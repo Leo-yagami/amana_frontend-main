@@ -1,5 +1,15 @@
 import axios from 'axios';
 
+/**
+ * API Configuration
+ * 
+ * Change this URL to point to your Express backend:
+ * - Development: http://localhost:3001 (or whatever port your Express server runs on)
+ * - Production: https://your-api-domain.com
+ * 
+ * You can set VITE_API_URL in a .env file:
+ * VITE_API_URL=http://localhost:3001
+ */
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 // Create axios instance with default config
@@ -8,10 +18,13 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true,
+  withCredentials: true, // Include cookies in requests (useful for sessions)
 });
 
-// Request interceptor to add auth token
+/**
+ * Request interceptor
+ * Automatically adds the auth token to every request
+ */
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -25,7 +38,10 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor for error handling
+/**
+ * Response interceptor
+ * Handles 401 (Unauthorized) errors by clearing auth and redirecting to login
+ */
 api.interceptors.response.use(
   (response) => response,
   (error) => {

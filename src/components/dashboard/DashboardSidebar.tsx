@@ -1,5 +1,4 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
 import {
   Heart,
   LayoutDashboard,
@@ -18,7 +17,6 @@ import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import api from "@/lib/api";
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
@@ -36,16 +34,6 @@ const DashboardSidebar = () => {
   const navigate = useNavigate();
   const { logout } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
-
-  // Fetch organization name
-  const { data: organization } = useQuery({
-    queryKey: ['organization'],
-    queryFn: async () => {
-      const response = await api.get('/organization');
-      return response.data;
-    },
-    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
-  });
 
   const handleLogout = () => {
     logout();
@@ -67,7 +55,7 @@ const DashboardSidebar = () => {
           </div>
           {!collapsed && (
             <span className="text-lg font-bold text-sidebar-foreground">
-              {organization?.name || "HopeBridge"}
+              HopeBridge
             </span>
           )}
         </Link>
@@ -112,7 +100,7 @@ const DashboardSidebar = () => {
 
       {/* Footer */}
       <div className="p-3 border-t border-sidebar-border">
-        <button 
+        <button
           onClick={handleLogout}
           className="flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium text-destructive hover:bg-destructive/10 transition-all duration-200 w-full"
         >

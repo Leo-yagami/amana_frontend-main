@@ -2,20 +2,17 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Heart, Menu, X } from "lucide-react";
-import { useLanguage } from "@/contexts/LanguageContext";
-import ThemeLanguageControls from "@/components/ThemeLanguageControls";
+
+const navLinks = [
+  { label: "About Us", href: "#about" },
+  { label: "Campaigns", href: "#campaigns" },
+  { label: "Impact", href: "#impact" },
+  { label: "Stories", href: "#stories" },
+  { label: "Contact", href: "#contact" },
+];
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { t } = useLanguage();
-
-  const navLinks = [
-    { label: t("nav.aboutUs"), href: "#about" },
-    { label: t("nav.campaigns"), href: "#campaigns" },
-    { label: t("nav.impact"), href: "#impact" },
-    { label: t("nav.stories"), href: "#stories" },
-    { label: t("nav.contact"), href: "#contact" },
-  ];
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-lg border-b border-border">
@@ -46,25 +43,19 @@ const Navbar = () => {
 
           {/* Desktop Actions */}
           <div className="hidden lg:flex items-center gap-3">
-            <ThemeLanguageControls variant="navbar" />
-            <Link to="/dashboard">
-              <Button variant="ghost">{t("nav.dashboard")}</Button>
+            <Link to="/login">
+              <Button variant="ghost">Dashboard</Button>
             </Link>
-            <Button variant="default">
-              {t("nav.donateNow")}
-            </Button>
+            <Button variant="default">Donate Now</Button>
           </div>
 
           {/* Mobile Menu Button */}
-          <div className="lg:hidden flex items-center gap-2">
-            <ThemeLanguageControls variant="navbar" />
-            <button
-              onClick={() => setIsOpen(!isOpen)}
-              className="p-2 text-foreground hover:bg-muted rounded-lg transition-colors"
-            >
-              {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
-          </div>
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="lg:hidden p-2 text-foreground hover:bg-muted rounded-lg transition-colors"
+          >
+            {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
         </div>
 
         {/* Mobile Navigation */}
@@ -82,11 +73,13 @@ const Navbar = () => {
                 </a>
               ))}
               <div className="flex flex-col gap-2 mt-4 px-4">
-                <Link to="/dashboard" onClick={() => setIsOpen(false)}>
-                  <Button variant="outline" className="w-full">{t("nav.dashboard")}</Button>
+                <Link to="/login" onClick={() => setIsOpen(false)}>
+                  <Button variant="outline" className="w-full">
+                    Dashboard
+                  </Button>
                 </Link>
                 <Button variant="default" className="w-full">
-                  {t("nav.donateNow")}
+                  Donate Now
                 </Button>
               </div>
             </div>

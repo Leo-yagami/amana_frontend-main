@@ -1,60 +1,64 @@
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { ArrowRight, Calendar, Users } from "lucide-react";
-import { useLanguage } from "@/contexts/LanguageContext";
 
 const campaigns = [
   {
     id: 1,
     title: "Clean Water for Villages",
     category: "Healthcare",
-    description: "Providing clean drinking water access to 15 rural villages in East Africa.",
+    description:
+      "Providing clean drinking water access to 15 rural villages in East Africa.",
     raised: 45000,
     goal: 60000,
     donors: 328,
     daysLeft: 12,
-    image: "https://images.unsplash.com/photo-1594398901394-4e34939a4fd0?w=800&auto=format&fit=crop&q=80",
+    image:
+      "https://images.unsplash.com/photo-1594398901394-4e34939a4fd0?w=800&auto=format&fit=crop&q=80",
   },
   {
     id: 2,
     title: "Education for Orphans",
     category: "Education",
-    description: "Supporting 200 orphaned children with school supplies, uniforms, and tuition.",
+    description:
+      "Supporting 200 orphaned children with school supplies, uniforms, and tuition.",
     raised: 32000,
     goal: 50000,
     donors: 245,
     daysLeft: 24,
-    image: "https://images.unsplash.com/photo-1497486751825-1233686d5d80?w=800&auto=format&fit=crop&q=80",
+    image:
+      "https://images.unsplash.com/photo-1497486751825-1233686d5d80?w=800&auto=format&fit=crop&q=80",
   },
   {
     id: 3,
     title: "Emergency Medical Fund",
     category: "Medical",
-    description: "Providing life-saving surgeries and treatments for children in critical need.",
+    description:
+      "Providing life-saving surgeries and treatments for children in critical need.",
     raised: 78000,
     goal: 100000,
     donors: 512,
     daysLeft: 8,
-    image: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=800&auto=format&fit=crop&q=80",
+    image:
+      "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=800&auto=format&fit=crop&q=80",
   },
 ];
 
 const CampaignsSection = () => {
-  const { t } = useLanguage();
-
   return (
     <section id="campaigns" className="py-20 lg:py-32 bg-background">
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
           <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-semibold mb-4">
-            {t("campaigns.badge")}
+            Active Campaigns
           </span>
           <h2 className="text-3xl lg:text-5xl font-bold text-foreground mb-4">
-            {t("campaigns.title")}
+            Support a Cause Today
           </h2>
           <p className="text-lg text-muted-foreground">
-            {t("campaigns.subtitle")}
+            Every campaign represents real people with real needs. Your
+            contribution directly impacts lives.
           </p>
         </div>
 
@@ -96,11 +100,11 @@ const CampaignsSection = () => {
                       ${campaign.raised.toLocaleString()}
                     </span>
                     <span className="text-muted-foreground">
-                      {t("campaigns.of")} ${campaign.goal.toLocaleString()}
+                      of ${campaign.goal.toLocaleString()}
                     </span>
                   </div>
-                  <Progress 
-                    value={(campaign.raised / campaign.goal) * 100} 
+                  <Progress
+                    value={(campaign.raised / campaign.goal) * 100}
                     className="h-2"
                   />
                 </div>
@@ -109,16 +113,16 @@ const CampaignsSection = () => {
                 <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
                   <div className="flex items-center gap-1">
                     <Users className="w-4 h-4" />
-                    <span>{campaign.donors} {t("campaigns.donors")}</span>
+                    <span>{campaign.donors} donors</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <Calendar className="w-4 h-4" />
-                    <span>{campaign.daysLeft} {t("campaigns.daysLeft")}</span>
+                    <span>{campaign.daysLeft} days left</span>
                   </div>
                 </div>
 
                 <Button variant="default" className="w-full">
-                  {t("campaigns.donateNow")}
+                  Donate Now
                 </Button>
               </div>
             </article>
@@ -128,7 +132,7 @@ const CampaignsSection = () => {
         {/* View All */}
         <div className="text-center">
           <Button variant="outline" size="lg" className="group">
-            {t("campaigns.viewAll")}
+            View All Campaigns
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </Button>
         </div>

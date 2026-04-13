@@ -1,7 +1,12 @@
 import { useState, useEffect } from "react";
-import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,12 +14,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { 
-  User, 
-  Building, 
-  Bell, 
-  Shield, 
-  Save, 
+import {
+  User,
+  Building,
+  Bell,
+  Shield,
+  Save,
   Upload,
   Users,
   Lock,
@@ -23,26 +28,19 @@ import {
   MapPin,
   Globe,
   AlertCircle,
-  Palette,
   Loader2,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import ThemeLanguageControls from "@/components/ThemeLanguageControls";
 import { toast } from "sonner";
 import api from "@/lib/api";
 
 const Settings = () => {
   const { user } = useAuth();
-  const queryClient = useQueryClient();
-  
-  // Fetch current user profile
-  const { data: userProfile, isLoading: profileLoading } = useQuery({
-    queryKey: ['user-profile'],
-    queryFn: async () => {
-      const response = await api.get('/auth/me');
-      return response.data;
-    },
-  });
+
+  // Loading states
+  const [profileLoading, setProfileLoading] = useState(true);
+  const [orgLoading, setOrgLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   // Profile state
   const [profileData, setProfileData] = useState({
@@ -50,27 +48,6 @@ const Settings = () => {
     email: "",
     phone: "",
     role: "",
-  });
-
-  // Update profile data when user profile loads
-  useEffect(() => {
-    if (userProfile) {
-      setProfileData({
-        fullName: userProfile.fullName || "",
-        email: userProfile.email || "",
-        phone: userProfile.phone || "",
-        role: userProfile.role || "",
-      });
-    }
-  }, [userProfile]);
-
-  // Fetch organization settings
-  const { data: organizationData, isLoading: orgLoading } = useQuery({
-    queryKey: ['organization'],
-    queryFn: async () => {
-      const response = await api.get('/organization');
-      return response.data;
-    },
   });
 
   // Organization state
@@ -84,22 +61,6 @@ const Settings = () => {
     website: "",
     description: "",
   });
-
-  // Update orgData when organization loads
-  useEffect(() => {
-    if (organizationData) {
-      setOrgData({
-        name: organizationData.name || "",
-        address: organizationData.address || "",
-        city: organizationData.city || "",
-        country: organizationData.country || "Ethiopia",
-        phone: organizationData.phone || "",
-        email: organizationData.email || "",
-        website: organizationData.website || "",
-        description: organizationData.description || "",
-      });
-    }
-  }, [organizationData]);
 
   // Password state
   const [passwordData, setPasswordData] = useState({
@@ -117,42 +78,67 @@ const Settings = () => {
     systemUpdates: true,
   });
 
-  // Profile update mutation
-  const profileMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const response = await api.put('/auth/me', data);
-      return response.data;
-    },
-    onSuccess: () => {
+  // Fetch user profile on mount
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await api.get("/auth/me");
+        const data = response.data;
+        setProfileData({
+          fullName: data.fullName || "",
+          email: data.email || "",
+          phone: data.phone || "",
+          role: data.role || "",
+        });
+      } catch (error) {
+        console.error("Failed to fetch profile:", error);
+      } finally {
+        setProfileLoading(false);
+      }
+    };
+    fetchProfile();
+  }, []);
+
+  // Fetch organization settings on mount
+  useEffect(() => {
+    const fetchOrganization = async () => {
+      try {
+        const response = await api.get("/organization");
+        const data = response.data;
+        setOrgData({
+          name: data.name || "",
+          address: data.address || "",
+          city: data.city || "",
+          country: data.country || "Ethiopia",
+          phone: data.phone || "",
+          email: data.email || "",
+          website: data.website || "",
+          description: data.description || "",
+        });
+      } catch (error) {
+        console.error("Failed to fetch organization:", error);
+      } finally {
+        setOrgLoading(false);
+      }
+    };
+    fetchOrganization();
+  }, []);
+
+  // Handle profile update
+  const handleProfileUpdate = async () => {
+    try {
+      setSaving(true);
+      await api.put("/auth/me", profileData);
       toast.success("Profile updated successfully");
-      queryClient.invalidateQueries({ queryKey: ['user-profile'] });
-      queryClient.invalidateQueries({ queryKey: ['user'] });
-    },
-    onError: (error: any) => {
+    } catch (error: any) {
       toast.error(error?.response?.data?.message || "Failed to update profile");
-    },
-  });
-
-  // Password update mutation
-  const passwordMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const response = await api.put('/auth/change-password', data);
-      return response.data;
-    },
-    onSuccess: () => {
-      toast.success("Password changed successfully");
-      setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
-    },
-    onError: (error: any) => {
-      toast.error(error?.response?.data?.message || "Failed to change password");
-    },
-  });
-
-  const handleProfileUpdate = () => {
-    profileMutation.mutate(profileData);
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handlePasswordChange = () => {
+  // Handle password change
+  const handlePasswordChange = async () => {
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       toast.error("Passwords do not match");
       return;
@@ -161,31 +147,43 @@ const Settings = () => {
       toast.error("Password must be at least 6 characters");
       return;
     }
-    passwordMutation.mutate({
-      currentPassword: passwordData.currentPassword,
-      newPassword: passwordData.newPassword,
-    });
+    try {
+      setSaving(true);
+      await api.put("/auth/change-password", {
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword,
+      });
+      toast.success("Password changed successfully");
+      setPasswordData({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.message || "Failed to change password"
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
-  // Organization update mutation
-  const orgMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const response = await api.put('/organization', data);
-      return response.data;
-    },
-    onSuccess: () => {
+  // Handle organization update
+  const handleOrgUpdate = async () => {
+    try {
+      setSaving(true);
+      await api.put("/organization", orgData);
       toast.success("Organization settings updated successfully");
-      queryClient.invalidateQueries({ queryKey: ['organization'] });
-    },
-    onError: (error: any) => {
-      toast.error(error?.response?.data?.message || "Failed to update organization");
-    },
-  });
-
-  const handleOrgUpdate = () => {
-    orgMutation.mutate(orgData);
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.message || "Failed to update organization"
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
+  // Handle notification update
   const handleNotificationUpdate = () => {
     toast.success("Notification preferences saved");
   };
@@ -194,13 +192,17 @@ const Settings = () => {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Settings</h1>
-        <p className="text-muted-foreground">Manage your account and application preferences</p>
+        <h1 className="text-2xl lg:text-3xl font-bold text-foreground">
+          Settings
+        </h1>
+        <p className="text-muted-foreground">
+          Manage your account and application preferences
+        </p>
       </div>
 
       {/* Settings Tabs */}
       <Tabs defaultValue="profile" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 lg:grid-cols-5">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="profile" className="flex items-center gap-2">
             <User className="w-4 h-4" />
             <span className="hidden sm:inline">Profile</span>
@@ -212,10 +214,6 @@ const Settings = () => {
           <TabsTrigger value="security" className="flex items-center gap-2">
             <Shield className="w-4 h-4" />
             <span className="hidden sm:inline">Security</span>
-          </TabsTrigger>
-          <TabsTrigger value="appearance" className="flex items-center gap-2">
-            <Palette className="w-4 h-4" />
-            <span className="hidden sm:inline">Appearance</span>
           </TabsTrigger>
           <TabsTrigger value="notifications" className="flex items-center gap-2">
             <Bell className="w-4 h-4" />
@@ -235,108 +233,122 @@ const Settings = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Profile Information</CardTitle>
-                <CardDescription>Update your personal information and profile picture</CardDescription>
+                <CardDescription>
+                  Update your personal information and profile picture
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-              {/* Avatar */}
-              <div className="flex items-center gap-6">
-                <Avatar className="w-24 h-24">
-                  <AvatarImage src={user?.avatar} />
-                  <AvatarFallback className="text-2xl">
-                    {user?.fullName?.charAt(0) || "U"}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <Button variant="outline" size="sm">
-                    <Upload className="w-4 h-4 mr-2" />
-                    Change Photo
+                {/* Avatar */}
+                <div className="flex items-center gap-6">
+                  <Avatar className="w-24 h-24">
+                    <AvatarImage src={undefined} />
+                    <AvatarFallback className="text-2xl">
+                      {profileData.fullName?.charAt(0) || "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <Button variant="outline" size="sm">
+                      <Upload className="w-4 h-4 mr-2" />
+                      Change Photo
+                    </Button>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      JPG, PNG or GIF. Max size 2MB.
+                    </p>
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Profile Fields */}
+                <div className="grid gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="fullName">Full Name</Label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="fullName"
+                        value={profileData.fullName}
+                        onChange={(e) =>
+                          setProfileData({
+                            ...profileData,
+                            fullName: e.target.value,
+                          })
+                        }
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="email">Email</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="email"
+                        type="email"
+                        value={profileData.email}
+                        onChange={(e) =>
+                          setProfileData({
+                            ...profileData,
+                            email: e.target.value,
+                          })
+                        }
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="phone">Phone Number</Label>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="phone"
+                        type="tel"
+                        value={profileData.phone}
+                        onChange={(e) =>
+                          setProfileData({
+                            ...profileData,
+                            phone: e.target.value,
+                          })
+                        }
+                        className="pl-10"
+                        placeholder="+251 xxx xxx xxx"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="role">Role</Label>
+                    <Input
+                      id="role"
+                      value={profileData.role}
+                      disabled
+                      className="bg-muted"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Contact an administrator to change your role
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex justify-end">
+                  <Button onClick={handleProfileUpdate} disabled={saving}>
+                    {saving ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-4 h-4 mr-2" />
+                        Save Changes
+                      </>
+                    )}
                   </Button>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    JPG, PNG or GIF. Max size 2MB.
-                  </p>
                 </div>
-              </div>
-
-              <Separator />
-
-              {/* Profile Fields */}
-              <div className="grid gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="fullName">Full Name</Label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      id="fullName"
-                      value={profileData.fullName}
-                      onChange={(e) => setProfileData({ ...profileData, fullName: e.target.value })}
-                      className="pl-10"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid gap-2">
-                  <Label htmlFor="email">Email</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      id="email"
-                      type="email"
-                      value={profileData.email}
-                      onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
-                      className="pl-10"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid gap-2">
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <div className="relative">
-                    <Phone className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      id="phone"
-                      type="tel"
-                      value={profileData.phone}
-                      onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
-                      className="pl-10"
-                      placeholder="+251 xxx xxx xxx"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid gap-2">
-                  <Label htmlFor="role">Role</Label>
-                  <Input
-                    id="role"
-                    value={profileData.role}
-                    disabled
-                    className="bg-muted"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Contact an administrator to change your role
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex justify-end">
-                <Button 
-                  onClick={handleProfileUpdate}
-                  disabled={profileMutation.isPending}
-                >
-                  {profileMutation.isPending ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="w-4 h-4 mr-2" />
-                      Save Changes
-                    </>
-                  )}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
           )}
         </TabsContent>
 
@@ -350,129 +362,142 @@ const Settings = () => {
             </Card>
           ) : (
             <Card>
-            <CardHeader>
-              <CardTitle>Organization Details</CardTitle>
-              <CardDescription>Manage your organization's information</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-2">
-                <Label htmlFor="orgName">Organization Name</Label>
-                <Input
-                  id="orgName"
-                  value={orgData.name}
-                  onChange={(e) => setOrgData({ ...orgData, name: e.target.value })}
-                />
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="orgAddress">Address</Label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    id="orgAddress"
-                    value={orgData.address}
-                    onChange={(e) => setOrgData({ ...orgData, address: e.target.value })}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-4">
+              <CardHeader>
+                <CardTitle>Organization Details</CardTitle>
+                <CardDescription>
+                  Manage your organization&apos;s information
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="orgCity">City</Label>
+                  <Label htmlFor="orgName">Organization Name</Label>
                   <Input
-                    id="orgCity"
-                    value={orgData.city}
-                    onChange={(e) => setOrgData({ ...orgData, city: e.target.value })}
+                    id="orgName"
+                    value={orgData.name}
+                    onChange={(e) =>
+                      setOrgData({ ...orgData, name: e.target.value })
+                    }
                   />
                 </div>
 
                 <div className="grid gap-2">
-                  <Label htmlFor="orgCountry">Country</Label>
-                  <Input
-                    id="orgCountry"
-                    value={orgData.country}
-                    onChange={(e) => setOrgData({ ...orgData, country: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="orgPhone">Phone</Label>
+                  <Label htmlFor="orgAddress">Address</Label>
                   <div className="relative">
-                    <Phone className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+                    <MapPin className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
                     <Input
-                      id="orgPhone"
-                      type="tel"
-                      value={orgData.phone}
-                      onChange={(e) => setOrgData({ ...orgData, phone: e.target.value })}
+                      id="orgAddress"
+                      value={orgData.address}
+                      onChange={(e) =>
+                        setOrgData({ ...orgData, address: e.target.value })
+                      }
                       className="pl-10"
                     />
                   </div>
                 </div>
 
-                <div className="grid gap-2">
-                  <Label htmlFor="orgEmail">Email</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="orgCity">City</Label>
                     <Input
-                      id="orgEmail"
-                      type="email"
-                      value={orgData.email}
-                      onChange={(e) => setOrgData({ ...orgData, email: e.target.value })}
-                      className="pl-10"
+                      id="orgCity"
+                      value={orgData.city}
+                      onChange={(e) =>
+                        setOrgData({ ...orgData, city: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="orgCountry">Country</Label>
+                    <Input
+                      id="orgCountry"
+                      value={orgData.country}
+                      onChange={(e) =>
+                        setOrgData({ ...orgData, country: e.target.value })
+                      }
                     />
                   </div>
                 </div>
-              </div>
 
-              <div className="grid gap-2">
-                <Label htmlFor="orgWebsite">Website</Label>
-                <div className="relative">
-                  <Globe className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    id="orgWebsite"
-                    type="url"
-                    value={orgData.website}
-                    onChange={(e) => setOrgData({ ...orgData, website: e.target.value })}
-                    className="pl-10"
-                    placeholder="https://example.com"
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="orgPhone">Phone</Label>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="orgPhone"
+                        type="tel"
+                        value={orgData.phone}
+                        onChange={(e) =>
+                          setOrgData({ ...orgData, phone: e.target.value })
+                        }
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="orgEmail">Email</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="orgEmail"
+                        type="email"
+                        value={orgData.email}
+                        onChange={(e) =>
+                          setOrgData({ ...orgData, email: e.target.value })
+                        }
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="orgWebsite">Website</Label>
+                  <div className="relative">
+                    <Globe className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      id="orgWebsite"
+                      type="url"
+                      value={orgData.website}
+                      onChange={(e) =>
+                        setOrgData({ ...orgData, website: e.target.value })
+                      }
+                      className="pl-10"
+                      placeholder="https://example.com"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="orgDescription">Description</Label>
+                  <Textarea
+                    id="orgDescription"
+                    value={orgData.description}
+                    onChange={(e) =>
+                      setOrgData({ ...orgData, description: e.target.value })
+                    }
+                    rows={4}
+                    placeholder="Describe your organization's mission and activities..."
                   />
                 </div>
-              </div>
 
-              <div className="grid gap-2">
-                <Label htmlFor="orgDescription">Description</Label>
-                <Textarea
-                  id="orgDescription"
-                  value={orgData.description}
-                  onChange={(e) => setOrgData({ ...orgData, description: e.target.value })}
-                  rows={4}
-                  placeholder="Describe your organization's mission and activities..."
-                />
-              </div>
-
-              <div className="flex justify-end">
-                <Button 
-                  onClick={handleOrgUpdate}
-                  disabled={orgMutation.isPending}
-                >
-                  {orgMutation.isPending ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="w-4 h-4 mr-2" />
-                      Save Organization
-                    </>
-                  )}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+                <div className="flex justify-end">
+                  <Button onClick={handleOrgUpdate} disabled={saving}>
+                    {saving ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-4 h-4 mr-2" />
+                        Save Organization
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           )}
 
           {/* User Management (Admin Only) */}
@@ -483,7 +508,9 @@ const Settings = () => {
                   <Users className="w-5 h-5" />
                   User Management
                 </CardTitle>
-                <CardDescription>Manage system users and their permissions</CardDescription>
+                <CardDescription>
+                  Manage system users and their permissions
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center justify-between p-4 border rounded-lg">
@@ -503,17 +530,14 @@ const Settings = () => {
           )}
         </TabsContent>
 
-        {/* Appearance Tab */}
-        <TabsContent value="appearance" className="space-y-6 mt-6">
-          <ThemeLanguageControls variant="settings" />
-        </TabsContent>
-
         {/* Security Tab */}
         <TabsContent value="security" className="space-y-6 mt-6">
           <Card>
             <CardHeader>
               <CardTitle>Change Password</CardTitle>
-              <CardDescription>Update your password to keep your account secure</CardDescription>
+              <CardDescription>
+                Update your password to keep your account secure
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-2">
@@ -524,7 +548,12 @@ const Settings = () => {
                     id="currentPassword"
                     type="password"
                     value={passwordData.currentPassword}
-                    onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                    onChange={(e) =>
+                      setPasswordData({
+                        ...passwordData,
+                        currentPassword: e.target.value,
+                      })
+                    }
                     className="pl-10"
                   />
                 </div>
@@ -538,7 +567,12 @@ const Settings = () => {
                     id="newPassword"
                     type="password"
                     value={passwordData.newPassword}
-                    onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                    onChange={(e) =>
+                      setPasswordData({
+                        ...passwordData,
+                        newPassword: e.target.value,
+                      })
+                    }
                     className="pl-10"
                   />
                 </div>
@@ -555,18 +589,20 @@ const Settings = () => {
                     id="confirmPassword"
                     type="password"
                     value={passwordData.confirmPassword}
-                    onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                    onChange={(e) =>
+                      setPasswordData({
+                        ...passwordData,
+                        confirmPassword: e.target.value,
+                      })
+                    }
                     className="pl-10"
                   />
                 </div>
               </div>
 
               <div className="flex justify-end">
-                <Button 
-                  onClick={handlePasswordChange}
-                  disabled={passwordMutation.isPending}
-                >
-                  {passwordMutation.isPending ? (
+                <Button onClick={handlePasswordChange} disabled={saving}>
+                  {saving ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                       Changing...
@@ -606,7 +642,9 @@ const Settings = () => {
           <Card>
             <CardHeader>
               <CardTitle>Notification Preferences</CardTitle>
-              <CardDescription>Choose what notifications you want to receive</CardDescription>
+              <CardDescription>
+                Choose what notifications you want to receive
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex items-center justify-between">
@@ -619,8 +657,11 @@ const Settings = () => {
                 <Switch
                   id="emailNotifications"
                   checked={notifications.emailNotifications}
-                  onCheckedChange={(checked) => 
-                    setNotifications({ ...notifications, emailNotifications: checked })
+                  onCheckedChange={(checked) =>
+                    setNotifications({
+                      ...notifications,
+                      emailNotifications: checked,
+                    })
                   }
                 />
               </div>
@@ -637,8 +678,11 @@ const Settings = () => {
                 <Switch
                   id="donationAlerts"
                   checked={notifications.donationAlerts}
-                  onCheckedChange={(checked) => 
-                    setNotifications({ ...notifications, donationAlerts: checked })
+                  onCheckedChange={(checked) =>
+                    setNotifications({
+                      ...notifications,
+                      donationAlerts: checked,
+                    })
                   }
                 />
               </div>
@@ -655,8 +699,11 @@ const Settings = () => {
                 <Switch
                   id="eventReminders"
                   checked={notifications.eventReminders}
-                  onCheckedChange={(checked) => 
-                    setNotifications({ ...notifications, eventReminders: checked })
+                  onCheckedChange={(checked) =>
+                    setNotifications({
+                      ...notifications,
+                      eventReminders: checked,
+                    })
                   }
                 />
               </div>
@@ -673,8 +720,11 @@ const Settings = () => {
                 <Switch
                   id="weeklyReports"
                   checked={notifications.weeklyReports}
-                  onCheckedChange={(checked) => 
-                    setNotifications({ ...notifications, weeklyReports: checked })
+                  onCheckedChange={(checked) =>
+                    setNotifications({
+                      ...notifications,
+                      weeklyReports: checked,
+                    })
                   }
                 />
               </div>
@@ -691,8 +741,11 @@ const Settings = () => {
                 <Switch
                   id="systemUpdates"
                   checked={notifications.systemUpdates}
-                  onCheckedChange={(checked) => 
-                    setNotifications({ ...notifications, systemUpdates: checked })
+                  onCheckedChange={(checked) =>
+                    setNotifications({
+                      ...notifications,
+                      systemUpdates: checked,
+                    })
                   }
                 />
               </div>
@@ -712,7 +765,9 @@ const Settings = () => {
                 <AlertCircle className="w-5 h-5" />
                 Danger Zone
               </CardTitle>
-              <CardDescription>Irreversible actions for your account</CardDescription>
+              <CardDescription>
+                Irreversible actions for your account
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between p-4 border border-destructive/50 rounded-lg">

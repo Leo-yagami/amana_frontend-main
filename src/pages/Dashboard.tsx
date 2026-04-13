@@ -1,65 +1,95 @@
-import { Users, HandHeart, DollarSign, Megaphone, Calendar, TrendingUp, ArrowUpRight } from "lucide-react";
+import { useState, useEffect } from "react";
+import {
+  Users,
+  HandHeart,
+  DollarSign,
+  Megaphone,
+  Calendar,
+  TrendingUp,
+  ArrowUpRight,
+} from "lucide-react";
 import StatCard from "@/components/dashboard/StatCard";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { useQuery } from "@tanstack/react-query";
-import { dashboardApi, eventApi } from "@/services/api.service";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { dashboardApi, eventApi } from "@/services/api.service";
+import type {
+  DashboardOverview,
+  TopDonor,
+  RecentActivity,
+  Event,
+} from "@/types/api";
 
 const Dashboard = () => {
-  // Fetch dashboard data
-  const { data: overview, isLoading: isLoadingOverview, error: overviewError } = useQuery({
-    queryKey: ['dashboard', 'overview'],
-    queryFn: async () => {
-      const response = await dashboardApi.getOverview();
-      return response.data;
-    },
-  });
+  // State for all dashboard data
+  const [overview, setOverview] = useState<DashboardOverview | null>(null);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [topDonors, setTopDonors] = useState<TopDonor[]>([]);
+  const [recentActivities, setRecentActivities] = useState<RecentActivity[]>(
+    []
+  );
 
-  const { data: events, isLoading: isLoadingEvents } = useQuery({
-    queryKey: ['events', 'active'],
-    queryFn: async () => {
-      const response = await eventApi.getAll({ status: 'Active', limit: 3 });
-      return response.data;
-    },
-  });
+  // Loading states
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const { data: topDonors, isLoading: isLoadingDonors } = useQuery({
-    queryKey: ['dashboard', 'top-donors'],
-    queryFn: async () => {
-      const response = await dashboardApi.getTopDonors({ limit: 3 });
-      return response.data;
-    },
-  });
+  // Fetch all dashboard data on mount
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-  const { data: recentActivities, isLoading: isLoadingActivities } = useQuery({
-    queryKey: ['dashboard', 'recent-activities'],
-    queryFn: async () => {
-      const response = await dashboardApi.getRecentActivities({ limit: 5 });
-      return response.data;
-    },
-  });
+        // Fetch all data in parallel
+        const [overviewRes, eventsRes, donorsRes, activitiesRes] =
+          await Promise.all([
+            dashboardApi.getOverview(),
+            eventApi.getAll({ status: "Active", limit: 3 }),
+            dashboardApi.getTopDonors({ limit: 3 }),
+            dashboardApi.getRecentActivities({ limit: 5 }),
+          ]);
+
+        setOverview(overviewRes.data);
+        setEvents(eventsRes.data.data || []);
+        setTopDonors(donorsRes.data || []);
+        setRecentActivities(activitiesRes.data || []);
+      } catch (err: any) {
+        console.error("Failed to fetch dashboard data:", err);
+        setError(
+          err.response?.data?.message ||
+            "Failed to load dashboard. Please try again."
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
 
   // Show error state
-  if (overviewError) {
+  if (error) {
     return (
       <div className="space-y-8">
         <Alert variant="destructive">
-          <AlertDescription>
-            Failed to load dashboard data. Please try refreshing the page.
-          </AlertDescription>
+          <AlertDescription>{error}</AlertDescription>
         </Alert>
       </div>
     );
   }
+
   return (
     <div className="space-y-8">
       {/* Page Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Dashboard</h1>
-          <p className="text-muted-foreground">Welcome back! Here's what's happening today.</p>
+          <h1 className="text-2xl lg:text-3xl font-bold text-foreground">
+            Dashboard
+          </h1>
+          <p className="text-muted-foreground">
+            Welcome back! Here&apos;s what&apos;s happening today.
+          </p>
         </div>
         <div className="flex gap-3">
           <Button variant="outline">
@@ -75,10 +105,13 @@ const Dashboard = () => {
 
       {/* Stats Grid */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {isLoadingOverview ? (
+        {loading ? (
           <>
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="bg-card rounded-xl border border-border p-6">
+              <div
+                key={i}
+                className="bg-card rounded-xl border border-border p-6"
+              >
                 <Skeleton className="h-4 w-24 mb-2" />
                 <Skeleton className="h-8 w-20 mb-1" />
                 <Skeleton className="h-3 w-16" />
@@ -132,14 +165,16 @@ const Dashboard = () => {
         {/* Recent Activity */}
         <div className="lg:col-span-2 bg-card rounded-xl border border-border p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-foreground">Recent Activity</h2>
+            <h2 className="text-lg font-semibold text-foreground">
+              Recent Activity
+            </h2>
             <Button variant="ghost" size="sm">
               View All
               <ArrowUpRight className="w-4 h-4 ml-1" />
             </Button>
           </div>
           <div className="space-y-4">
-            {isLoadingActivities ? (
+            {loading ? (
               <>
                 {[...Array(5)].map((_, i) => (
                   <div key={i} className="flex items-start gap-4 p-3">
@@ -151,7 +186,7 @@ const Dashboard = () => {
                   </div>
                 ))}
               </>
-            ) : recentActivities && recentActivities.length > 0 ? (
+            ) : recentActivities.length > 0 ? (
               recentActivities.map((activity) => (
                 <div
                   key={activity.id}
@@ -159,7 +194,9 @@ const Dashboard = () => {
                 >
                   <div className="w-2 h-2 rounded-full bg-primary mt-2" />
                   <div className="flex-1">
-                    <p className="text-foreground text-sm">{activity.description}</p>
+                    <p className="text-foreground text-sm">
+                      {activity.description}
+                    </p>
                     <p className="text-muted-foreground text-xs mt-1">
                       {new Date(activity.timestamp).toLocaleString()}
                     </p>
@@ -167,7 +204,9 @@ const Dashboard = () => {
                 </div>
               ))
             ) : (
-              <p className="text-muted-foreground text-sm text-center py-4">No recent activities</p>
+              <p className="text-muted-foreground text-sm text-center py-4">
+                No recent activities
+              </p>
             )}
           </div>
         </div>
@@ -175,14 +214,16 @@ const Dashboard = () => {
         {/* Upcoming Events */}
         <div className="bg-card rounded-xl border border-border p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-foreground">Upcoming Events</h2>
+            <h2 className="text-lg font-semibold text-foreground">
+              Upcoming Events
+            </h2>
             <Button variant="ghost" size="sm">
               View All
               <ArrowUpRight className="w-4 h-4 ml-1" />
             </Button>
           </div>
           <div className="space-y-4">
-            {isLoadingEvents ? (
+            {loading ? (
               <>
                 {[...Array(3)].map((_, i) => (
                   <div key={i} className="p-4 rounded-lg bg-muted/50">
@@ -191,37 +232,45 @@ const Dashboard = () => {
                   </div>
                 ))}
               </>
-            ) : events && events.data.length > 0 ? (
-              events.data.map((event) => (
+            ) : events.length > 0 ? (
+              events.map((event) => (
                 <div
                   key={event.id}
                   className="p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
                 >
-                  <h3 className="font-medium text-foreground mb-1">{event.title}</h3>
+                  <h3 className="font-medium text-foreground mb-1">
+                    {event.title}
+                  </h3>
                   <div className="flex items-center justify-between text-sm text-muted-foreground">
-                    <span>{new Date(event.startDate).toLocaleDateString()}</span>
+                    <span>
+                      {event.startDate
+                        ? new Date(event.startDate).toLocaleDateString()
+                        : "TBD"}
+                    </span>
                     <span className="capitalize">{event.eventType}</span>
                   </div>
                 </div>
               ))
             ) : (
-              <p className="text-muted-foreground text-sm text-center py-4">No upcoming events</p>
+              <p className="text-muted-foreground text-sm text-center py-4">
+                No upcoming events
+              </p>
             )}
           </div>
         </div>
       </div>
 
-      {/* Campaign Progress */}
+      {/* Top Donors / Campaigns */}
       <div className="bg-card rounded-xl border border-border p-6">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-semibold text-foreground">Top Campaigns</h2>
+          <h2 className="text-lg font-semibold text-foreground">Top Donors</h2>
           <Button variant="ghost" size="sm">
             View All
             <ArrowUpRight className="w-4 h-4 ml-1" />
           </Button>
         </div>
         <div className="space-y-6">
-          {isLoadingDonors ? (
+          {loading ? (
             <>
               {[...Array(3)].map((_, i) => (
                 <div key={i}>
@@ -233,12 +282,14 @@ const Dashboard = () => {
                 </div>
               ))}
             </>
-          ) : topDonors && topDonors.length > 0 ? (
+          ) : topDonors.length > 0 ? (
             topDonors.map((donor) => (
               <div key={donor.id}>
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="font-medium text-foreground">{donor.name}</h3>
-                  <span className="text-sm text-muted-foreground">{donor.donationCount} donations</span>
+                  <span className="text-sm text-muted-foreground">
+                    {donor.donationCount} donations
+                  </span>
                 </div>
                 <div className="flex items-center gap-4">
                   <Progress value={100} className="flex-1 h-2" />
@@ -249,7 +300,9 @@ const Dashboard = () => {
               </div>
             ))
           ) : (
-            <p className="text-muted-foreground text-sm text-center py-4">No donor data available</p>
+            <p className="text-muted-foreground text-sm text-center py-4">
+              No donor data available
+            </p>
           )}
         </div>
       </div>
