@@ -238,12 +238,12 @@ const Events = () => {
                     <div className="flex flex-col lg:flex-row lg:items-center gap-6">
                       {/* Date Box */}
                       <div className="flex-shrink-0 w-20 h-20 rounded-xl bg-primary/10 flex flex-col items-center justify-center">
-                        <span className="text-2xl font-bold text-primary">
+                        {/* <span className="text-2xl font-bold text-primary">
                           {dateInfo.day}
-                        </span>
-                        <span className="text-xs text-primary uppercase">
+                        </span> */}
+                        {/* <span className="text-xs text-primary uppercase">
                           {dateInfo.month}
-                        </span>
+                        </span> */}
                       </div>
 
                       {/* Event Details */}
@@ -274,7 +274,7 @@ const Events = () => {
                         <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                           <div className="flex items-center gap-1">
                             <Calendar className="w-4 h-4" />
-                            <span>{dateInfo.full}</span>
+                            {/* <span>{dateInfo.full}</span> */}
                           </div>
                           {event.location && (
                             <div className="flex items-center gap-1">

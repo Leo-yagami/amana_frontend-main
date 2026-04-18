@@ -317,7 +317,7 @@ const EventProfile = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Families Supported</p>
-                <p className="text-2xl font-bold">{stats?.supportedFamilies || stats?.familiesSupported || 0}</p>
+                <p className="text-2xl font-bold">{  stats?.familiesSupported || 0}</p>
               </div>
               <Users className="w-8 h-8 text-info opacity-50" />
             </div>
