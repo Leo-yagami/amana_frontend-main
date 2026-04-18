@@ -62,6 +62,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(newUser);
   };
 
+  //login with google function
+  
+
   // Logout function
   const logout = () => {
     // Try to call logout API but don't wait for it

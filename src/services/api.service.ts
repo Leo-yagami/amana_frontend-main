@@ -39,6 +39,10 @@ export const authApi = {
   
   refreshToken: () =>
     api.post<{ token: string }>('/auth/refresh'),
+  // exchangeGoogleCode: (code: string) =>
+  //   api.post<AuthResponse>("/auth/google/exchange", { code }),
+  exchangeGoogleCode: (code: string) =>
+    api.post('/google/callback/exchange', { code }),
 };
 
 // Family API

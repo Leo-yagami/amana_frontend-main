@@ -46,7 +46,10 @@ const Navbar = () => {
             <Link to="/login">
               <Button variant="ghost">Dashboard</Button>
             </Link>
-            <Button variant="default">Donate Now</Button>
+            <Link to="/signUp">
+              <Button variant="default">Donate Now</Button>
+            </Link>
+            
           </div>
 
           {/* Mobile Menu Button */}

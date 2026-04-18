@@ -10,7 +10,9 @@ import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
+import AuthCallback from "./pages/AuthCallback";
 import VerifyDonation from "./pages/VerifyDonation";
+import Payment from "./pages/Payment";
 
 // Dashboard
 import DashboardLayout from "./layouts/DashboardLayout";
@@ -45,6 +47,8 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/payment" element={<Payment />} />
           <Route path="/verify-donation/:token" element={<VerifyDonation />} />
 
           {/* Protected dashboard routes */}
