@@ -43,10 +43,10 @@ const Navbar = () => {
 
           {/* Desktop Actions */}
           <div className="hidden lg:flex items-center gap-3">
-            <Link to="/login">
+            <Link to="/dashboard">
               <Button variant="ghost">Dashboard</Button>
             </Link>
-            <Link to="/signUp">
+            <Link to="/payment">
               <Button variant="default">Donate Now</Button>
             </Link>
             

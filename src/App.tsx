@@ -3,7 +3,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { ProtectedRoute1 } from "@/components/ProtectedRouteDashboard";
+import { ProtectedRoute2 } from "@/components/ProtectedRoutePayment";
 
 // Pages
 import Index from "./pages/Index";
@@ -48,16 +49,24 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
-          <Route path="/payment" element={<Payment />} />
+          {/* <Route path="/payment" element={<Payment />} /> */}
+          <Route 
+            path="/payment" 
+            element={
+              <ProtectedRoute2>
+                <Payment />
+              </ProtectedRoute2>
+            } 
+          />
           <Route path="/verify-donation/:token" element={<VerifyDonation />} />
 
           {/* Protected dashboard routes */}
           <Route
             path="/dashboard"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute1>
                 <DashboardLayout />
-              </ProtectedRoute>
+              </ProtectedRoute1>
             }
           >
             <Route index element={<Dashboard />} />
