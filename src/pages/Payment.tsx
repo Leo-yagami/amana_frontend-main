@@ -256,6 +256,7 @@
 
 // export default Payment;
 
+const axios = import('axios')
 import { useMemo, useState } from "react";
 import {
   CreditCard,
@@ -390,7 +391,7 @@ const Payment = () => {
   } = useForm({
     resolver: zodResolver(paymentSchema),
     defaultValues: {
-      selectedAmount: 25,
+      selectedAmount: '',
       customAmount: "",
       paymentMethod: "card",
       telebirrPhone: "",
@@ -412,11 +413,21 @@ const Payment = () => {
   const processingFee = useMemo(() => +(displayAmount * 0.03).toFixed(2), [displayAmount]);
   const totalAmount = useMemo(() => +(displayAmount + processingFee).toFixed(2), [displayAmount, processingFee]);
 
-  const onSubmit = (data) => {
+  const onSubmit = async (data) => {
+    // const apiOrigin = import.meta.env.VITE_API_URL || "http://localhost:3000/initialize";
+    const apiOrigin = "http://localhost:3000/initialize";
+    
     console.log("Validated form data:", data);
-
-    const apiOrigin = import.meta.env.VITE_API_URL || "http://localhost:3000";
-    window.location.assign(`${apiOrigin}/initialize`);
+    const response = await fetch(apiOrigin, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json', 
+      },
+      body: JSON.stringify(data),
+    })
+    console.log('waiting for response')
+    console.log(response)
+    window.location.assign(`${apiOrigin}`);
   };
 
   return (
@@ -488,7 +499,7 @@ const Payment = () => {
                 </div>
               </div>
             </section>
-
+              
             {/* Payment Method */}
             <section className="space-y-6">
               <div className="flex items-center gap-2">
@@ -541,108 +552,108 @@ const Payment = () => {
                   </div>
                 </div>
               </div>
+              
+                <input type="hidden" {...register("paymentMethod")} />
 
-              <input type="hidden" {...register("paymentMethod")} />
-
-              {watchedPaymentMethod === "telebirr" && (
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-muted-foreground">Telebirr Phone Number</label>
-                  <input
-                    type="tel"
-                    placeholder="09XXXXXXXX"
-                    {...register("telebirrPhone")}
-                    className="w-full px-5 py-4 rounded-xl border border-border bg-background"
-                  />
-                  {errors.telebirrPhone && (
-                    <p className="text-red-500 text-xs">{errors.telebirrPhone.message}</p>
-                  )}
-                </div>
-              )}
-            </section>
-
-            {/* Card Details Form */}
-            {watchedPaymentMethod === "card" && (
-              <section className="bg-muted/40 p-8 rounded-2xl space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="md:col-span-2 space-y-2">
-                    <label className="text-sm font-semibold text-muted-foreground">Card Number</label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        placeholder="0000 0000 0000 0000"
-                        {...register("cardNumber")}
-                        className="w-full px-5 py-4 rounded-xl border border-border bg-background"
-                      />
-                      <Lock className="w-4 h-4 absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                    </div>
-                    {errors.cardNumber && <p className="text-red-500 text-xs">{errors.cardNumber.message}</p>}
-                  </div>
-
+                {watchedPaymentMethod === "telebirr" && (
                   <div className="space-y-2">
-                    <label className="text-sm font-semibold text-muted-foreground">Expiry Date</label>
+                    <label className="text-sm font-semibold text-muted-foreground">Telebirr Phone Number</label>
                     <input
-                      type="text"
-                      placeholder="MM/YY"
-                      {...register("expiryDate")}
+                      type="tel"
+                      placeholder="09XXXXXXXX"
+                      {...register("telebirrPhone")}
                       className="w-full px-5 py-4 rounded-xl border border-border bg-background"
                     />
-                    {errors.expiryDate && <p className="text-red-500 text-xs">{errors.expiryDate.message}</p>}
+                    {errors.telebirrPhone && (
+                      <p className="text-red-500 text-xs">{errors.telebirrPhone.message}</p>
+                    )}
                   </div>
+                )}
+              </section>
 
-                  <div className="space-y-2">
-                    <label className="text-sm font-semibold text-muted-foreground">CVV Code</label>
-                    <div className="relative">
+              {/* Card Details Form */}
+              {watchedPaymentMethod === "card" && (
+                <section className="bg-muted/40 p-8 rounded-2xl space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="md:col-span-2 space-y-2">
+                      <label className="text-sm font-semibold text-muted-foreground">Card Number</label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          placeholder="0000 0000 0000 0000"
+                          {...register("cardNumber")}
+                          className="w-full px-5 py-4 rounded-xl border border-border bg-background"
+                        />
+                        <Lock className="w-4 h-4 absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                      </div>
+                      {errors.cardNumber && <p className="text-red-500 text-xs">{errors.cardNumber.message}</p>}
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-semibold text-muted-foreground">Expiry Date</label>
                       <input
-                        type="password"
-                        placeholder="***"
-                        {...register("cvv")}
+                        type="text"
+                        placeholder="MM/YY"
+                        {...register("expiryDate")}
                         className="w-full px-5 py-4 rounded-xl border border-border bg-background"
                       />
-                      <HelpCircle className="w-4 h-4 absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                      {errors.expiryDate && <p className="text-red-500 text-xs">{errors.expiryDate.message}</p>}
                     </div>
-                    {errors.cvv && <p className="text-red-500 text-xs">{errors.cvv.message}</p>}
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-semibold text-muted-foreground">CVV Code</label>
+                      <div className="relative">
+                        <input
+                          type="password"
+                          placeholder="***"
+                          {...register("cvv")}
+                          className="w-full px-5 py-4 rounded-xl border border-border bg-background"
+                        />
+                        <HelpCircle className="w-4 h-4 absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                      </div>
+                      {errors.cvv && <p className="text-red-500 text-xs">{errors.cvv.message}</p>}
+                    </div>
                   </div>
-                </div>
-              </section>
-            )}
-          </div>
-
-          {/* Sidebar */}
-          <aside className="lg:col-span-4 sticky top-10">
-            <div className="bg-card rounded-2xl border border-border overflow-hidden">
-              <div className="p-8">
-                <h3 className="text-xl font-bold mb-6">Donation Summary</h3>
-
-                <div className="space-y-4 mb-8">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Donation</span>
-                    <span className="font-semibold">${displayAmount.toFixed(2)}</span>
-                  </div>
-
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Processing Fee</span>
-                    <span className="font-semibold">${processingFee.toFixed(2)}</span>
-                  </div>
-
-                  <div className="pt-4 mt-4 border-t border-border flex justify-between items-end">
-                    <span className="text-sm font-medium">Total Amount</span>
-                    <span className="text-3xl font-extrabold text-primary">${totalAmount.toFixed(2)}</span>
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full py-5 bg-primary text-primary-foreground rounded-full font-bold text-lg hover:opacity-90 transition flex items-center justify-center gap-3"
-                >
-                  Complete Donation
-                  <HeartHandshake className="w-5 h-5" />
-                </button>
-
-                <p className="mt-6 text-[11px] text-center text-muted-foreground leading-relaxed px-4">
-                  By clicking &quot;Complete Donation&quot;, you agree to our Terms of Service and Privacy Policy.
-                </p>
-              </div>
+                </section>
+              )}
             </div>
+
+            {/* Sidebar */}
+            <aside className="lg:col-span-4 sticky top-10">
+              <div className="bg-card rounded-2xl border border-border overflow-hidden">
+                <div className="p-8">
+                  <h3 className="text-xl font-bold mb-6">Donation Summary</h3>
+
+                  <div className="space-y-4 mb-8">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Donation</span>
+                      <span className="font-semibold">${displayAmount.toFixed(2)}</span>
+                    </div>
+
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Processing Fee</span>
+                      <span className="font-semibold">${processingFee.toFixed(2)}</span>
+                    </div>
+
+                    <div className="pt-4 mt-4 border-t border-border flex justify-between items-end">
+                      <span className="text-sm font-medium">Total Amount</span>
+                      <span className="text-3xl font-extrabold text-primary">${totalAmount.toFixed(2)}</span>
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full py-5 bg-primary text-primary-foreground rounded-full font-bold text-lg hover:opacity-90 transition flex items-center justify-center gap-3"
+                  >
+                    Complete Donation
+                    <HeartHandshake className="w-5 h-5" />
+                  </button>
+
+                  <p className="mt-6 text-[11px] text-center text-muted-foreground leading-relaxed px-4">
+                    By clicking &quot;Complete Donation&quot;, you agree to our Terms of Service and Privacy Policy.
+                  </p>
+                </div>
+              </div>
 
             <div className="mt-6 p-4 border border-border rounded-xl flex items-center gap-4 bg-muted/30">
               <ShieldCheck className="w-8 h-8 text-primary" />

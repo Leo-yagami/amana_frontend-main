@@ -3,6 +3,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import {AuthRedirectRoute} from '@/components/AuthRedirectRoute'
+import {AuthRedirectRouteDashboard} from '@/components/AuthRedirectRouteDashboard'
 import { ProtectedRoute1 } from "@/components/ProtectedRouteDashboard";
 import { ProtectedRoute2 } from "@/components/ProtectedRoutePayment";
 
@@ -46,8 +48,22 @@ const App = () => (
         <Routes>
           {/* Public routes */}
           <Route path="/" element={<Index />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
+          <Route 
+            path="/login" 
+            element={
+              <AuthRedirectRouteDashboard>
+                <Login />
+              </AuthRedirectRouteDashboard>
+            } 
+          />
+          <Route 
+            path="/signup" 
+            element={
+              <AuthRedirectRoute>
+                <Signup />
+              </AuthRedirectRoute>
+            } 
+          />
           <Route path="/auth/callback" element={<AuthCallback />} />
           {/* <Route path="/payment" element={<Payment />} /> */}
           <Route 
