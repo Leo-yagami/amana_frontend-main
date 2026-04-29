@@ -419,7 +419,7 @@ const DonationProfile = () => {
       )}
 
       {/* Allocation */}
-      {(donation.family || donation.event || donation.beneficiary) && (
+      {(donation.family || donation.event) && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -456,18 +456,6 @@ const DonationProfile = () => {
               </div>
             )}
 
-            {donation.beneficiary && (
-              <div 
-                className="p-4 bg-muted rounded-lg hover:bg-muted/80 transition-colors cursor-pointer flex items-center gap-3"
-                onClick={() => navigate(`/dashboard/beneficiaries/${donation.beneficiary.id}`)}
-              >
-                <User className="w-5 h-5 text-muted-foreground" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Beneficiary</p>
-                  <p className="font-medium text-foreground">{donation.beneficiary.fullName}</p>
-                </div>
-              </div>
-            )}
           </CardContent>
         </Card>
       )}

@@ -104,7 +104,7 @@ const Dashboard = () => {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {loading ? (
           <>
             {[...Array(4)].map((_, i) => (
@@ -120,15 +120,6 @@ const Dashboard = () => {
           </>
         ) : overview ? (
           <>
-            <StatCard
-              title="Total Beneficiaries"
-              value={overview.beneficiaries.total.toLocaleString()}
-              change={`${overview.beneficiaries.orphaned} orphaned`}
-              trend="up"
-              icon={Users}
-              iconColor="text-info"
-              iconBgColor="bg-info/10"
-            />
             <StatCard
               title="Active Donors"
               value={overview.donors.active.toLocaleString()}
@@ -176,7 +167,7 @@ const Dashboard = () => {
           <div className="space-y-4">
             {loading ? (
               <>
-                {[...Array(5)].map((_, i) => (
+                {[...Array(3)].map((_, i) => (
                   <div key={i} className="flex items-start gap-4 p-3">
                     <Skeleton className="w-2 h-2 rounded-full mt-2" />
                     <div className="flex-1 space-y-2">

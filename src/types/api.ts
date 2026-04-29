@@ -63,7 +63,7 @@ export interface Family {
   documentationUrls?: string;
   isActive: boolean;
   isVerified: boolean;
-  registrationStatus?: "incomplete" | "pending" | "verified";
+  registrationStatus?: "incomplete" | "pending" | "verified" | "rejected";
   verifiedBy?: string;
   verifiedAt?: string;
   registeredBy?: string;

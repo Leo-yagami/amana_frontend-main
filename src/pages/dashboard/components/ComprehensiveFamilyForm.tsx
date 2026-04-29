@@ -11,11 +11,12 @@ import { Plus, Trash2, User, Save } from "lucide-react";
 import { familyApi } from "@/services/api.service";
 import { useNavigate } from "react-router-dom";
 import ImageUpload from "@/components/ImageUpload";
+import Beneficiaries from "../Beneficiaries";
 
 interface BeneficiaryFormData {
   tempId: string;
   fullName: string;
-  age: string;
+  ageGroup: "child" | "teen" | "adult" | "";  
   gender: string;
   beneficiaryType: string;
   relationshipToHead: string;
@@ -38,16 +39,11 @@ export default function ComprehensiveFamilyForm() {
   // Family data
   const [familyData, setFamilyData] = useState({
     familyName: "",
-    region: "",
-    subRegion: "",
-    address: "",
-    exactLocation: "",
+    primaryPhone: "",
     description: "",
-    urgencyLevel: "medium",
-    monthlyIncome: "",
-    monthlyRentAmount: "",
     familySize: "",
     childrenCount: "",
+    urgencyLevel: "medium",
     notes: "",
   });
 
@@ -58,7 +54,7 @@ export default function ComprehensiveFamilyForm() {
   const [currentBeneficiary, setCurrentBeneficiary] = useState<BeneficiaryFormData>({
     tempId: "",
     fullName: "",
-    age: "",
+    ageGroup: "",
     gender: "",
     beneficiaryType: "child",
     relationshipToHead: "",
@@ -73,24 +69,30 @@ export default function ComprehensiveFamilyForm() {
     notes: "",
   });
 
-  // Age to DOB conversion
-  const ageToDateOfBirth = (age: number): string => {
-    if (!age || age < 0) return "";
-    const currentYear = new Date().getFullYear();
-    const birthYear = currentYear - age;
-    return `${birthYear}-01-01T00:00:00.000Z`;
-  };
+  const CHILD_AGES = Array.from({ length: 13 }, (_, i) => i); // 0..12
+  const TEEN_AGES = Array.from({ length: 6 }, (_, i) => i + 13); // 13..18
+  const ADULT_AGES = Array.from({ length: 83 }, (_, i) => i + 19); // 19..101
 
   // Handle age change
-  const handleAgeChange = (age: string) => {
-    const ageNum = parseInt(age);
-    const type = ageNum >= 18 ? "adult" : "child";
-    setCurrentBeneficiary({ 
-      ...currentBeneficiary, 
-      age,
-      beneficiaryType: type,
-      isOrphan: type === "adult" ? false : currentBeneficiary.isOrphan,
-      orphanType: type === "adult" ? "none" : currentBeneficiary.orphanType,
+  // const handleAgeChange = (age: string) => {
+  //   const ageNum = parseInt(age);
+  //   const type = ageNum >= 18 ? "adult" : "child";
+  //   setCurrentBeneficiary({ 
+  //     ...currentBeneficiary, 
+  //     age,
+  //     beneficiaryType: type,
+  //     isOrphan: type === "adult" ? false : currentBeneficiary.isOrphan,
+  //     orphanType: type === "adult" ? "none" : currentBeneficiary.orphanType,
+  //   });
+  // };
+
+  const handleAgeGroupChange = (ageGroup: "child" | "teen" | "adult") => {
+    setCurrentBeneficiary({
+      ...currentBeneficiary,
+      ageGroup,
+      beneficiaryType: ageGroup === "adult" ? "adult" : "child", // teen maps to child in existing API
+      isOrphan: ageGroup === "adult" ? false : currentBeneficiary.isOrphan,
+      orphanType: ageGroup === "adult" ? "none" : currentBeneficiary.orphanType,
     });
   };
 
@@ -103,7 +105,7 @@ export default function ComprehensiveFamilyForm() {
 
   // Add beneficiary to list
   const addBeneficiary = () => {
-    if (!currentBeneficiary.fullName || !currentBeneficiary.age) {
+    if (!currentBeneficiary.fullName || !currentBeneficiary.ageGroup) {
       toast({
         title: "Validation Error",
         description: "Name and age are required for beneficiary",
@@ -162,11 +164,91 @@ export default function ComprehensiveFamilyForm() {
     setFamilyData({ ...familyData, monthlyIncome: totalIncome > 0 ? totalIncome.toString() : "" });
   };
 
-  // Submit complete family registration
+  // // Submit complete family registration
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+
+  //   if (!familyData.familyName) {
+  //     toast({
+  //       title: "Validation Error",
+  //       description: "Family name is required",
+  //       variant: "destructive",
+  //     });
+  //     return;
+  //   }
+
+  //   if (beneficiaries.length === 0) {
+  //     toast({
+  //       title: "Warning",
+  //       description: "No beneficiaries added. Add at least one family member.",
+  //       variant: "destructive",
+  //     });
+  //     return;
+  //   }
+
+  //   setLoading(true);
+
+  //   try {
+  //     // Prepare beneficiaries data
+  //     const beneficiariesData = beneficiaries.map(ben => ({
+  //       fullName: ben.fullName,
+  //       age: parseInt(ben.age),
+  //       dateOfBirth: ageToDateOfBirth(parseInt(ben.age)),
+  //       gender: ben.gender || undefined,
+  //       beneficiaryType: ben.beneficiaryType,
+  //       relationshipToHead: ben.relationshipToHead || undefined,
+  //       isOrphan: ben.isOrphan,
+  //       orphanType: ben.orphanType,
+  //       occupation: ben.occupation || undefined,
+  //       monthlyIncome: ben.monthlyIncome ? parseFloat(ben.monthlyIncome) : undefined,
+  //       educationStatus: ben.educationStatus || undefined,
+  //       healthStatus: ben.healthStatus || undefined,
+  //       photoUrl: ben.photoUrl || undefined,
+  //       isFamilyHead: ben.isFamilyHead,
+  //       verificationStatus: "pending",
+  //       notes: ben.notes || undefined,
+  //     }));
+
+  //     // Prepare family data
+  //     const submitData = {
+  //       familyName: familyData.familyName,
+  //       region: familyData.region || undefined,
+  //       subRegion: familyData.subRegion || undefined,
+  //       address: familyData.address || undefined,
+  //       exactLocation: familyData.exactLocation || undefined,
+  //       description: familyData.description || undefined,
+  //       urgencyLevel: familyData.urgencyLevel,
+  //       monthlyIncome: familyData.monthlyIncome ? parseFloat(familyData.monthlyIncome) : undefined,
+  //       monthlyRentAmount: familyData.monthlyRentAmount ? parseFloat(familyData.monthlyRentAmount) : undefined,
+  //       familySize: familyData.familySize ? parseInt(familyData.familySize) : beneficiaries.length,
+  //       childrenCount: familyData.childrenCount ? parseInt(familyData.childrenCount) : beneficiaries.filter(b => b.beneficiaryType === "child").length,
+  //       notes: familyData.notes || undefined,
+  //       beneficiaries: beneficiariesData,
+  //     };
+
+  //     const response = await familyApi.create(submitData);
+
+  //     toast({
+  //       title: "Success",
+  //       description: `Family "${familyData.familyName}" registered successfully with ${beneficiaries.length} members`,
+  //     });
+
+  //     navigate(`/dashboard/families/${response.data.id}`);
+  //   } catch (error: any) {
+  //     toast({
+  //       title: "Error",
+  //       description: error.response?.data?.message || "Failed to register family",
+  //       variant: "destructive",
+  //     });
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  //changed handlesumbit function
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!familyData.familyName) {
+    if (!familyData.familyName.trim()) {
       toast({
         title: "Validation Error",
         description: "Family name is required",
@@ -174,64 +256,100 @@ export default function ComprehensiveFamilyForm() {
       });
       return;
     }
-
     if (beneficiaries.length === 0) {
       toast({
-        title: "Warning",
-        description: "No beneficiaries added. Add at least one family member.",
+        title: "Validation Error",
+        description: "Add at least one family member.",
         variant: "destructive",
       });
       return;
     }
 
+    const phone = familyData.primaryPhone.trim();
+    const phoneOk = /^(?:\+251|0)(?:9|7)\d{8}$/.test(phone);
+    if (!phoneOk) {
+      toast({
+        title: "Validation Error",
+        description: "Phone must be +2519XXXXXXXX / +2517XXXXXXXX / 09XXXXXXXX / 07XXXXXXXX",
+        variant: "destructive",
+      });
+      return;
+    }
     setLoading(true);
-
     try {
-      // Prepare beneficiaries data
-      const beneficiariesData = beneficiaries.map(ben => ({
-        fullName: ben.fullName,
-        age: parseInt(ben.age),
-        dateOfBirth: ageToDateOfBirth(parseInt(ben.age)),
-        gender: ben.gender || undefined,
-        beneficiaryType: ben.beneficiaryType,
-        relationshipToHead: ben.relationshipToHead || undefined,
-        isOrphan: ben.isOrphan,
-        orphanType: ben.orphanType,
-        occupation: ben.occupation || undefined,
-        monthlyIncome: ben.monthlyIncome ? parseFloat(ben.monthlyIncome) : undefined,
-        educationStatus: ben.educationStatus || undefined,
-        healthStatus: ben.healthStatus || undefined,
-        photoUrl: ben.photoUrl || undefined,
-        isFamilyHead: ben.isFamilyHead,
-        verificationStatus: "pending",
-        notes: ben.notes || undefined,
-      }));
+      // Convert local “members” form state into API payload objects
+      // const membersPayload = beneficiaries.map((m) => {
+      //   const ageNum = parseInt(m.age, 10);
+      //   return {
+      //     fullName: m.fullName.trim(),
+      //     age: Number.isFinite(ageNum) ? ageNum : undefined,
+      //     gender: m.gender || undefined,
+      //     beneficiaryType: m.beneficiaryType, // keep as-is if backend expects it
+      //     relationshipToHead: m.relationshipToHead || undefined,
+      //     isOrphan: m.isOrphan,
+      //     orphanType: m.isOrphan ? m.orphanType : "none",
+      //     occupation: m.occupation || undefined,
+      //     monthlyIncome: m.monthlyIncome ? parseFloat(m.monthlyIncome) : undefined,
+      //     educationStatus: m.educationStatus || undefined,
+      //     healthStatus: m.healthStatus || undefined,
+      //     photoUrl: m.photoUrl || undefined,
+      //     isFamilyHead: m.isFamilyHead,
+      //     verificationStatus: "pending",
+      //     notes: m.notes || undefined,
+      //   };
+      // });
+      //changed version
+      const membersPayload = beneficiaries.map((m) => {
+        const isAdult = m.ageGroup === "adult";
+      
+        return {
+          fullName: m.fullName.trim(),
+          gender: m.gender || undefined,
+      
+          // keep existing backend expectation:
+          beneficiaryType: isAdult ? "adult" : "child", // teen treated as child
+      
+          // NEW: keep the group explicitly (backend should accept it, or you can drop it)
+          ageGroup: m.ageGroup,
+          isHead: m.isFamilyHead,
+      
+          photoUrl: m.photoUrl || undefined,
 
-      // Prepare family data
-      const submitData = {
-        familyName: familyData.familyName,
-        region: familyData.region || undefined,
-        subRegion: familyData.subRegion || undefined,
-        address: familyData.address || undefined,
-        exactLocation: familyData.exactLocation || undefined,
+      
+          isOrphan: !isAdult ? m.isOrphan : false,
+          orphanType: !isAdult && m.isOrphan ? m.orphanType : "none",
+        };
+      });
+      // Prepare family payload
+      const familySize =
+        familyData.familySize && familyData.familySize.trim() !== ""
+          ? parseInt(familyData.familySize, 10)
+          : beneficiaries.length;
+      const childrenCount =
+        familyData.childrenCount && familyData.childrenCount.trim() !== ""
+          ? parseInt(familyData.childrenCount, 10)
+          : beneficiaries.filter((m) => m.beneficiaryType === "child").length;
+      const submitData: any = {
+        familyName: familyData.familyName.trim(),
+        familyHead: beneficiaries.find(b=>b.isFamilyHead).fullName,
         description: familyData.description || undefined,
         urgencyLevel: familyData.urgencyLevel,
-        monthlyIncome: familyData.monthlyIncome ? parseFloat(familyData.monthlyIncome) : undefined,
-        monthlyRentAmount: familyData.monthlyRentAmount ? parseFloat(familyData.monthlyRentAmount) : undefined,
-        familySize: familyData.familySize ? parseInt(familyData.familySize) : beneficiaries.length,
-        childrenCount: familyData.childrenCount ? parseInt(familyData.childrenCount) : beneficiaries.filter(b => b.beneficiaryType === "child").length,
+        primaryPhone: familyData.primaryPhone.trim(),
+        familySize,
         notes: familyData.notes || undefined,
-        beneficiaries: beneficiariesData,
+        // Embedded members on the family document:
+        // Keep the key name your backend currently accepts.
+        // beneficiaries: membersPayload,
+        // If your backend uses `members` instead, switch to:
+        members: membersPayload,
       };
-
       const response = await familyApi.create(submitData);
-
       toast({
         title: "Success",
-        description: `Family "${familyData.familyName}" registered successfully with ${beneficiaries.length} members`,
+        description: `Family "${familyData.familyName}" registered successfully with ${beneficiaries.length} member(s)`,
       });
-
-      navigate(`/dashboard/families/${response.data.id}`);
+      // navigate(`/dashboard/families/${response.data.id}`);
+      navigate(`/dashboard/families`);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -251,7 +369,7 @@ export default function ComprehensiveFamilyForm() {
           <CardTitle>Family Information</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
+        <div className="space-y-2">
             <Label htmlFor="familyName">Family Name *</Label>
             <Input
               id="familyName"
@@ -263,63 +381,19 @@ export default function ComprehensiveFamilyForm() {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="region">Region</Label>
-              <Input
-                id="region"
-                value={familyData.region}
-                onChange={(e) => setFamilyData({ ...familyData, region: e.target.value })}
-                placeholder="e.g., Addis Ababa"
-                disabled={loading}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="subRegion">Sub Region</Label>
-              <Input
-                id="subRegion"
-                value={familyData.subRegion}
-                onChange={(e) => setFamilyData({ ...familyData, subRegion: e.target.value })}
-                placeholder="e.g., Kirkos"
-                disabled={loading}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="monthlyIncome">Family Monthly Income (ETB)</Label>
-              <Input
-                id="monthlyIncome"
-                type="number"
-                value={familyData.monthlyIncome}
-                onChange={(e) => setFamilyData({ ...familyData, monthlyIncome: e.target.value })}
-                placeholder="0.00"
-                min="0"
-                step="0.01"
-                disabled={loading}
-              />
-              <p className="text-xs text-muted-foreground">
-                {beneficiaries.length > 0 
-                  ? `Auto-calculated from ${beneficiaries.filter(b => b.monthlyIncome && parseFloat(b.monthlyIncome) > 0).length} working member(s)`
-                  : "Will be calculated from working members' income"}
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="monthlyRentAmount">Monthly Rent (ETB)</Label>
-              <Input
-                id="monthlyRentAmount"
-                type="number"
-                value={familyData.monthlyRentAmount}
-                onChange={(e) => setFamilyData({ ...familyData, monthlyRentAmount: e.target.value })}
-                placeholder="0.00"
-                min="0"
-                step="0.01"
-                disabled={loading}
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="primaryPhone">Phone Number *</Label>
+            <Input
+              id="primaryPhone"
+              value={familyData.primaryPhone}
+              onChange={(e) => setFamilyData({ ...familyData, primaryPhone: e.target.value })}
+              placeholder="+2519XXXXXXXX / 09XXXXXXXX / 07XXXXXXXX"
+              required
+              disabled={loading}
+            />
+            <p className="text-xs text-muted-foreground">
+              Accepted formats: +2519XXXXXXXX, +2517XXXXXXXX, 09XXXXXXXX, 07XXXXXXXX
+            </p>
           </div>
 
           <div className="space-y-2">
@@ -342,25 +416,13 @@ export default function ComprehensiveFamilyForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="address">Address</Label>
-            <Textarea
-              id="address"
-              value={familyData.address}
-              onChange={(e) => setFamilyData({ ...familyData, address: e.target.value })}
-              placeholder="Street address, house number, etc."
-              rows={2}
-              disabled={loading}
-            />
-          </div>
-
-          <div className="space-y-2">
             <Label htmlFor="notes">Additional Notes</Label>
             <Textarea
               id="notes"
               value={familyData.notes}
               onChange={(e) => setFamilyData({ ...familyData, notes: e.target.value })}
               placeholder="Any additional information about the family..."
-              rows={2}
+              rows={3}
               disabled={loading}
             />
           </div>
@@ -373,191 +435,108 @@ export default function ComprehensiveFamilyForm() {
           <CardTitle>Add Family Member</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="benFullName">Full Name *</Label>
-              <Input
-                id="benFullName"
-                value={currentBeneficiary.fullName}
-                onChange={(e) => setCurrentBeneficiary({ ...currentBeneficiary, fullName: e.target.value })}
-                placeholder="e.g., Ahmed Mohammed"
-                disabled={loading}
-              />
-            </div>
+        <div className="grid grid-cols-2 gap-4">
+  <div className="space-y-2">
+    <Label htmlFor="benFullName">Full Name *</Label>
+    <Input
+      id="benFullName"
+      value={currentBeneficiary.fullName}
+      onChange={(e) =>
+        setCurrentBeneficiary({ ...currentBeneficiary, fullName: e.target.value })
+      }
+      placeholder="e.g., Ahmed Mohammed"
+      disabled={loading}
+    />
+  </div>
+  <div className="space-y-2">
+    <Label htmlFor="benAgeGroup">Age</Label>
+    <Select
+      value={currentBeneficiary.ageGroup}
+      onValueChange={(value) => handleAgeGroupChange(value as "child" | "teen" | "adult")}
+      disabled={loading}
+    >
+      <SelectTrigger id="benAgeGroup">
+        <SelectValue placeholder="Select age group" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="child">Child (0–12)</SelectItem>
+        <SelectItem value="teen">Teen (13–18)</SelectItem>
+        <SelectItem value="adult">Adult (19+)</SelectItem>
+      </SelectContent>
+    </Select>
+  </div>
+  
+</div>
 
-            <div className="space-y-2">
-              <Label htmlFor="benAge">Age *</Label>
-              <Input
-                id="benAge"
-                type="number"
-                value={currentBeneficiary.age}
-                onChange={(e) => handleAgeChange(e.target.value)}
-                placeholder="e.g., 25"
-                min="0"
-                max="150"
-                disabled={loading}
-              />
-              {currentBeneficiary.age && (
-                <p className="text-xs text-muted-foreground">
-                  Type: {currentBeneficiary.beneficiaryType === "adult" ? "Adult (18+)" : "Child (Under 18)"}
-                </p>
-              )}
-            </div>
-          </div>
+<div className="space-y-2">
+  <Label htmlFor="benGender">Gender</Label>
+  <Select
+    value={currentBeneficiary.gender}
+    onValueChange={(value) =>
+      setCurrentBeneficiary({ ...currentBeneficiary, gender: value })
+    }
+    disabled={loading}
+  >
+    <SelectTrigger>
+      <SelectValue placeholder="Select gender" />
+    </SelectTrigger>
+    <SelectContent>
+      <SelectItem value="male">Male</SelectItem>
+      <SelectItem value="female">Female</SelectItem>
+      <SelectItem value="other">Other</SelectItem>
+    </SelectContent>
+  </Select>
+</div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="benGender">Gender</Label>
-              <Select
-                value={currentBeneficiary.gender}
-                onValueChange={(value) => setCurrentBeneficiary({ ...currentBeneficiary, gender: value })}
-                disabled={loading}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select gender" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="male">Male</SelectItem>
-                  <SelectItem value="female">Female</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+<ImageUpload
+  label="Beneficiary Photo"
+  value={currentBeneficiary.photoUrl}
+  onChange={(url) => setCurrentBeneficiary({ ...currentBeneficiary, photoUrl: url })}
+  disabled={loading}
+/>
 
-            <div className="space-y-2">
-              <Label htmlFor="benRelationship">Relationship to Head</Label>
-              <Input
-                id="benRelationship"
-                value={currentBeneficiary.relationshipToHead}
-                onChange={(e) => setCurrentBeneficiary({ ...currentBeneficiary, relationshipToHead: e.target.value })}
-                placeholder="e.g., Father, Mother, Son"
-                disabled={loading}
-              />
-            </div>
-          </div>
+{/* Orphan toggle — keep same behavior, but show for child + teen (< 19) */}
+{currentBeneficiary.ageGroup && currentBeneficiary.ageGroup !== "adult" && (
+  <div className="space-y-4">
+    <div className="flex items-center space-x-2">
+      <Switch
+        id="benOrphan"
+        checked={currentBeneficiary.isOrphan}
+        onCheckedChange={(checked) =>
+          setCurrentBeneficiary({
+            ...currentBeneficiary,
+            isOrphan: checked,
+            orphanType: checked ? currentBeneficiary.orphanType : "none",
+          })
+        }
+        disabled={loading}
+      />
+      <Label htmlFor="benOrphan">This child is an orphan</Label>
+    </div>
 
-          {/* Education and Health */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="benEducation">Education Status</Label>
-              <Select
-                value={currentBeneficiary.educationStatus}
-                onValueChange={(value) => setCurrentBeneficiary({ ...currentBeneficiary, educationStatus: value })}
-                disabled={loading}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select education status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="not_enrolled">Not Enrolled</SelectItem>
-                  <SelectItem value="preschool">Preschool</SelectItem>
-                  <SelectItem value="primary">Primary School</SelectItem>
-                  <SelectItem value="secondary">Secondary School</SelectItem>
-                  <SelectItem value="high_school">High School</SelectItem>
-                  <SelectItem value="college">College/University</SelectItem>
-                  <SelectItem value="graduated">Graduated</SelectItem>
-                  <SelectItem value="illiterate">Illiterate</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="benHealth">Health Status</Label>
-              <Select
-                value={currentBeneficiary.healthStatus}
-                onValueChange={(value) => setCurrentBeneficiary({ ...currentBeneficiary, healthStatus: value })}
-                disabled={loading}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select health status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="good">Good</SelectItem>
-                  <SelectItem value="fair">Fair</SelectItem>
-                  <SelectItem value="poor">Poor</SelectItem>
-                  <SelectItem value="chronic_illness">Chronic Illness</SelectItem>
-                  <SelectItem value="disability">Disability</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Photo Upload */}
-          <ImageUpload
-            label="Beneficiary Photo"
-            value={currentBeneficiary.photoUrl}
-            onChange={(url) => setCurrentBeneficiary({ ...currentBeneficiary, photoUrl: url })}
-            disabled={loading}
-          />
-
-          {/* Adult Fields */}
-          {currentBeneficiary.beneficiaryType === "adult" && (
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="benOccupation">Occupation</Label>
-                <Input
-                  id="benOccupation"
-                  value={currentBeneficiary.occupation}
-                  onChange={(e) => setCurrentBeneficiary({ ...currentBeneficiary, occupation: e.target.value })}
-                  placeholder="e.g., Teacher, Farmer"
-                  disabled={loading}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="benIncome">Monthly Income (ETB)</Label>
-                <Input
-                  id="benIncome"
-                  type="number"
-                  value={currentBeneficiary.monthlyIncome}
-                  onChange={(e) => setCurrentBeneficiary({ ...currentBeneficiary, monthlyIncome: e.target.value })}
-                  placeholder="0.00"
-                  min="0"
-                  step="0.01"
-                  disabled={loading}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Child Fields */}
-          {currentBeneficiary.beneficiaryType === "child" && (
-            <div className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="benOrphan"
-                  checked={currentBeneficiary.isOrphan}
-                  onCheckedChange={(checked) => setCurrentBeneficiary({ 
-                    ...currentBeneficiary, 
-                    isOrphan: checked,
-                    orphanType: checked ? currentBeneficiary.orphanType : "none"
-                  })}
-                  disabled={loading}
-                />
-                <Label htmlFor="benOrphan">This child is an orphan</Label>
-              </div>
-
-              {currentBeneficiary.isOrphan && (
-                <div className="space-y-2">
-                  <Label htmlFor="benOrphanType">Orphan Type</Label>
-                  <Select
-                    value={currentBeneficiary.orphanType}
-                    onValueChange={(value) => setCurrentBeneficiary({ ...currentBeneficiary, orphanType: value })}
-                    disabled={loading}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select orphan type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="mother">Lost Mother</SelectItem>
-                      <SelectItem value="father">Lost Father</SelectItem>
-                      <SelectItem value="both">Lost Both Parents</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-            </div>
-          )}
+    {currentBeneficiary.isOrphan && (
+      <div className="space-y-2">
+        <Label htmlFor="benOrphanType">Orphan Type</Label>
+        <Select
+          value={currentBeneficiary.orphanType}
+          onValueChange={(value) =>
+            setCurrentBeneficiary({ ...currentBeneficiary, orphanType: value })
+          }
+          disabled={loading}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select orphan type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="mother">Lost Mother</SelectItem>
+            <SelectItem value="father">Lost Father</SelectItem>
+            <SelectItem value="both">Lost Both Parents</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+    )}
+  </div>
+)}
 
           <Button
             type="button"
@@ -599,7 +578,7 @@ export default function ComprehensiveFamilyForm() {
                     .filter(b => b.beneficiaryType === "adult")
                     .map((ben) => (
                       <SelectItem key={ben.tempId} value={ben.tempId}>
-                        {ben.fullName} ({ben.age} years old)
+                        {ben.fullName} 
                       </SelectItem>
                     ))}
                 </SelectContent>

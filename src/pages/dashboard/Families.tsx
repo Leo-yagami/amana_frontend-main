@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { familyApi, beneficiaryApi } from "@/services/api.service";
+import { familyApi } from "@/services/api.service";
 import { Family, FamilyFilters } from "@/types/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -92,14 +92,15 @@ const Families = () => {
     try {
       setLoading(true);
       const response = await familyApi.getAll(filters);
-      setFamilies(response.data.data);
+      console.log(response.data)
+      setFamilies(response.data);
       
       // Calculate stats
-      const total = response.data.pagination.total;
-      const verified = response.data.data.filter(f => f.registrationStatus === "verified").length;
-      const pending = response.data.data.filter(f => f.registrationStatus === "pending").length;
-      const incomplete = response.data.data.filter(f => f.registrationStatus === "incomplete").length;
-      const urgent = response.data.data.filter(f => f.urgencyLevel === "high" || f.urgencyLevel === "critical").length;
+      const total = response.data.length;
+      const verified = response.data.filter(f => f.registrationStatus === "verified").length;
+      const pending = response.data.filter(f => f.registrationStatus === "pending").length;
+      const incomplete = response.data.filter(f => f.registrationStatus === "incomplete").length;
+      const urgent = response.data.filter(f => f.urgencyLevel === "high" || f.urgencyLevel === "critical").length;
       
       setStats({ total, verified, pending, incomplete, urgent });
     } catch (error: any) {
@@ -133,7 +134,7 @@ const Families = () => {
     fetchFamilies();
     
     if (shouldAddMember) {
-      navigate(`/dashboard/beneficiaries/new?familyId=${familyId}`);
+      navigate(`/dashboard/families/${familyId}/edit?focus=members`);
     } else {
       navigate(`/dashboard/families/${familyId}`);
     }
@@ -239,6 +240,26 @@ const Families = () => {
       toast({
         title: "Export Complete",
         description: `Exported ${selectedIds.length} selected famil${selectedIds.length === 1 ? 'y' : 'ies'}`,
+      });
+    }
+  };
+
+  //handling delete
+  const handleDelete = async (id: string) => {
+    try {
+      await familyApi.delete(id);
+  
+      toast({
+        title: "Deleted",
+        description: "Family deleted successfully",
+      });
+  
+      fetchFamilies();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.response?.data?.message || "Failed to delete family",
+        variant: "destructive",
       });
     }
   };
@@ -448,7 +469,6 @@ const Families = () => {
                   <TableHead>Family Code</TableHead>
                   <TableHead>Family Name</TableHead>
                   <TableHead>Head of Family</TableHead>
-                  <TableHead>Region</TableHead>
                   <TableHead>Members</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Urgency</TableHead>
@@ -458,11 +478,11 @@ const Families = () => {
               </TableHeader>
               <TableBody>
                 {families.map((family) => (
-                  <TableRow key={family.id}>
+                  <TableRow key={family._id}>
                     <TableCell>
                       <Checkbox
-                        checked={selectedIds.includes(family.id)}
-                        onCheckedChange={(checked) => handleSelectOne(family.id, checked as boolean)}
+                        checked={selectedIds.includes(family._id)}
+                        onCheckedChange={(checked) => handleSelectOne(family._id, checked as boolean)}
                       />
                     </TableCell>
                     <TableCell className="font-medium">{family.familyCode}</TableCell>
@@ -471,10 +491,9 @@ const Families = () => {
                         {family.familyName}
                       </div>
                     </TableCell>
-                    <TableCell>{family.headBeneficiary?.fullName || "N/A"}</TableCell>
-                    <TableCell>{family.region || "N/A"}</TableCell>
+                    <TableCell>{family.familyHead || "N/A"}</TableCell>
                     <TableCell>
-                      <Badge variant="secondary">{family.familySize || 0}</Badge>
+                      <Badge variant="secondary">{family.members.length || 0}</Badge>
                     </TableCell>
                     <TableCell>
                       <RegistrationStatusBadge status={family.registrationStatus} />
@@ -506,31 +525,31 @@ const Families = () => {
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => navigate(`/dashboard/families/${family.id}`)}>
+                          <DropdownMenuItem onClick={() => navigate(`/dashboard/families/${family._id}`)}>
                             <Eye className="mr-2 h-4 w-4" />
                             View Profile
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => navigate(`/dashboard/families/${family.id}/edit`)}>
+                          <DropdownMenuItem onClick={() => navigate(`/dashboard/families/${family._id}/edit`)}>
                             <Edit className="mr-2 h-4 w-4" />
                             Edit Family
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => navigate(`/dashboard/beneficiaries/new?familyId=${family.id}`)}>
+                          <DropdownMenuItem onClick={() => navigate(`/dashboard/families/${family._id}/edit?focus=members`)}>
                             <UserPlus className="mr-2 h-4 w-4" />
                             Add Member
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => navigate(`/dashboard/families/${family.id}?action=support`)}>
+                          <DropdownMenuItem onClick={() => navigate(`/dashboard/families/${family._id}?action=support`)}>
                             <Zap className="mr-2 h-4 w-4" />
                             Record Support
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           {family.registrationStatus !== "verified" && (
-                            <DropdownMenuItem onClick={() => handleVerify(family.id)}>
+                            <DropdownMenuItem onClick={() => handleVerify(family._id)}>
                               <UserCheck className="mr-2 h-4 w-4" />
                               Verify Family
                             </DropdownMenuItem>
                           )}
-                          <DropdownMenuItem onClick={() => handleDelete(family.id)} className="text-red-600">
+                          <DropdownMenuItem onClick={() => handleDelete(family._id)} className="text-red-600">
                             <Trash2 className="mr-2 h-4 w-4" />
                             Delete Family
                           </DropdownMenuItem>

@@ -33,7 +33,7 @@ const QuickFamilyRegistrationModal = ({
 
   const [formData, setFormData] = useState({
     familyName: "",
-    region: "",
+    // region: "",
     briefReason: "",
     addFirstMember: false,
   });
@@ -46,14 +46,15 @@ const QuickFamilyRegistrationModal = ({
       // Create family with minimal information
       const familyData = {
         familyName: formData.familyName,
-        primaryPhone: formData.phoneNumber || undefined,
-        region: formData.region || undefined,
+        primaryPhone: formData.phoneNumber,
+        // region: formData.region || undefined,
         notes: formData.briefReason || undefined,
         // Smart defaults
         urgencyLevel: "medium",
-        verificationStatus: "pending",
+        registrationStatus: "incomplete",
         registrationCompleted: false, // Flag as incomplete
         registrationType: "quick",
+        members: [],
       };
 
       const response = await familyApi.create(familyData);
@@ -64,13 +65,13 @@ const QuickFamilyRegistrationModal = ({
       });
 
       // Call onSuccess with family ID and whether to add member
-      onSuccess(response.data.id, formData.addFirstMember);
+      onSuccess(response.data._id, formData.addFirstMember);
       
       // Reset form
       setFormData({
         familyName: "",
         phoneNumber: "",
-        region: "",
+        // region: "",
         briefReason: "",
         addFirstMember: false,
       });
@@ -84,6 +85,20 @@ const QuickFamilyRegistrationModal = ({
       setLoading(false);
     }
   };
+
+  //removed code relocation
+//   <div className="space-y-2">
+//   <Label htmlFor="region">Region/Kebele (Optional)</Label>
+//   <Input
+//     id="region"
+//     value={formData.region}
+//     onChange={(e) =>
+//       setFormData({ ...formData, region: e.target.value })
+//     }
+//     placeholder="e.g., Addis Ababa, Kirkos"
+//     disabled={loading}
+//   />
+// </div>
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -126,7 +141,9 @@ const QuickFamilyRegistrationModal = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="phoneNumber">Phone Number (Optional)</Label>
+            <Label htmlFor="phoneNumber">
+              Phone Number <span className="text-red-500">*</span>
+            </Label>
             <Input
               id="phoneNumber"
               type="tel"
@@ -134,20 +151,8 @@ const QuickFamilyRegistrationModal = ({
               onChange={(e) =>
                 setFormData({ ...formData, phoneNumber: e.target.value })
               }
-              placeholder="e.g., +251-xxx-xxxx"
-              disabled={loading}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="region">Region/Kebele (Optional)</Label>
-            <Input
-              id="region"
-              value={formData.region}
-              onChange={(e) =>
-                setFormData({ ...formData, region: e.target.value })
-              }
-              placeholder="e.g., Addis Ababa, Kirkos"
+              placeholder="e.g., +2519XXXXXXXX, 09XXXXXXXX"
+              required
               disabled={loading}
             />
           </div>

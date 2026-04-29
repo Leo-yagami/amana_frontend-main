@@ -20,9 +20,9 @@ import Payment from "./pages/Payment";
 // Dashboard
 import DashboardLayout from "./layouts/DashboardLayout";
 import Dashboard from "./pages/Dashboard";
-import Beneficiaries from "./pages/dashboard/Beneficiaries";
-import BeneficiaryProfile from "./pages/dashboard/BeneficiaryProfile";
-import BeneficiaryForm from "./pages/dashboard/BeneficiaryForm";
+// import Beneficiaries from "./pages/dashboard/Beneficiaries";
+// import BeneficiaryProfile from "./pages/dashboard/BeneficiaryProfile";
+// import BeneficiaryForm from "./pages/dashboard/BeneficiaryForm";
 import Families from "./pages/dashboard/Families";
 import FamilyProfile from "./pages/dashboard/FamilyProfile";
 import FamilyForm from "./pages/dashboard/FamilyForm";
@@ -90,10 +90,6 @@ const App = () => (
             <Route path="families/new" element={<FamilyForm />} />
             <Route path="families/:id" element={<FamilyProfile />} />
             <Route path="families/:id/edit" element={<FamilyForm />} />
-            <Route path="beneficiaries" element={<Beneficiaries />} />
-            <Route path="beneficiaries/new" element={<BeneficiaryForm />} />
-            <Route path="beneficiaries/:id" element={<BeneficiaryProfile />} />
-            <Route path="beneficiaries/:id/edit" element={<BeneficiaryForm />} />
             <Route path="donors" element={<Donors />} />
             <Route path="donors/new" element={<DonorForm />} />
             <Route path="donors/:id" element={<DonorProfile />} />

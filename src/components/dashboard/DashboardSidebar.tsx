@@ -21,7 +21,7 @@ import { useAuth } from "@/contexts/AuthContext";
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
   { icon: UsersRound, label: "Families", href: "/dashboard/families" },
-  { icon: Users, label: "Beneficiaries", href: "/dashboard/beneficiaries" },
+  // { icon: Users, label: "Beneficiaries", href: "/dashboard/beneficiaries" },
   { icon: HandHeart, label: "Donors", href: "/dashboard/donors" },
   { icon: Gift, label: "Donations", href: "/dashboard/donations" },
   { icon: Calendar, label: "Events", href: "/dashboard/events" },
