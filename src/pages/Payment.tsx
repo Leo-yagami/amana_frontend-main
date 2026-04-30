@@ -423,10 +423,12 @@ const Payment = () => {
       headers: {
         'Content-Type': 'application/json', 
       },
+      credentials: "include",
       body: JSON.stringify(data),
     })
-    console.log('waiting for response')
-    console.log(response)
+    const result = await response.json();
+    console.log('POST Result', result)
+    // console.log(response)
     window.location.assign(`${apiOrigin}`);
   };
 
