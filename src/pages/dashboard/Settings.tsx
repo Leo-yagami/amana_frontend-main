@@ -202,23 +202,23 @@ const Settings = () => {
 
       {/* Settings Tabs */}
       <Tabs defaultValue="profile" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="profile" className="flex items-center gap-2">
             <User className="w-4 h-4" />
             <span className="hidden sm:inline">Profile</span>
           </TabsTrigger>
-          <TabsTrigger value="organization" className="flex items-center gap-2">
+          {false && (<TabsTrigger value="organization" className="flex items-center gap-2">
             <Building className="w-4 h-4" />
             <span className="hidden sm:inline">Organization</span>
-          </TabsTrigger>
+          </TabsTrigger>)}
           <TabsTrigger value="security" className="flex items-center gap-2">
             <Shield className="w-4 h-4" />
             <span className="hidden sm:inline">Security</span>
           </TabsTrigger>
-          <TabsTrigger value="notifications" className="flex items-center gap-2">
+          {false && (<TabsTrigger value="notifications" className="flex items-center gap-2">
             <Bell className="w-4 h-4" />
             <span className="hidden sm:inline">Notifications</span>
-          </TabsTrigger>
+          </TabsTrigger>)}
         </TabsList>
 
         {/* Profile Tab */}
@@ -353,7 +353,8 @@ const Settings = () => {
         </TabsContent>
 
         {/* Organization Tab */}
-        <TabsContent value="organization" className="space-y-6 mt-6">
+        {false && (
+          <TabsContent value="organization" className="space-y-6 mt-6">
           {orgLoading ? (
             <Card>
               <CardContent className="p-12 flex items-center justify-center">
@@ -529,6 +530,8 @@ const Settings = () => {
             </Card>
           )}
         </TabsContent>
+        )}
+        
 
         {/* Security Tab */}
         <TabsContent value="security" className="space-y-6 mt-6">
@@ -638,7 +641,8 @@ const Settings = () => {
         </TabsContent>
 
         {/* Notifications Tab */}
-        <TabsContent value="notifications" className="space-y-6 mt-6">
+        {false && (
+          <TabsContent value="notifications" className="space-y-6 mt-6">
           <Card>
             <CardHeader>
               <CardTitle>Notification Preferences</CardTitle>
@@ -782,6 +786,8 @@ const Settings = () => {
             </CardContent>
           </Card>
         </TabsContent>
+        )}
+        
       </Tabs>
     </div>
   );
