@@ -977,6 +977,7 @@ const DonationForm = () => {
 
   const [formData, setFormData] = useState({
     donorId: donorIdFromUrl || "",
+    donorName: "",
     donationType: "monetary",
     amount: "",
     currency: "ETB",
@@ -1004,7 +1005,7 @@ const DonationForm = () => {
     queryKey: ["donors", "all"],
     queryFn: async () => {
       const response = await donorApi.getAll({ page: 1, limit: 100 });
-      return response.data;
+      return response;
     },
   });
 
@@ -1013,6 +1014,7 @@ const DonationForm = () => {
     queryFn: async () => {
       if (!donorIdFromUrl) return null;
       const response = await donorApi.getById(donorIdFromUrl);
+      console.log("DONOR DATA", response)
       return response.data;
     },
     enabled: !!donorIdFromUrl && !isEditMode,
@@ -1044,6 +1046,7 @@ const DonationForm = () => {
     if (donationData) {
       setFormData({
         donorId: donationData.donorId || "",
+        donorName: donationData.donorName || "",
         donationType: donationData.donationType || "monetary",
         amount: donationData.amount?.toString() || "",
         currency: donationData.currency || "USD",
@@ -1095,6 +1098,7 @@ const DonationForm = () => {
     try {
       const payload: any = {
         donorId: formData.donorId,
+        donorName: formData.donorName,
         donationType: formData.donationType,
         status: formData.status,
         receivedAt: new Date(formData.receivedAt).toISOString(),
@@ -1120,7 +1124,7 @@ const DonationForm = () => {
         toast({ title: "Success", description: "Donation updated successfully" });
       } else {
         const response = await donationApi.create(payload);
-        savedDonationId = response.data.id;
+        savedDonationId = response.id;
         toast({ title: "Success", description: "Donation recorded successfully" });
       }
 
@@ -1142,7 +1146,7 @@ const DonationForm = () => {
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
 
       if (donorIdFromUrl) navigate(`/dashboard/donors/${donorIdFromUrl}`);
-      else navigate("/dashboard/finances");
+      else navigate("/dashboard/donations");
     } catch (error: any) {
       toast({
         title: "Error",
@@ -1220,7 +1224,7 @@ const DonationForm = () => {
                         className="w-full justify-between"
                       >
                         {formData.donorId
-                          ? donorsData?.data?.find((donor: any) => donor.id === formData.donorId)?.name
+                          ? donorsData?.data?.find((donor: any) => donor._id === formData.donorId)?.name
                           : "Select donor..."}
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
@@ -1233,23 +1237,23 @@ const DonationForm = () => {
                           <CommandGroup>
                             {donorsData?.data?.map((donor: any) => (
                               <CommandItem
-                                key={donor.id}
+                                key={donor._id}
                                 value={donor.name}
                                 onSelect={() => {
-                                  setFormData({ ...formData, donorId: donor.id });
+                                  setFormData({ ...formData, donorId: donor._id, donorName: donor.name });
                                   setDonorOpen(false);
                                 }}
                               >
                                 <Check
                                   className={cn(
                                     "mr-2 h-4 w-4",
-                                    formData.donorId === donor.id ? "opacity-100" : "opacity-0"
+                                    formData.donorId === donor._id ? "opacity-100" : "opacity-0"
                                   )}
                                 />
                                 <div>
                                   <p className="font-medium">{donor.name}</p>
                                   <p className="text-xs text-muted-foreground">
-                                    {donor.donorCode} {donor.email && `• ${donor.email}`}
+                                    {donor.donorCode} 
                                   </p>
                                 </div>
                               </CommandItem>

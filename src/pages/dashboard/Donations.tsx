@@ -62,7 +62,7 @@ const Donations = () => {
       if (statusFilter !== "all") params.status = statusFilter;
       if (typeFilter !== "all") params.donationType = typeFilter;
       const response = await donationApi.getAll(params);
-      return response.data;
+      return response;
     },
   });
 
@@ -70,7 +70,7 @@ const Donations = () => {
     queryKey: ['dashboard', 'overview'],
     queryFn: async () => {
       const response = await dashboardApi.getOverview();
-      return response.data;
+      return response;
     },
   });
 
@@ -83,7 +83,7 @@ const Donations = () => {
     if (!donationToDelete) return;
 
     try {
-      await donationApi.delete(donationToDelete.id);
+      await donationApi.delete(donationToDelete._id);
       toast({
         title: "Success",
         description: "Donation deleted successfully",
@@ -314,18 +314,18 @@ const Donations = () => {
               ) : donationsData && donationsData.data.length > 0 ? (
                 donationsData.data.map((donation: any) => (
                   <TableRow 
-                    key={donation.id}
+                    key={donation._id}
                     className="cursor-pointer hover:bg-muted/50"
-                    onClick={() => navigate(`/dashboard/donations/${donation.id}`)}
+                    onClick={() => navigate(`/dashboard/donations/${donation._id}`)}
                   >
                     <TableCell className="font-medium font-mono text-sm">
-                      {donation.donationReference || `DON-${donation.id.slice(0, 8)}`}
+                      {donation.donationReference }
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <User className="w-4 h-4 text-muted-foreground" />
                         <span className="font-medium">
-                          {donation.donor?.name || "Anonymous"}
+                          {donation.donorName || "Anonymous"}
                         </span>
                       </div>
                     </TableCell>
@@ -368,7 +368,7 @@ const Donations = () => {
                         <Button
                           size="sm"
                           variant="ghost"
-                          onClick={() => navigate(`/dashboard/donations/${donation.id}`)}
+                          onClick={() => navigate(`/dashboard/donations/${donation._id}`)}
                           title="View Details"
                         >
                           <Eye className="w-4 h-4" />
@@ -376,7 +376,7 @@ const Donations = () => {
                         <Button
                           size="sm"
                           variant="ghost"
-                          onClick={() => navigate(`/dashboard/donations/edit/${donation.id}`)}
+                          onClick={() => navigate(`/dashboard/donations/edit/${donation._id}`)}
                           title="Edit"
                         >
                           <Edit className="w-4 h-4" />

@@ -68,6 +68,7 @@ const DonationProfile = () => {
     queryFn: async () => {
       if (!id) throw new Error("No donation ID provided");
       const response = await donationApi.getById(id);
+      console.log("PLEEEEEEEEASE WORK", response)
       return response.data;
     },
     enabled: !!id,
@@ -301,7 +302,7 @@ const DonationProfile = () => {
             {donation.verificationStatus && getVerificationStatusBadge(donation.verificationStatus)}
           </div>
           <p className="text-muted-foreground">
-            {donation.donationReference || `DON-${donation.id.slice(0, 8)}`}
+            {donation.donationReference || `DON-${donation._id.slice(0, 8)}`}
           </p>
         </div>
         <div className="flex gap-2">
@@ -592,7 +593,7 @@ const DonationProfile = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div>
               <p className="text-muted-foreground mb-1">Donation ID</p>
-              <p className="font-mono text-foreground">{donation.id}</p>
+              <p className="font-mono text-foreground">{donation._id}</p>
             </div>
             {donation.donationType === 'monetary' && donation.donationReference && (
               <div>
