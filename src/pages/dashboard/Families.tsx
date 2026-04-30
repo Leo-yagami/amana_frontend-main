@@ -161,7 +161,7 @@ const Families = () => {
   // Handle select all
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedIds(families.map(f => f.id));
+      setSelectedIds(families.map(f => f._id));
     } else {
       setSelectedIds([]);
     }

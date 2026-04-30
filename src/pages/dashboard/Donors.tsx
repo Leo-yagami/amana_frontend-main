@@ -61,7 +61,8 @@ const Donors = () => {
         params.donorType = donorTypeFilter;
       }
       const response = await donorApi.getAll(params);
-      return response.data;
+      console.log("RESPONNSEEEEEEEEE",response)
+      return response;
     },
   });
 
@@ -69,7 +70,7 @@ const Donors = () => {
     queryKey: ['dashboard', 'overview'],
     queryFn: async () => {
       const response = await dashboardApi.getOverview();
-      return response.data;
+      return response;
     },
   });
 
@@ -79,10 +80,11 @@ const Donors = () => {
   };
 
   const handleDeleteConfirm = async () => {
+    console.log("THIS IS ITTTTTTTTT", donorToDelete)
     if (!donorToDelete) return;
 
     try {
-      await donorApi.delete(donorToDelete.id);
+      await donorApi.delete(donorToDelete._id);
       toast({
         title: "Success",
         description: "Donor deleted successfully",
@@ -115,26 +117,28 @@ const Donors = () => {
       </div>
 
       {/* Stats */}
-      <div className="grid sm:grid-cols-3 gap-4">
-        <div className="bg-card rounded-xl border border-border p-6">
-          <p className="text-muted-foreground text-sm mb-1">Total Donors</p>
-          <p className="text-3xl font-bold text-foreground">
-            {overview ? overview.donors.total.toLocaleString() : '-'}
-          </p>
-        </div>
-        <div className="bg-card rounded-xl border border-border p-6">
-          <p className="text-muted-foreground text-sm mb-1">Active Donors</p>
-          <p className="text-3xl font-bold text-success">
-            {overview ? overview.donors.active.toLocaleString() : '-'}
-          </p>
-        </div>
-        <div className="bg-card rounded-xl border border-border p-6">
-          <p className="text-muted-foreground text-sm mb-1">Total Donated</p>
-          <p className="text-3xl font-bold text-primary">
-            {overview ? `$${overview.donations.totalAmount.toLocaleString()}` : '-'}
-          </p>
-        </div>
-      </div>
+
+          <div className="grid sm:grid-cols-3 gap-4">
+            <div className="bg-card rounded-xl border border-border p-6">
+              <p className="text-muted-foreground text-sm mb-1">Total Donors</p>
+              <p className="text-3xl font-bold text-foreground">
+                
+                {overview ? '-' : donorsData?.data.length}
+              </p>
+            </div>
+            <div className="bg-card rounded-xl border border-border p-6">
+              <p className="text-muted-foreground text-sm mb-1">Active Donors</p>
+              <p className="text-3xl font-bold text-success">
+                {overview ? overview.donors.active.toLocaleString() : '-'}
+              </p>
+            </div>
+            <div className="bg-card rounded-xl border border-border p-6">
+              <p className="text-muted-foreground text-sm mb-1">Total Donated</p>
+              <p className="text-3xl font-bold text-primary">
+                {overview ? `$${overview?.donations.totalAmount.toLocaleString()}` : donorsData?.data?.reduce((sum, donor) => {return sum+=donor.totalDonated}, 0) || 0}
+              </p>
+            </div>
+          </div>
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4">
@@ -203,7 +207,7 @@ const Donors = () => {
         ) : donorsData && donorsData.data.length > 0 ? (
           donorsData.data.map((donor) => (
           <div
-            key={donor.id}
+            key={donor._id}
             className="bg-card rounded-xl border border-border p-6 hover:shadow-md transition-shadow"
           >
             <div className="flex items-start gap-4 mb-4">
@@ -252,7 +256,7 @@ const Donors = () => {
                 <Button
                   size="sm"
                   variant="ghost"
-                  onClick={() => navigate(`/dashboard/donors/${donor.id}`)}
+                  onClick={() => navigate(`/dashboard/donors/${donor._id}`)}
                   title="View Details"
                 >
                   <Eye className="w-4 h-4" />
@@ -260,7 +264,7 @@ const Donors = () => {
                 <Button
                   size="sm"
                   variant="ghost"
-                  onClick={() => navigate(`/dashboard/donors/edit/${donor.id}`)}
+                  onClick={() => navigate(`/dashboard/donors/edit/${donor._id}`)}
                   title="Edit"
                 >
                   <Edit className="w-4 h-4" />

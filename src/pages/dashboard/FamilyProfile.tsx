@@ -705,7 +705,7 @@ const FamilyProfile = () => {
       const fam: Family = response.data;
 
       setFamily(fam);
-      setMembers(fam.beneficiaries || []);
+      setMembers(fam.members || []);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -727,7 +727,8 @@ const FamilyProfile = () => {
         familyId: id,
         limit: 50,
       });
-      setSupportHistory(response.data.data);
+      console.log("response motherfucker",response)
+      setSupportHistory(response.data);
     } catch (error) {
       console.error("Failed to fetch support history", error);
     } finally {
@@ -739,7 +740,7 @@ const FamilyProfile = () => {
     if (!family) return;
 
     try {
-      await familyApi.update(family.id, { isVerified: true });
+      await familyApi.update(family._id, { isVerified: true });
       toast({
         title: "Success",
         description: "Family verified successfully",
@@ -769,18 +770,16 @@ const FamilyProfile = () => {
   const ageDistribution = useMemo(() => {
     return members.reduce(
       (acc, m) => {
-        const age = m.age || calculateAge(m.dateOfBirth);
-        if (age === null || age === undefined) return acc;
+        const ageGroup = m.ageGroup;
+        if (ageGroup === null || ageGroup === undefined) return acc;
 
-        if (age < 5) acc.infants++;
-        else if (age < 13) acc.children++;
-        else if (age < 18) acc.teens++;
-        else if (age < 60) acc.adults++;
-        else acc.seniors++;
+        if (ageGroup === "child") acc.children++;
+        else if (ageGroup === "teen") acc.teens++;
+        else acc.adults++;
 
         return acc;
       },
-      { infants: 0, children: 0, teens: 0, adults: 0, seniors: 0 }
+      {children: 0, teens: 0, adults: 0}
     );
   }, [members]);
 
@@ -804,7 +803,7 @@ const FamilyProfile = () => {
     );
   }
 
-  const goToEditMembers = () => navigate(`/dashboard/families/${family.id}/edit?focus=members`);
+  const goToEditMembers = () => navigate(`/dashboard/families/${family._id}/edit?focus=members`);
 
   return (
     <div className="space-y-6">
@@ -839,7 +838,7 @@ const FamilyProfile = () => {
             </Button>
           )}
 
-          <Button variant="outline" onClick={() => navigate(`/dashboard/families/${family.id}/edit`)}>
+          <Button variant="outline" onClick={() => navigate(`/dashboard/families/${family._id}/edit`)}>
             <Edit className="mr-2 h-4 w-4" />
             Edit Details
           </Button>
@@ -901,11 +900,11 @@ const FamilyProfile = () => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Head of Family:</span>
-                  <span className="font-medium">{family.headBeneficiary?.fullName || "N/A"}</span>
+                  <span className="font-medium">{family.familyHead || "N/A"}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Number of Members:</span>
-                  <Badge variant="secondary">{family.numberOfMembers || members.length || 0}</Badge>
+                  <Badge variant="secondary">{members.length || 0}</Badge>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Registration Status:</span>
@@ -954,7 +953,7 @@ const FamilyProfile = () => {
               </CardContent>
             </Card>
 
-            <Card>
+            { false && (<Card>
               <CardHeader>
                 <CardTitle className="flex items-center text-lg">
                   <MapPin className="mr-2 h-5 w-5" />
@@ -991,8 +990,7 @@ const FamilyProfile = () => {
                   </div>
                 )}
               </CardContent>
-            </Card>
-
+            </Card>)}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center text-lg">
@@ -1020,9 +1018,9 @@ const FamilyProfile = () => {
                   <span className="text-muted-foreground">Verification Status:</span>
                   <Badge
                     variant={
-                      family.verificationStatus === "verified"
+                      family.registrationStatus === "verified"
                         ? "default"
-                        : family.verificationStatus === "pending"
+                        : family.registrationStatus === "pending"
                           ? "secondary"
                           : "destructive"
                     }
@@ -1033,6 +1031,20 @@ const FamilyProfile = () => {
                 </div>
               </CardContent>
             </Card>
+            {/*notes replacing forth card which was the location and region information */}
+            {family.notes && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center text-lg">
+                  <FileText className="mr-2 h-5 w-5" />
+                  Notes
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm whitespace-pre-wrap">{family.notes}</p>
+              </CardContent>
+            </Card>
+            )}
           </div>
 
           {family.addressDetails && (
@@ -1048,20 +1060,6 @@ const FamilyProfile = () => {
               </CardContent>
             </Card>
           )}
-
-          {family.notes && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center text-lg">
-                  <FileText className="mr-2 h-5 w-5" />
-                  Notes
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm whitespace-pre-wrap">{family.notes}</p>
-              </CardContent>
-            </Card>
-          )}
         </TabsContent>
 
         <TabsContent value="members" className="space-y-4">
@@ -1071,27 +1069,28 @@ const FamilyProfile = () => {
                 <CardTitle className="text-lg">Age Distribution</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-5 gap-4 text-center">
-                  <div>
-                    <div className="text-2xl font-bold">{ageDistribution.infants}</div>
-                    <div className="text-xs text-muted-foreground">0-4 years</div>
-                  </div>
+                <div className="grid grid-cols-3 gap-4 text-center">
+                  {false && (<div>
+                      <div className="text-2xl font-bold">{ageDistribution.infants}</div>
+                      <div className="text-xs text-muted-foreground">0-4 years</div>
+                    </div>
+                  )}
                   <div>
                     <div className="text-2xl font-bold">{ageDistribution.children}</div>
-                    <div className="text-xs text-muted-foreground">5-12 years</div>
+                    <div className="text-xs text-muted-foreground">0-12 years</div>
                   </div>
                   <div>
                     <div className="text-2xl font-bold">{ageDistribution.teens}</div>
-                    <div className="text-xs text-muted-foreground">13-17 years</div>
+                    <div className="text-xs text-muted-foreground">13-18 years</div>
                   </div>
                   <div>
                     <div className="text-2xl font-bold">{ageDistribution.adults}</div>
-                    <div className="text-xs text-muted-foreground">18-59 years</div>
+                    <div className="text-xs text-muted-foreground">19+ years</div>
                   </div>
-                  <div>
+                  {false  && (<div>
                     <div className="text-2xl font-bold">{ageDistribution.seniors}</div>
                     <div className="text-xs text-muted-foreground">60+ years</div>
-                  </div>
+                  </div>)}
                 </div>
               </CardContent>
             </Card>
@@ -1118,10 +1117,12 @@ const FamilyProfile = () => {
                         <h4 className="font-semibold text-lg">{member.fullName}</h4>
                         <div className="text-sm text-muted-foreground space-y-1">
                           <div>
-                            Age: {member.age || calculateAge(member.dateOfBirth) || "N/A"} | Gender:{" "}
-                            {member.gender || "N/A"}
+                            Age Group: {member.ageGroup || calculateAge(member.dateOfBirth) || "N/A"}
                           </div>
-                          <div>Relationship: {member.relationshipToHead || "N/A"}</div>
+                          <div>
+                            Gender:{" "}{member.gender || "N/A"}
+                          </div>
+                          {false && (<div>Relationship: {member.relationshipToHead || "N/A"}</div>)}
                         </div>
                       </div>
 
@@ -1185,9 +1186,15 @@ const FamilyProfile = () => {
                         <span className="text-sm font-medium text-muted-foreground">Items Provided:</span>
                         <ul className="mt-1 space-y-1">
                           {history.itemsProvided.map((item: any, idx: number) => (
-                            <li key={idx} className="text-sm ml-4">
-                              • {item.name}: {item.quantity} {item.unit}
+                            <>
+                            <li key={idx} className="text-md ml-4">
+                              • {item.name}
+                              <ul className="pl-4 text-sm">
+                                <li>Quantity: {item.quantity}</li>
+                                <li>Unit: {item.unit}</li>
+                              </ul>
                             </li>
+                            </>
                           ))}
                         </ul>
                       </div>
@@ -1236,7 +1243,7 @@ const FamilyProfile = () => {
         open={showRecordSupportModal}
         onClose={() => setShowRecordSupportModal(false)}
         targetType="family"
-        targetId={family.id}
+        targetId={family._id}
         targetName={family.familyName}
         onSuccess={() => {
           fetchSupportHistory();

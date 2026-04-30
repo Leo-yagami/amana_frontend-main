@@ -33,10 +33,15 @@ const DonorForm = () => {
     email: "",
     phone: "",
     donorType: "Individual",
-    address: "",
-    country: "",
-    city: "",
+    // address: "",
+    // country: "",
+    // city: "",
     notes: "",
+  });
+  const [errors, setErrors] = useState({
+    name: "",
+    email: "",
+    phone: "",
   });
 
   const isEditMode = !!id;
@@ -59,25 +64,59 @@ const DonorForm = () => {
         email: donorData.email || "",
         phone: donorData.phone || "",
         donorType: donorData.donorType || "Individual",
-        address: donorData.address || "",
-        country: donorData.country || "",
-        city: donorData.city || "",
+        // address: donorData.address || "",
+        // country: donorData.country || "",
+        // city: donorData.city || "",
         notes: donorData.notes || "",
       });
     }
   }, [donorData]);
 
+  const validateForm = () => {
+    let valid = true;
+  
+    const newErrors = {
+      name: "",
+      email: "",
+      phone: "",
+    };
+  
+    // Name required
+    if (!formData.name.trim()) {
+      newErrors.name = "Donor name is required";
+      valid = false;
+    }
+  
+    // Email format (optional, but must be valid if filled)
+    if (formData.email.trim()) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email.trim())) {
+        newErrors.email = "Please enter a valid email address";
+        valid = false;
+      }
+    }
+  
+    // Ethiopian phone validation (optional, but must match if filled)
+    if (formData.phone.trim()) {
+      const phoneRegex = /^(?:\+251[79]\d{8}|0[79]\d{8})$/;
+  
+      if (!phoneRegex.test(formData.phone.trim())) {
+        newErrors.phone =
+          "Phone must be: +2519XXXXXXXX, +2517XXXXXXXX, 09XXXXXXXX, or 07XXXXXXXX";
+        valid = false;
+      }
+    }
+  
+    setErrors(newErrors);
+    return valid;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name.trim()) {
-      toast({
-        title: "Validation Error",
-        description: "Donor name is required",
-        variant: "destructive",
-      });
-      return;
-    }
+    const isValid = validateForm();
+    if (!isValid) return;
+  
 
     setLoading(true);
     try {
@@ -156,13 +195,17 @@ const DonorForm = () => {
                   <Input
                     id="name"
                     value={formData.name}
-                    onChange={(e) =>
+                    onChange={(e) =>{
                       setFormData({ ...formData, name: e.target.value })
-                    }
+                      setErrors({ ...errors, name: "" });
+                    }}
                     placeholder="Enter donor name"
                     required
                   />
                 </div>
+                {errors.name && (
+                  <p className="text-sm text-destructive mt-1">{errors.name}</p>
+                )}
 
                 {/* Donor Type */}
                 <div>
@@ -205,12 +248,16 @@ const DonorForm = () => {
                     id="email"
                     type="email"
                     value={formData.email}
-                    onChange={(e) =>
+                    onChange={(e) =>{
                       setFormData({ ...formData, email: e.target.value })
-                    }
+                      setErrors({ ...errors, email: "" });
+                    }}
                     placeholder="email@example.com"
                   />
                 </div>
+                {errors.email && (
+                  <p className="text-sm text-destructive mt-1">{errors.email}</p>
+                )}
 
                 {/* Phone */}
                 <div>
@@ -218,18 +265,22 @@ const DonorForm = () => {
                   <Input
                     id="phone"
                     value={formData.phone}
-                    onChange={(e) =>
+                    onChange={(e) =>{
                       setFormData({ ...formData, phone: e.target.value })
-                    }
+                      setErrors({ ...errors, phone: "" });
+                    }}
                     placeholder="+1234567890"
                   />
                 </div>
+                {errors.phone && (
+                  <p className="text-sm text-destructive mt-1">{errors.phone}</p>
+                )}
               </div>
             </CardContent>
           </Card>
 
           {/* Location Information */}
-          <Card>
+          {false && (<Card>
             <CardHeader>
               <CardTitle>Location Information</CardTitle>
               <CardDescription>
@@ -279,7 +330,7 @@ const DonorForm = () => {
                 </div>
               </div>
             </CardContent>
-          </Card>
+          </Card>)}
 
           {/* Additional Information */}
           <Card>

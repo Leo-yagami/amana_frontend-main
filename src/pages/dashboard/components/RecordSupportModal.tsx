@@ -92,9 +92,9 @@ const RecordSupportModal = ({
         amountValue: formData.amountValue ? parseFloat(formData.amountValue) : undefined,
         currency: formData.currency || undefined,
         itemsProvided: items.length > 0 ? items : undefined,
-        deliveredBy: formData.deliveredBy || undefined,
-        donorId: formData.donorId || undefined,
-        volunteerId: formData.volunteerId || undefined,
+        // deliveredBy: formData.deliveredBy || undefined,
+        // donorId: formData.donorId || undefined,
+        // volunteerId: formData.volunteerId || undefined,
         description: formData.description || undefined,
         notes: formData.notes || undefined,
       };
@@ -344,6 +344,8 @@ const RecordSupportModal = ({
           </div>
 
           {/* Delivery Information */}
+          {false && (
+
           <div className="space-y-4">
             <h3 className="font-semibold text-sm">Delivery & Attribution (Optional)</h3>
             <div className="grid grid-cols-2 gap-4">
@@ -355,7 +357,7 @@ const RecordSupportModal = ({
                     setFormData({ ...formData, donorId: value })
                   }
                   disabled={loading || loadingDonors}
-                >
+                  >
                   <SelectTrigger>
                     <SelectValue placeholder="Select donor (optional)" />
                   </SelectTrigger>
@@ -369,9 +371,9 @@ const RecordSupportModal = ({
                 </Select>
                 {formData.donorId && (
                   <button
-                    type="button"
-                    onClick={() => setFormData({ ...formData, donorId: "" })}
-                    className="text-xs text-muted-foreground hover:text-foreground underline"
+                  type="button"
+                  onClick={() => setFormData({ ...formData, donorId: "" })}
+                  className="text-xs text-muted-foreground hover:text-foreground underline"
                   >
                     Clear selection
                   </button>
@@ -387,7 +389,7 @@ const RecordSupportModal = ({
                   }
                   placeholder="Volunteer ID (optional)"
                   disabled={loading}
-                />
+                  />
               </div>
             </div>
             <div className="space-y-2">
@@ -400,9 +402,10 @@ const RecordSupportModal = ({
                 }
                 placeholder="Name of person/organization"
                 disabled={loading}
-              />
+                />
             </div>
           </div>
+          )}
 
           {/* Description & Notes */}
           <div className="space-y-4">
