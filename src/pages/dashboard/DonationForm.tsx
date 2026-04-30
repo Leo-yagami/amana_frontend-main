@@ -1043,6 +1043,16 @@ const DonationForm = () => {
   }, [donorIdFromUrl, isEditMode]);
 
   useEffect(() => {
+    if (donorData) {
+      setFormData((prev) => ({
+        ...prev,
+        donorId: donorData._id,
+        donorName: donorData.name,
+      }));
+    }
+  }, [donorData]);
+
+  useEffect(() => {
     if (donationData) {
       setFormData({
         donorId: donationData.donorId || "",
