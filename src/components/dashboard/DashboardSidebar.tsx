@@ -25,7 +25,7 @@ const menuItems = [
   { icon: HandHeart, label: "Donors", href: "/dashboard/donors" },
   { icon: Gift, label: "Donations", href: "/dashboard/donations" },
   { icon: Calendar, label: "Events", href: "/dashboard/events" },
-  { icon: FileText, label: "Reports", href: "/dashboard/reports" },
+  { icon: FileText, label: "Analytics", href: "/dashboard/reports" },
   { icon: Settings, label: "Settings", href: "/dashboard/settings" },
 ];
 

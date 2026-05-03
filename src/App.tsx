@@ -37,6 +37,7 @@ import Events from "./pages/dashboard/Events";
 import EventProfile from "./pages/dashboard/EventProfile";
 import Finances from "./pages/dashboard/Finances";
 import Reports from "./pages/dashboard/Reports";
+import Reports2 from './pages/dashboard/Reports2_0'
 import Settings from "./pages/dashboard/Settings";
 
 const App = () => (
@@ -102,7 +103,7 @@ const App = () => (
             <Route path="events" element={<Events />} />
             <Route path="events/:id" element={<EventProfile />} />
             <Route path="finances" element={<Finances />} />
-            <Route path="reports" element={<Reports />} />
+            <Route path="reports" element={<Reports2 />} />
             <Route path="settings" element={<Settings />} />
           </Route>
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Plus, Search, Filter, Eye, Edit, Trash2, DollarSign, Calendar, User, ArrowUpDown } from "lucide-react";
@@ -11,7 +11,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+// import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueries, useQueryClient } from "@tanstack/react-query";
 import { donationApi, dashboardApi } from "@/services/api.service";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -52,6 +53,7 @@ const Donations = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [donationToDelete, setDonationToDelete] = useState<any>(null);
   const [trendRange, setTrendRange] = useState<"3m" | "6m" | "1y">("6m");
+  // const [trendData, setTrendData] = useState({ months: [], values: [] });
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -68,11 +70,20 @@ const Donations = () => {
     },
   });
 
-  const { data: overview } = useQuery({
-    queryKey: ['dashboard', 'overview'],
+  // const { data: overview } = useQuery({
+  //   queryKey: ['dashboard', 'overview'],
+  //   queryFn: async () => {
+  //     const response = await dashboardApi.getOverview();
+  //     console.log(response)
+  //     return response.data;
+  //   },
+  // });
+
+  //new version with loading
+  const { data: overview, isLoading: overviewLoading } = useQuery({
+    queryKey: ["dashboard", "overview"],
     queryFn: async () => {
       const response = await dashboardApi.getOverview();
-      console.log(response)
       return response.data;
     },
   });
@@ -160,33 +171,108 @@ const Donations = () => {
   };
 
   //helper function to calculate the last N months
-  const getLastNMonths = async (n: number) => {
-    const months = [];
-    const values = [];
+  // const getLastNMonths = async (n: number) => {
+  //   const months = [];
+  //   let values = [];
   
+  //   const now = new Date();
+  
+  //   for (let i = n - 1; i >= 0; i--) {
+  //     const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+  
+  //     const label = date.toLocaleString("en-US", { month: "short" });
+  
+  //     months.push(label);
+  
+  //     // fake value logic for now (replace with backend later)
+  //     //making a separate route just to get the monthly data
+  //     values.push(Math.floor(4000 + Math.random() * 6000));
+  //   }
+  //   console.log("BEFORE", values)
+  //   // console.log("MONTHS", months)
+  //   const monthResponse = await donationApi.getMonth(months);
+  //   // console.log(monthResponse)
+  //   values = monthResponse?.data
+  //   console.log("AFTER", values)
+  //   return { months, values };
+  // };
+
+  const fetchTrendData = async (range) => {
+    const n = range === "3m" ? 3 : range === "6m" ? 6 : 12;
+  
+    const months = [];
     const now = new Date();
   
     for (let i = n - 1; i >= 0; i--) {
       const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-  
-      const label = date.toLocaleString("en-US", { month: "short" });
-  
-      months.push(label);
-  
-      // fake value logic for now (replace with backend later)
-      //making a separate route just to get the monthly data
-      values.push(Math.floor(4000 + Math.random() * 6000));
+      months.push(date.toLocaleString("en-US", { month: "short" }));
     }
-    console.log("MONTHS", months)
+  
     const monthResponse = await donationApi.getMonth(months);
-    return { months, values };
+  
+    return { months, values: monthResponse?.data || [] };
   };
 
-  const trendData = {
-    "3m": getLastNMonths(3),
-    "6m": getLastNMonths(6),
-    "1y": getLastNMonths(12),
-  }[trendRange];
+  const TREND_RANGES: Array<"3m" | "6m" | "1y"> = ["3m", "6m", "1y"];
+
+  const trendQueries = useQueries({
+    queries: TREND_RANGES.map((r) => ({
+      queryKey: ["donations", "trend", r],
+      queryFn: () => fetchTrendData(r),
+      staleTime: 10 * 60 * 1000,
+      gcTime: 30 * 60 * 1000,
+      refetchOnWindowFocus: false,
+    })),
+  });
+  
+  const trendDataByRange = TREND_RANGES.reduce((acc, r, idx) => {
+    acc[r] = trendQueries[idx].data;
+    return acc;
+  }, {} as Record<"3m" | "6m" | "1y", { months: string[]; values: number[] } | undefined>);
+  
+  const trendData = trendDataByRange[trendRange];
+  const trendLoading = trendQueries.some((q) => q.isLoading);
+  // const { data: trendData, isFetching: trendLoading } = useQuery({
+  //   queryKey: ["donations", "trend", trendRange],
+  //   queryFn: () => fetchTrendData(trendRange),
+  //   staleTime: 1000 * 60 * 10, // cache for 10 min
+  //   keepPreviousData: true,    // prevents chart from going blank
+  // });
+  // useEffect(() => {
+  //   queryClient.prefetchQuery({
+  //     queryKey: ["donations", "trend", "3m"],
+  //     queryFn: () => fetchTrendData("3m"),
+  //   });
+    
+  //   queryClient.prefetchQuery({
+  //     queryKey: ["donations", "trend", "6m"],
+  //     queryFn: () => fetchTrendData("6m"),
+  //   });
+    
+  //   queryClient.prefetchQuery({
+  //     queryKey: ["donations", "trend", "1y"],
+  //     queryFn: () => fetchTrendData("1y"),
+  //   });
+  // }, []);
+
+
+
+  // const trendData = {
+  //   "3m": getLastNMonths(3),
+  //   "6m": getLastNMonths(6),
+  //   "1y": getLastNMonths(12),
+  // }[trendRange];
+  // USE 'USE EFFECT' TO SET asynchornous data
+  // useEffect(() => {
+  //   const loadTrendData = async () => {
+  //     const result = await getLastNMonths(
+  //       trendRange === "3m" ? 3 : trendRange === "6m" ? 6 : 12
+  //     );
+  //     setTrendData(result);
+  //   };
+  
+  //   loadTrendData();
+  // }, [trendRange]);
 
   return (
     <div className="space-y-6">
@@ -203,7 +289,7 @@ const Donations = () => {
       </div>
 
       {/* Stats Cards */}
-      {overview && (
+      {false && overview && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -251,6 +337,69 @@ const Donations = () => {
           </Card>
         </div>
       )}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {overviewLoading ? (
+          [...Array(3)].map((_, i) => (
+            <Card key={i}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <Skeleton className="h-4 w-28" />
+                <Skeleton className="h-4 w-4 rounded" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-8 w-24 mb-2" />
+                <Skeleton className="h-3 w-32" />
+              </CardContent>
+            </Card>
+          ))
+        ) : (
+          <>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Donations</CardTitle>
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {formatCurrency(overview?.donations?.totalAmount || 0)}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {overview?.donations?.totalCount || 0} donations
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">This Month</CardTitle>
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {formatCurrency(overview?.donations?.monthlyAmount || 0)}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Current month contributions
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Active Donors</CardTitle>
+                <User className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {overview?.donors?.active?.toLocaleString() || 0}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Donated this month
+                </p>
+              </CardContent>
+            </Card>
+          </>
+        )}
+      </div>
       {/** chart section */}
       {/* Donation Trend Card */}
       
@@ -279,8 +428,8 @@ const Donations = () => {
         <CardContent>
           <div className="h-[330px] w-full">
           <DonationTrendsChart
-            values={trendData.values}
-            labels={trendData.months}
+            values={trendData?.values || []}
+            labels={trendData?.months || []}
           />
           </div>
         </CardContent>

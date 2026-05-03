@@ -350,3 +350,35 @@ export interface DonationFilters extends PaginationParams {
   startDate?: string;
   endDate?: string;
 }
+
+export type DashboardAnalyticsRange = "month" | "3m" | "6m" | "1y";
+
+export interface DashboardAnalyticsStat {
+  total: number;
+  change: number;
+}
+
+export interface DashboardAnalyticsDonutSlice {
+  label: string;
+  value: number;
+  color: string;
+}
+
+export interface DashboardAnalytics {
+  stats: {
+    families: DashboardAnalyticsStat;
+    donations: DashboardAnalyticsStat;
+    events: DashboardAnalyticsStat;
+  };
+  monthlyTrends: {
+    labels: string[];
+    values: number[];
+  };
+  urgencyLevels: DashboardAnalyticsDonutSlice[];
+  donationSources: DashboardAnalyticsDonutSlice[];
+  eventTypes: DashboardAnalyticsDonutSlice[];
+}
+
+export interface DashboardAnalyticsResponse {
+  analytics: DashboardAnalytics;
+}

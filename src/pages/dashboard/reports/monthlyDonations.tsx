@@ -159,17 +159,24 @@ export default function DonationTrendsChart({ values, labels }) {
 
       y: {
         min: 0,
-        max: 10000,
+        max: 20000,
         ticks: {
-          stepSize: 2500,
+          stepSize: 5000,
           color: "#B6C2C2",
-          font: { size: 13 },
+          font: { size: 14 },
           callback: (value) => {
             if (value === 0) return "0";
-            if (value === 2500) return "$2.5k";
             if (value === 5000) return "$5k";
-            if (value === 7500) return "$7.5k";
             if (value === 10000) return "$10k";
+            if (value === 15000) return "$15k";
+            if (value === 20000) return "$20k";
+            // if (value === 25000) return "$25k";
+            // if (value === 30000) return "$30k";
+            // if (value === 35000) return "$35k";
+            // if (value === 40000) return "$40k";
+            // if (value === 45000) return "$45k";
+            // if (value === 50000) return "$50k";
+            // if (value === 10000) return "$10k";
             return value;
           },
         },

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Users,
   HandHeart,
@@ -21,57 +22,91 @@ import type {
   Event,
 } from "@/types/api";
 
+
 const Dashboard = () => {
   // State for all dashboard data
-  const [overview, setOverview] = useState<DashboardOverview | null>(null);
-  const [events, setEvents] = useState<Event[]>([]);
-  const [topDonors, setTopDonors] = useState<TopDonor[]>([]);
-  const [recentActivities, setRecentActivities] = useState<RecentActivity[]>(
-    []
-  );
+  // const [overview, setOverview] = useState<DashboardOverview | null>(null);
+  // const [events, setEvents] = useState<Event[]>([]);
+  // const [topDonors, setTopDonors] = useState<TopDonor[]>([]);
+  // const [recentActivities, setRecentActivities] = useState<RecentActivity[]>(
+  //   []
+  // );
+  const {
+    data,
+    isLoading,
+    error,
+    isFetching,
+  } = useQuery({
+    queryKey: ["dashboard", "home"],
+    queryFn: async () => {
+      const [overviewRes, eventsRes, donorsRes, activitiesRes] = await Promise.all([
+        dashboardApi.getOverview(),
+        eventApi.getAll({ status: "Active", limit: 3 }),
+        dashboardApi.getTopDonors({ limit: 3 }),
+        dashboardApi.getRecentActivities({ limit: 9 }),
+      ]);
+  
+      return {
+        overview: overviewRes.data,
+        events: eventsRes.data || [],
+        topDonors: donorsRes.data || [],
+        recentActivities: activitiesRes.data || [],
+      };
+    },
+    placeholderData: (prev) => prev,
+    staleTime: 5 * 60 * 1000,   // no refetch for 5 min
+    gcTime: 30 * 60 * 1000,     // keep cache for 30 min
+    refetchOnWindowFocus: false,
+  });
+
+  const overview = data?.overview ?? null;
+  const events = data?.events ?? [];
+  const topDonors = data?.topDonors ?? [];
+  const recentActivities = data?.recentActivities ?? [];
 
   // Loading states
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // const [loading, setLoading] = useState(true);
+  // const [error, setError] = useState<string | null>(null);
 
   // Fetch all dashboard data on mount
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+  // useEffect(() => {
+  //   const fetchDashboardData = async () => {
+  //     try {
+  //       setLoading(true);
+  //       setError(null);
 
-        // Fetch all data in parallel
-        const [overviewRes, eventsRes, donorsRes, activitiesRes] =
-          await Promise.all([
-            dashboardApi.getOverview(),
-            eventApi.getAll({ status: "Active", limit: 3 }),
-            dashboardApi.getTopDonors({ limit: 3 }),
-            dashboardApi.getRecentActivities({ limit: 9 }),
-          ]);
+  //       // Fetch all data in parallel
+  //       const [overviewRes, eventsRes, donorsRes, activitiesRes] =
+  //         await Promise.all([
+  //           dashboardApi.getOverview(),
+  //           eventApi.getAll({ status: "Active", limit: 3 }),
+  //           dashboardApi.getTopDonors({ limit: 3 }),
+  //           dashboardApi.getRecentActivities({ limit: 9 }),
+  //         ]);
 
-        setOverview(overviewRes.data);
-        setEvents(eventsRes.data || []);
-        setTopDonors(donorsRes.data || []);
-        setRecentActivities(activitiesRes.data || []);
-        console.log("overview data: ", overviewRes)
-        console.log("event data: ", eventsRes)
-        console.log("donor data: ", donorsRes)
-        console.log("activity data: ", activitiesRes.data)
-      } catch (err: any) {
-        console.error("Failed to fetch dashboard data:", err);
-        setError(
-          err.response?.data?.message ||
-            "Failed to load dashboard. Please try again."
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
+  //       setOverview(overviewRes.data);
+  //       setEvents(eventsRes.data || []);
+  //       setTopDonors(donorsRes.data || []);
+  //       setRecentActivities(activitiesRes.data || []);
+  //       console.log("overview data: ", overviewRes)
+  //       console.log("event data: ", eventsRes)
+  //       console.log("donor data: ", donorsRes)
+  //       console.log("activity data: ", activitiesRes.data)
+  //     } catch (err: any) {
+  //       console.error("Failed to fetch dashboard data:", err);
+  //       setError(
+  //         err.response?.data?.message ||
+  //           "Failed to load dashboard. Please try again."
+  //       );
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
 
-    fetchDashboardData();
-  }, []);
+  //   fetchDashboardData();
+  // }, []);
 
+  
   // Show error state
   if (error) {
     return (
@@ -83,6 +118,11 @@ const Dashboard = () => {
     );
   }
 
+  const errorMessage =
+  (error as any)?.response?.data?.message || "Failed to load dashboard. Please try again.";
+
+  //fixing loading issue
+  // const showInitialLoading = loading;
   return (
     <div className="space-y-8">
       {/* Page Header */}
@@ -109,7 +149,7 @@ const Dashboard = () => {
 
       {/* Stats Grid */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {loading ? (
+        {isLoading ? (
           <>
             {[...Array(4)].map((_, i) => (
               <div
@@ -169,7 +209,7 @@ const Dashboard = () => {
             </Button>
           </div>
           <div className="space-y-4 max-h-[280px] overflow-y-auto pr-2">
-            {loading ? (
+            {isLoading ? (
               <>
                 {[...Array(3)].map((_, i) => (
                   <div key={i} className="flex items-start gap-4 p-3">
@@ -218,7 +258,7 @@ const Dashboard = () => {
             </Button>
           </div>
           <div className="space-y-4">
-            {loading ? (
+            {isLoading ? (
               <>
                 {[...Array(3)].map((_, i) => (
                   <div key={i} className="p-4 rounded-lg bg-muted/50">
@@ -265,7 +305,7 @@ const Dashboard = () => {
           </Button>
         </div>
         <div className="space-y-6">
-          {loading ? (
+          {isLoading ? (
             <>
               {[...Array(3)].map((_, i) => (
                 <div key={i}>

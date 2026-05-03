@@ -311,6 +311,8 @@ import type {
   DonationTrend,
   TopDonor,
   RecentActivity,
+  DashboardAnalyticsRange,
+  DashboardAnalyticsResponse,
 } from '@/types/api';
 
 // Auth API
@@ -540,6 +542,8 @@ export const dashboardApi = {
   
   getRecentActivities: (params?: { limit?: number }) =>
     api.get<RecentActivity[]>('/dashboard/recent-activities', { params }),
+  getAnalytics: (params: { range: DashboardAnalyticsRange }) =>
+    api.get<DashboardAnalyticsResponse>("/dashboard/analytics", { params }),
 };
 
 // Donation Verification API
@@ -587,3 +591,4 @@ export const reportsApi = {
   getDashboardStats: () =>
     api.get('/reports/dashboard'),
 };
+
