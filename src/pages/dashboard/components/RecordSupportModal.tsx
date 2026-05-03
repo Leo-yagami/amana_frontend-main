@@ -72,6 +72,7 @@ const RecordSupportModal = ({
     setLoadingDonors(true);
     try {
       const response = await donorApi.getAll({ limit: 100 });
+      console.log(response)
       setDonors(response.data.data);
     } catch (error) {
       console.error("Failed to fetch donors", error);
@@ -363,7 +364,7 @@ const RecordSupportModal = ({
                   </SelectTrigger>
                   <SelectContent>
                     {donors.map((donor) => (
-                      <SelectItem key={donor.id} value={donor.id}>
+                      <SelectItem key={donor._id} value={donor._id}>
                         {donor.name}
                       </SelectItem>
                     ))}

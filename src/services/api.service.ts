@@ -445,6 +445,13 @@ export const donationApi = {
   
   delete: (id: string) =>
     api.delete(`/donations/${id}`),
+  getMonth: (months: Array) =>
+    api.get(`/donations/months`, {
+      params: {months},
+      paramsSerializer: {
+        indexes: null, // important
+      },
+    })
 };
 
 // Recurring Donation API

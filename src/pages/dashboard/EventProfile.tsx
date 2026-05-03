@@ -92,6 +92,7 @@ const EventProfile = () => {
     queryKey: ["event", id],
     queryFn: async () => {
       const response = await eventApi.getById(id!);
+      console.log("YOU GOT THISSSSSSSSSSSSSS", response.data)
       return response.data;
     },
     enabled: !!id,
@@ -195,7 +196,7 @@ const EventProfile = () => {
     );
   }
 
-  const progress = calculateProgress(Number(event.collectedAmount), event.targetAmount ? Number(event.targetAmount) : undefined);
+  const progress = calculateProgress(Number(stats?.totalAmount * 1), event.targetAmount ? Number(event.targetAmount) : undefined);
 
   return (
     <div className="space-y-6">
@@ -230,7 +231,7 @@ const EventProfile = () => {
                 <div>
                   <h1 className="text-3xl font-bold text-foreground mb-2">{event.title}</h1>
                   <p className="text-muted-foreground">
-                    Event Code: {event.campaignCode || `ID: ${event.id.slice(0, 8)}`}
+                    Event Code: {event.campaignCode || `ID: ${event._id.slice(0, 8)}`}
                   </p>
                 </div>
                 <div className="flex gap-2">
@@ -329,7 +330,7 @@ const EventProfile = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Participants</p>
-                <p className="text-2xl font-bold">{event.participantCount || 0}</p>
+                <p className="text-2xl font-bold">{event.participantCount || stats?.familiesSupported + stats?.uniqueDonors || 0}</p>
               </div>
               <Users className="w-8 h-8 text-warning opacity-50" />
             </div>
@@ -351,10 +352,10 @@ const EventProfile = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-3xl font-bold">
-                    ETB {Number(event.collectedAmount).toLocaleString()}
+                    ETB {Number(stats?.totalAmount)}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    of ETB {Number(event.targetAmount).toLocaleString()} goal (received)
+                    of ETB {Number(event?.targetAmount).toLocaleString()} goal (received)
                   </p>
                 </div>
                 <div className="text-right">
@@ -397,7 +398,7 @@ const EventProfile = () => {
       <Tabs defaultValue="donations" className="w-full">
         <TabsList>
           <TabsTrigger value="donations">
-            Donations ({event._count?.donations || 0})
+            Donations ({event?._count?.donation || 0})
           </TabsTrigger>
           <TabsTrigger value="support">
             Support History ({event._count?.supportHistory || 0})
@@ -412,37 +413,37 @@ const EventProfile = () => {
                 <div className="space-y-4">
                   {event.donations.map((donation: any) => (
                     <div
-                      key={donation.id}
+                      key={donation._id}
                       className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
-                      onClick={() => navigate(`/dashboard/donations/${donation.id}`)}
+                      onClick={() => navigate(`/dashboard/donations/${donation._id}`)}
                     >
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <p className="font-medium">
-                            {donation.donor?.name || donation.donor?.email || "Anonymous"}
+                            {donation?.donorName || donation.donor?.email || "Anonymous"}
                           </p>
                           <Badge 
                             variant="outline" 
                             className={`text-xs ${
-                              donation.status === 'received' 
+                              donation?.status === 'received' 
                                 ? 'bg-success/10 text-success border-success/20' 
-                                : donation.status === 'promised'
+                                : donation?.status === 'promised'
                                 ? 'bg-blue-50 text-blue-600 border-blue-200'
                                 : 'bg-muted text-muted-foreground border-muted'
                             }`}
                           >
-                            {donation.status}
+                            {donation?.status}
                           </Badge>
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          {formatDateShort(donation.receivedAt)}
+                          {formatDateShort(donation?.receivedAt)}
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="font-semibold">ETB {Number(donation.amount).toLocaleString()}</p>
-                        {donation.paymentMethod && (
+                        <p className="font-semibold">ETB {Number(donation?.amount).toLocaleString()}</p>
+                        {donation?.paymentMethod && (
                           <p className="text-xs text-muted-foreground mt-1">
-                            via {donation.paymentMethod}
+                            via {donation?.paymentMethod}
                           </p>
                         )}
                       </div>
@@ -474,8 +475,8 @@ const EventProfile = () => {
                           families: [],
                         };
                       }
-                      if (support.family) {
-                        acc[key].families.push(support.family);
+                      if (support.familyId) {
+                        acc[key].families.push(support.familyId);
                       }
                       return acc;
                     }, {});
@@ -527,11 +528,11 @@ const EventProfile = () => {
                         )}
 
                         {/* Delivery Info */}
-                        {(group.deliveredBy || group.donor) && (
+                        {(group.deliveredBy || group.donorId) && (
                           <div className="mb-3 text-xs text-muted-foreground">
                             {group.deliveredBy && <span>Delivered by: {group.deliveredBy}</span>}
-                            {group.donor && group.deliveredBy && <span> • </span>}
-                            {group.donor && <span>Donor: {group.donor.name}</span>}
+                            {group.donorId && group.deliveredBy && <span> • </span>}
+                            {group.donorId && <span>Donor: {group.donorId.name}</span>}
                           </div>
                         )}
 

@@ -47,13 +47,17 @@ const Dashboard = () => {
             dashboardApi.getOverview(),
             eventApi.getAll({ status: "Active", limit: 3 }),
             dashboardApi.getTopDonors({ limit: 3 }),
-            dashboardApi.getRecentActivities({ limit: 5 }),
+            dashboardApi.getRecentActivities({ limit: 9 }),
           ]);
 
         setOverview(overviewRes.data);
-        setEvents(eventsRes.data.data || []);
+        setEvents(eventsRes.data || []);
         setTopDonors(donorsRes.data || []);
         setRecentActivities(activitiesRes.data || []);
+        console.log("overview data: ", overviewRes)
+        console.log("event data: ", eventsRes)
+        console.log("donor data: ", donorsRes)
+        console.log("activity data: ", activitiesRes.data)
       } catch (err: any) {
         console.error("Failed to fetch dashboard data:", err);
         setError(
@@ -140,8 +144,8 @@ const Dashboard = () => {
             />
             <StatCard
               title="Active Events"
-              value={overview.events.active.toString()}
-              change={`${overview.events.total} total`}
+              value={overview?.events?.active?.toString()}
+              change={`${overview?.events?.total} total`}
               trend="up"
               icon={Megaphone}
               iconColor="text-primary"
@@ -164,7 +168,7 @@ const Dashboard = () => {
               <ArrowUpRight className="w-4 h-4 ml-1" />
             </Button>
           </div>
-          <div className="space-y-4">
+          <div className="space-y-4 max-h-[280px] overflow-y-auto pr-2">
             {loading ? (
               <>
                 {[...Array(3)].map((_, i) => (
@@ -223,10 +227,10 @@ const Dashboard = () => {
                   </div>
                 ))}
               </>
-            ) : events.length > 0 ? (
-              events.map((event) => (
+            ) : events?.length > 0 ? (
+              events?.map((event) => (
                 <div
-                  key={event.id}
+                  key={event._id}
                   className="p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
                 >
                   <h3 className="font-medium text-foreground mb-1">

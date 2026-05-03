@@ -40,6 +40,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import  DonationTrendsChart  from "@/pages/dashboard/reports/monthlyDonations";
 
 const Donations = () => {
   const navigate = useNavigate();
@@ -50,7 +51,8 @@ const Donations = () => {
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [donationToDelete, setDonationToDelete] = useState<any>(null);
-  
+  const [trendRange, setTrendRange] = useState<"3m" | "6m" | "1y">("6m");
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
@@ -70,7 +72,8 @@ const Donations = () => {
     queryKey: ['dashboard', 'overview'],
     queryFn: async () => {
       const response = await dashboardApi.getOverview();
-      return response;
+      console.log(response)
+      return response.data;
     },
   });
 
@@ -156,6 +159,35 @@ const Donations = () => {
     });
   };
 
+  //helper function to calculate the last N months
+  const getLastNMonths = async (n: number) => {
+    const months = [];
+    const values = [];
+  
+    const now = new Date();
+  
+    for (let i = n - 1; i >= 0; i--) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+  
+      const label = date.toLocaleString("en-US", { month: "short" });
+  
+      months.push(label);
+  
+      // fake value logic for now (replace with backend later)
+      //making a separate route just to get the monthly data
+      values.push(Math.floor(4000 + Math.random() * 6000));
+    }
+    console.log("MONTHS", months)
+    const monthResponse = await donationApi.getMonth(months);
+    return { months, values };
+  };
+
+  const trendData = {
+    "3m": getLastNMonths(3),
+    "6m": getLastNMonths(6),
+    "1y": getLastNMonths(12),
+  }[trendRange];
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -180,10 +212,10 @@ const Donations = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {formatCurrency(overview.totalDonations || 0)}
+                {formatCurrency(overview?.donations?.totalAmount || 0)}
               </div>
               <p className="text-xs text-muted-foreground">
-                {overview.donationCount || 0} donations
+                {overview?.donations?.totalCount || 0} donations
               </p>
             </CardContent>
           </Card>
@@ -195,7 +227,7 @@ const Donations = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {formatCurrency(overview.monthlyDonations || 0)}
+                {formatCurrency(overview?.donations?.monthlyAmount || 0)}
               </div>
               <p className="text-xs text-muted-foreground">
                 Current month contributions
@@ -210,16 +242,49 @@ const Donations = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {overview.totalDonors || 0}
+                {overview?.donors?.active.toLocaleString() || 0}
               </div>
               <p className="text-xs text-muted-foreground">
-                Registered donors
+                Donated this month
               </p>
             </CardContent>
           </Card>
         </div>
       )}
+      {/** chart section */}
+      {/* Donation Trend Card */}
+      
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>Donation Trend</CardTitle>
+            <CardDescription>
+              Monthly Contribution analysis
+            </CardDescription>
+          </div>
 
+          <Select value={trendRange} onValueChange={(v: any) => setTrendRange(v)}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder="Time range" />
+            </SelectTrigger>
+
+            <SelectContent>
+              <SelectItem value="3m">Last 3 months</SelectItem>
+              <SelectItem value="6m">Last 6 months</SelectItem>
+              <SelectItem value="1y">Last year</SelectItem>
+            </SelectContent>
+          </Select>
+        </CardHeader>
+
+        <CardContent>
+          <div className="h-[330px] w-full">
+          <DonationTrendsChart
+            values={trendData.values}
+            labels={trendData.months}
+          />
+          </div>
+        </CardContent>
+      </Card>
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="flex-1 flex items-center gap-2 bg-card border border-border rounded-lg px-4 py-2">

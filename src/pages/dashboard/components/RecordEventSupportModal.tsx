@@ -76,7 +76,8 @@ const RecordEventSupportModal = ({
     setLoadingDonors(true);
     try {
       const response = await donorApi.getAll({ page: 1, limit: 100 });
-      setDonors(response.data.data);
+      console.log("RESPOOOOOOONSE", response)
+      setDonors(response.data);
     } catch (error) {
       console.error("Failed to fetch donors", error);
       toast.error("Failed to load donors");
@@ -89,7 +90,8 @@ const RecordEventSupportModal = ({
     setLoadingFamilies(true);
     try {
       const response = await familyApi.getAll({ page: 1, limit: 100 });
-      setFamilies(response.data.data);
+      console.log("RESPOOOOOOOOOOOOOOOOOOOOOOOONS",response)
+      setFamilies(response.data);
     } catch (error) {
       console.error("Failed to fetch families", error);
       toast.error("Failed to load families");
@@ -124,6 +126,10 @@ const RecordEventSupportModal = ({
         description: formData.description || undefined,
         notes: formData.notes || undefined,
       };
+
+      //logging purposes
+      console.log("FINAL PAYLOAD:", supportData);
+      console.log("selectedFamilyIds:", selectedFamilyIds);
 
       const response = await supportHistoryApi.createBulk(supportData);
 
@@ -178,7 +184,7 @@ const RecordEventSupportModal = ({
     if (selectedFamilyIds.length === filteredFamilies.length) {
       setSelectedFamilyIds([]);
     } else {
-      setSelectedFamilyIds(filteredFamilies.map((f) => f.id));
+      setSelectedFamilyIds(filteredFamilies.map((f) => f._id));
     }
   };
 
@@ -304,22 +310,22 @@ const RecordEventSupportModal = ({
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {filteredFamilies.map((family) => (
+                  {true && (filteredFamilies.map((family) => (
                     <div
                       key={family.id}
                       className="flex items-center space-x-3 p-2 hover:bg-muted rounded-md cursor-pointer"
                       onClick={(e) => {
                         // Only toggle if clicking on the div itself, not the checkbox
                         if (e.target === e.currentTarget || (e.target as HTMLElement).closest('.flex-1')) {
-                          toggleFamilySelection(family.id);
+                          toggleFamilySelection(family._id);
                         }
                       }}
                     >
                       <Checkbox
-                        checked={selectedFamilyIds.includes(family.id)}
-                        onCheckedChange={() => toggleFamilySelection(family.id)}
+                        checked={selectedFamilyIds.includes(family._id)}
+                        onCheckedChange={() => toggleFamilySelection(family._id)}
                       />
-                      <div className="flex-1" onClick={() => toggleFamilySelection(family.id)}>
+                      <div className="flex-1">
                         <p className="font-medium text-sm">
                           {family.familyName}
                         </p>
@@ -333,7 +339,34 @@ const RecordEventSupportModal = ({
                         </Badge>
                       )}
                     </div>
-                  ))}
+                  )))}
+                  {/*replacement for filtered families selection*/}
+                  {false && (filteredFamilies.map((family) => (
+                    <div
+                      key={family.id}
+                      className="flex items-center space-x-3 p-2 hover:bg-muted rounded-md cursor-pointer"
+                      onClick={() => toggleFamilySelection(family._id)}
+                    >
+                      <Checkbox
+                        checked={selectedFamilyIds.includes(family._id)}
+                        onCheckedChange={() => toggleFamilySelection(family._id)}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+
+                      <div className="flex-1">
+                        <p className="font-medium text-sm">{family.familyName}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {family.familyCode} • {family.region || "Unknown region"}
+                        </p>
+                      </div>
+
+                      {family.urgencyLevel && (
+                        <Badge variant="outline" className="text-xs">
+                          {family.urgencyLevel}
+                        </Badge>
+                      )}
+                    </div>
+                    )))}
                 </div>
               )}
             </ScrollArea>
@@ -496,7 +529,7 @@ const RecordEventSupportModal = ({
                   </SelectTrigger>
                   <SelectContent>
                     {donors.map((donor) => (
-                      <SelectItem key={donor.id} value={donor.id}>
+                      <SelectItem key={donor.id} value={donor._id}>
                         {donor.name}
                       </SelectItem>
                     ))}

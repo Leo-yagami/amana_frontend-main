@@ -61,7 +61,7 @@ const Donors = () => {
         params.donorType = donorTypeFilter;
       }
       const response = await donorApi.getAll(params);
-      console.log("RESPONNSEEEEEEEEE",response)
+      // console.log("RESPONNSEEEEEEEEE",response)
       return response;
     },
   });
@@ -70,7 +70,8 @@ const Donors = () => {
     queryKey: ['dashboard', 'overview'],
     queryFn: async () => {
       const response = await dashboardApi.getOverview();
-      return response;
+      console.log(response.data)
+      return response.data;
     },
   });
 
@@ -123,19 +124,19 @@ const Donors = () => {
               <p className="text-muted-foreground text-sm mb-1">Total Donors</p>
               <p className="text-3xl font-bold text-foreground">
                 
-                {overview ? '-' : donorsData?.data.length}
+                {overview ? overview?.donors?.total : '-' }
               </p>
             </div>
             <div className="bg-card rounded-xl border border-border p-6">
               <p className="text-muted-foreground text-sm mb-1">Active Donors</p>
               <p className="text-3xl font-bold text-success">
-                {overview ? overview.donors.active.toLocaleString() : '-'}
+                {overview ? overview?.donors?.active?.toLocaleString() : '-' }
               </p>
             </div>
             <div className="bg-card rounded-xl border border-border p-6">
               <p className="text-muted-foreground text-sm mb-1">Total Donated</p>
               <p className="text-3xl font-bold text-primary">
-                {overview ? `$${overview?.donations.totalAmount.toLocaleString()}` : donorsData?.data?.reduce((sum, donor) => {return sum+=donor.totalDonated}, 0) || 0}
+                {overview ? `$${overview?.donations?.totalAmount?.toLocaleString()}` : '-' || 0}
               </p>
             </div>
           </div>

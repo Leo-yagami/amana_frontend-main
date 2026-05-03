@@ -1509,7 +1509,7 @@ const DonationForm = () => {
                     <PopoverTrigger asChild>
                       <Button variant="outline" role="combobox" aria-expanded={familyOpen} className="w-full justify-between">
                         {formData.familyId
-                          ? familiesData?.data?.find((family: any) => family.id === formData.familyId)?.familyName
+                          ? familiesData?.find((family: any) => family._id === formData.familyId)?.familyName
                           : "Select family..."}
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
@@ -1530,12 +1530,12 @@ const DonationForm = () => {
                               <Check className={cn("mr-2 h-4 w-4", formData.familyId === "" ? "opacity-100" : "opacity-0")} />
                               None
                             </CommandItem>
-                            {familiesData?.data?.map((family: any) => (
+                            {familiesData?.map((family: any) => (
                               <CommandItem
-                                key={family.id}
+                                key={family._id}
                                 value={family.familyName}
                                 onSelect={() => {
-                                  setFormData({ ...formData, familyId: family.id });
+                                  setFormData({ ...formData, familyId: family._id });
                                   setFamilyOpen(false);
                                 }}
                               >
@@ -1559,7 +1559,7 @@ const DonationForm = () => {
                     <PopoverTrigger asChild>
                       <Button variant="outline" role="combobox" aria-expanded={eventOpen} className="w-full justify-between">
                         {formData.eventId
-                          ? eventsData?.data?.find((event: any) => event.id === formData.eventId)?.title
+                          ? eventsData?.find((event: any) => event._id === formData.eventId)?.title
                           : "Select event..."}
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
@@ -1580,12 +1580,12 @@ const DonationForm = () => {
                               <Check className={cn("mr-2 h-4 w-4", formData.eventId === "" ? "opacity-100" : "opacity-0")} />
                               None
                             </CommandItem>
-                            {eventsData?.data?.map((event: any) => (
+                            {eventsData?.map((event: any) => (
                               <CommandItem
-                                key={event.id}
+                                key={event._id}
                                 value={event.title}
                                 onSelect={() => {
-                                  setFormData({ ...formData, eventId: event.id });
+                                  setFormData({ ...formData, eventId: event._id });
                                   setEventOpen(false);
                                 }}
                               >

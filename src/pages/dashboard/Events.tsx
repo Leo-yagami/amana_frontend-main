@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Plus, Calendar, MapPin, Users, Search, Filter, TrendingUp, DollarSign } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -55,6 +55,7 @@ const getStatusLabel = (status: string) => {
 };
 
 const Events = () => {
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
@@ -73,8 +74,20 @@ const Events = () => {
       if (typeFilter !== "all") params.eventType = typeFilter;
       
       const response = await eventApi.getAll(params);
+      return response;
+    },
+  });
+
+   // Fetch event stats
+   const { data: stats, isLoading: statsLoading } = useQuery({
+    queryKey: ["event-stats", id],
+    queryFn: async () => {
+      console.log("HELLLLLLO")
+      const response = await eventApi.getStats(id!);
+      console.log("YOU GOT THISSSSSSSSSSSSSS", response.data)
       return response.data;
     },
+    enabled: !!id,
   });
 
   const handleCreateEvent = () => {
@@ -230,10 +243,10 @@ const Events = () => {
           <div className="space-y-4">
             {data.data.map((event: Event) => {
               const dateInfo = formatEventDate(event.startDate, event.endDate, event.eventDate);
-              const progress = calculateProgress(Number(event.collectedAmount), event.targetAmount ? Number(event.targetAmount) : undefined);
+              const progress = calculateProgress(Number(event?.collectedAmount), event?.targetAmount ? Number(event?.targetAmount) : undefined);
               
               return (
-                <Card key={event.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleViewEvent(event.id)}>
+                <Card key={event._id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleViewEvent(event.id)}>
                   <CardContent className="p-6">
                     <div className="flex flex-col lg:flex-row lg:items-center gap-6">
                       {/* Date Box */}
@@ -252,7 +265,7 @@ const Events = () => {
                           <div>
                             <h3 className="text-lg font-semibold text-foreground">{event.title}</h3>
                             <p className="text-sm text-muted-foreground">
-                              Event Code: {event.campaignCode || event.id.slice(0, 8)}
+                              Event Code: {event.campaignCode || event._id.slice(0, 8)}
                             </p>
                           </div>
                           <div className="flex items-center gap-2">
@@ -302,7 +315,7 @@ const Events = () => {
                             <div className="flex items-center justify-between text-sm mb-1">
                               <span className="text-muted-foreground">Fundraising Progress</span>
                               <span className="font-medium">
-                                ETB {Number(event.collectedAmount).toLocaleString()} / ETB {Number(event.targetAmount).toLocaleString()}
+                                ETB {Number(event?.collectedAmount).toLocaleString()} / ETB {Number(event?.targetAmount).toLocaleString()}
                               </span>
                             </div>
                             <div className="w-full bg-muted rounded-full h-2">
@@ -325,7 +338,7 @@ const Events = () => {
                           size="sm"
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleViewEvent(event.id);
+                            handleViewEvent(event._id);
                           }}
                         >
                           View Details
