@@ -32,9 +32,9 @@ const EventReport = () => {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <Skeleton className="h-32 w-full" />
-        <Skeleton className="h-64 w-full" />
+      <div className="space-y-4 sm:space-y-6">
+        <Skeleton className="h-24 sm:h-32 w-full" />
+        <Skeleton className="h-48 sm:h-64 w-full" />
       </div>
     );
   }
@@ -63,36 +63,34 @@ const EventReport = () => {
       {
         data: reportData?.byStatus?.map((s: any) => s._count) || [],
         backgroundColor: [
-          "rgba(156, 163, 175, 0.8)", // draft
-          "rgba(59, 130, 246, 0.8)",  // upcoming
-          "rgba(245, 158, 11, 0.8)",  // ongoing
-          "rgba(16, 185, 129, 0.8)",  // completed
-          "rgba(239, 68, 68, 0.8)",   // cancelled
+          "rgba(156, 163, 175, 0.8)",
+          "rgba(59, 130, 246, 0.8)",
+          "rgba(245, 158, 11, 0.8)",
+          "rgba(16, 185, 129, 0.8)",
+          "rgba(239, 68, 68, 0.8)",
         ],
       },
     ],
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-foreground">Event Performance Report</h2>
-          <p className="text-muted-foreground">Analysis of event effectiveness and impact</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+        <div className="min-w-0">
+          <h2 className="text-lg sm:text-2xl font-bold text-foreground truncate">Event Performance Report</h2>
+          <p className="text-xs sm:text-sm text-muted-foreground truncate">Analysis of event effectiveness and impact</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline">
-            <Download className="w-4 h-4 mr-2" />
-            Export
-          </Button>
-        </div>
+        <Button variant="outline" size="sm" className="text-xs sm:text-sm">
+          <Download className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
+          <span className="hidden sm:inline">Export</span>
+        </Button>
       </div>
 
       {/* Date Range Filter */}
       <Card>
-        <CardContent className="p-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+        <CardContent className="p-3 sm:p-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 items-end">
             <div>
               <Label htmlFor="startDate">Start Date</Label>
               <Input

@@ -65,10 +65,10 @@ const FinancialReport = () => {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <Skeleton className="h-32 w-full" />
-        <Skeleton className="h-64 w-full" />
-        <Skeleton className="h-64 w-full" />
+      <div className="space-y-4 sm:space-y-6">
+        <Skeleton className="h-24 sm:h-32 w-full" />
+        <Skeleton className="h-48 sm:h-64 w-full" />
+        <Skeleton className="h-48 sm:h-64 w-full" />
       </div>
     );
   }
@@ -125,148 +125,154 @@ const FinancialReport = () => {
   const oneTimeData = recurringVsOneTime.find((r: any) => r.type === "one-time");
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-foreground">Financial Summary Report</h2>
-          <p className="text-muted-foreground">Comprehensive analysis of donations and financial activities</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+        <div className="min-w-0">
+          <h2 className="text-lg sm:text-2xl font-bold text-foreground truncate">Financial Summary Report</h2>
+          <p className="text-xs sm:text-sm text-muted-foreground truncate">Comprehensive analysis of donations and financial activities</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={handleExportExcel}>
-            <Download className="w-4 h-4 mr-2" />
-            Excel
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={handleExportExcel} size="sm" className="text-xs sm:text-sm">
+            <Download className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Excel</span>
           </Button>
-          <Button variant="outline" onClick={handleExportPDF}>
-            <Download className="w-4 h-4 mr-2" />
-            PDF
+          <Button variant="outline" onClick={handleExportPDF} size="sm" className="text-xs sm:text-sm">
+            <Download className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">PDF</span>
           </Button>
         </div>
       </div>
 
       {/* Date Range Filter */}
       <Card>
-        <CardContent className="p-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+        <CardContent className="p-3 sm:p-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 items-end">
             <div>
-              <Label htmlFor="startDate">Start Date</Label>
+              <Label htmlFor="startDate" className="text-xs sm:text-sm">Start Date</Label>
               <Input
                 id="startDate"
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
+                className="text-sm"
               />
             </div>
             <div>
-              <Label htmlFor="endDate">End Date</Label>
+              <Label htmlFor="endDate" className="text-xs sm:text-sm">End Date</Label>
               <Input
                 id="endDate"
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
+                className="text-sm"
               />
             </div>
-            <Button onClick={handleApplyFilter}>
-              <Calendar className="w-4 h-4 mr-2" />
-              Apply Filter
+            <Button onClick={handleApplyFilter} size="sm" className="text-xs sm:text-sm">
+              <Calendar className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Apply</span>
+              <span className="sm:hidden">Go</span>
             </Button>
           </div>
         </CardContent>
       </Card>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-3 sm:p-6">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Total Donations</p>
-                <p className="text-2xl font-bold">
+              <div className="min-w-0">
+                <p className="text-xs sm:text-sm text-muted-foreground mb-1">Total Donations</p>
+                <p className="text-lg sm:text-2xl font-bold truncate">
                   ETB {Number(reportData?.summary?.totalAmount || 0).toLocaleString()}
                 </p>
               </div>
-              <DollarSign className="w-8 h-8 text-primary opacity-50" />
+              <DollarSign className="w-6 sm:w-8 h-6 sm:h-8 text-primary opacity-50 flex-shrink-0 ml-2" />
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-3 sm:p-6">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Total Count</p>
-                <p className="text-2xl font-bold">
+              <div className="min-w-0">
+                <p className="text-xs sm:text-sm text-muted-foreground mb-1">Total Count</p>
+                <p className="text-lg sm:text-2xl font-bold">
                   {reportData?.summary?.totalCount || 0}
                 </p>
               </div>
-              <TrendingUp className="w-8 h-8 text-success opacity-50" />
+              <TrendingUp className="w-6 sm:w-8 h-6 sm:h-8 text-success opacity-50 flex-shrink-0 ml-2" />
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-3 sm:p-6">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Recurring</p>
-                <p className="text-2xl font-bold">
+              <div className="min-w-0">
+                <p className="text-xs sm:text-sm text-muted-foreground mb-1">Recurring</p>
+                <p className="text-lg sm:text-2xl font-bold truncate">
                   ETB {Number(recurringData?.total || 0).toLocaleString()}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {recurringData?.count || 0} donations
+                  {recurringData?.count || 0}
                 </p>
               </div>
-              <TrendingUp className="w-8 h-8 text-info opacity-50" />
+              <TrendingUp className="w-6 sm:w-8 h-6 sm:h-8 text-info opacity-50 flex-shrink-0 ml-2" />
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-3 sm:p-6">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">One-Time</p>
-                <p className="text-2xl font-bold">
+              <div className="min-w-0">
+                <p className="text-xs sm:text-sm text-muted-foreground mb-1">One-Time</p>
+                <p className="text-lg sm:text-2xl font-bold truncate">
                   ETB {Number(oneTimeData?.total || 0).toLocaleString()}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {oneTimeData?.count || 0} donations
+                  {oneTimeData?.count || 0}
                 </p>
               </div>
-              <TrendingDown className="w-8 h-8 text-warning opacity-50" />
+              <TrendingDown className="w-6 sm:w-8 h-6 sm:h-8 text-warning opacity-50 flex-shrink-0 ml-2" />
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Charts Row 1 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Donations by Type */}
         <Card>
-          <CardHeader>
-            <CardTitle>Donations by Type</CardTitle>
+          <CardHeader className="pb-3 sm:pb-6">
+            <CardTitle className="text-base sm:text-lg">Donations by Type</CardTitle>
           </CardHeader>
-          <CardContent>
-            <Bar
-              data={donationByTypeData}
-              options={{
-                responsive: true,
-                plugins: {
-                  legend: { display: false },
-                },
-              }}
-            />
+          <CardContent className="p-3 sm:p-6">
+            <div className="h-48 sm:h-64">
+              <Bar
+                data={donationByTypeData}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                    legend: { display: false },
+                  },
+                }}
+              />
+            </div>
           </CardContent>
         </Card>
 
         {/* Donations by Status */}
         <Card>
-          <CardHeader>
-            <CardTitle>Donations by Status</CardTitle>
+          <CardHeader className="pb-3 sm:pb-6">
+            <CardTitle className="text-base sm:text-lg">Donations by Status</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-3 sm:p-6">
             <div className="flex justify-center">
-              <div className="w-64 h-64">
+              <div className="w-40 h-40 sm:w-64 sm:h-64">
                 <Pie
                   data={donationByStatusData}
                   options={{
