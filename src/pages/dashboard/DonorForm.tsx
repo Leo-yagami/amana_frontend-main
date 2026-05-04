@@ -154,7 +154,7 @@ const DonorForm = () => {
   }
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <div className="md:container mx-auto py-6 space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
         <Button
@@ -194,6 +194,7 @@ const DonorForm = () => {
                   </Label>
                   <Input
                     id="name"
+                    className="text-sm sm:text-base"
                     value={formData.name}
                     onChange={(e) =>{
                       setFormData({ ...formData, name: e.target.value })
@@ -246,6 +247,7 @@ const DonorForm = () => {
                   <Label htmlFor="email">Email</Label>
                   <Input
                     id="email"
+                    className="text-sm sm:text-base"
                     type="email"
                     value={formData.email}
                     onChange={(e) =>{
@@ -264,6 +266,7 @@ const DonorForm = () => {
                   <Label htmlFor="phone">Phone</Label>
                   <Input
                     id="phone"
+                    className="text-sm sm:text-base"
                     value={formData.phone}
                     onChange={(e) =>{
                       setFormData({ ...formData, phone: e.target.value })
@@ -294,6 +297,7 @@ const DonorForm = () => {
                   <Label htmlFor="country">Country</Label>
                   <Input
                     id="country"
+                    className="text-sm sm:text-base"
                     value={formData.country}
                     onChange={(e) =>
                       setFormData({ ...formData, country: e.target.value })
@@ -307,6 +311,7 @@ const DonorForm = () => {
                   <Label htmlFor="city">City</Label>
                   <Input
                     id="city"
+                    className="text-sm sm:text-base"
                     value={formData.city}
                     onChange={(e) =>
                       setFormData({ ...formData, city: e.target.value })
@@ -320,6 +325,7 @@ const DonorForm = () => {
                   <Label htmlFor="address">Address</Label>
                   <Textarea
                     id="address"
+                    className="text-sm sm:text-base"
                     value={formData.address}
                     onChange={(e) =>
                       setFormData({ ...formData, address: e.target.value })
@@ -345,6 +351,7 @@ const DonorForm = () => {
                 <Label htmlFor="notes">Notes</Label>
                 <Textarea
                   id="notes"
+                  className="text-sm sm:text-base"
                   value={formData.notes}
                   onChange={(e) =>
                     setFormData({ ...formData, notes: e.target.value })

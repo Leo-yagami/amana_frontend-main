@@ -1183,7 +1183,7 @@ const DonationForm = () => {
   };
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <div className="md:container mx-auto py-6 space-y-6">
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={() => navigate(getBackUrl())}>
           <ArrowLeft className="w-5 h-5" />
@@ -1203,7 +1203,7 @@ const DonationForm = () => {
       </div>
 
       <form onSubmit={handleSubmit}>
-        <div className="grid gap-6 max-w-4xl">
+        <div className="grid gap-6 max-w-4xl ">
           <Card>
             <CardHeader>
               <CardTitle>Donor Information</CardTitle>
@@ -1287,7 +1287,7 @@ const DonationForm = () => {
               <CardDescription>Information about the contribution</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 <div>
                   <Label htmlFor="donationType">
                     Donation Type <span className="text-destructive">*</span>
@@ -1322,6 +1322,7 @@ const DonationForm = () => {
                   <Label htmlFor="status">Status</Label>
                   <Select
                     value={formData.status}
+                    
                     onValueChange={(value) => {
                       if (value === "pledged") {
                         setFormData({
@@ -1360,7 +1361,7 @@ const DonationForm = () => {
                           value={formData.amount}
                           onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                           placeholder="0.00"
-                          className="pl-10"
+                          className="pl-10 text-sm sm:text-base"
                           required={formData.donationType === "monetary"}
                         />
                       </div>
@@ -1408,6 +1409,7 @@ const DonationForm = () => {
                       <Label htmlFor="donationReference">Reference Number</Label>
                       <Input
                         id="donationReference"
+                        className="text-sm sm:text-base"
                         value={formData.donationReference}
                         onChange={(e) => setFormData({ ...formData, donationReference: e.target.value })}
                         placeholder="Transaction reference"
@@ -1417,10 +1419,11 @@ const DonationForm = () => {
                 )}
 
                 {formData.status === "received" && (
-                  <div className="col-span-2">
+                  <div className="md:col-span-2">
                     <Label htmlFor="receivedAt">Date Received</Label>
                     <Input
                       id="receivedAt"
+                      className="text-sm sm:text-base"
                       type="date"
                       value={formData.receivedAt}
                       onChange={(e) => setFormData({ ...formData, receivedAt: e.target.value })}
@@ -1429,10 +1432,11 @@ const DonationForm = () => {
                 )}
 
                 {formData.status === "pledged" && (
-                  <div className="col-span-2">
+                  <div className="md:col-span-2">
                     <Label htmlFor="receivedAt">Promise Date</Label>
                     <Input
                       id="receivedAt"
+                      className="text-sm sm:text-base"
                       type="date"
                       value={formData.receivedAt}
                       onChange={(e) => setFormData({ ...formData, receivedAt: e.target.value })}
@@ -1442,7 +1446,7 @@ const DonationForm = () => {
                 )}
 
                 {formData.status === "received" && (
-                  <div className="col-span-2">
+                  <div className="md:col-span-2">
                     <Label htmlFor="receipt">Receipt (Optional)</Label>
                     {!selectedReceipt ? (
                       <div
@@ -1473,9 +1477,10 @@ const DonationForm = () => {
                     )}
                     <input
                       id="receipt-input"
+                      
                       type="file"
                       accept="image/jpeg,image/jpg,image/png,application/pdf"
-                      className="hidden"
+                      className="hidden text-sm sm:text-base"
                       onChange={(e) => {
                         const file = e.target.files?.[0];
                         if (!file) return;
@@ -1621,6 +1626,7 @@ const DonationForm = () => {
                 </Label>
                 <Textarea
                   id="description"
+                  className="text-sm sm:text-base"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder={
@@ -1637,6 +1643,7 @@ const DonationForm = () => {
                 <Label htmlFor="usageNote">Usage Note</Label>
                 <Textarea
                   id="usageNote"
+                  className="text-sm sm:text-base"
                   value={formData.usageNote}
                   onChange={(e) => setFormData({ ...formData, usageNote: e.target.value })}
                   placeholder="How will this donation be used?"

@@ -373,6 +373,7 @@ export default function ComprehensiveFamilyForm() {
             <Label htmlFor="familyName">Family Name *</Label>
             <Input
               id="familyName"
+              className="text-sm sm:text-base"
               value={familyData.familyName}
               onChange={(e) => setFamilyData({ ...familyData, familyName: e.target.value })}
               placeholder="e.g., Ahmed Family"
@@ -385,6 +386,7 @@ export default function ComprehensiveFamilyForm() {
             <Label htmlFor="primaryPhone">Phone Number *</Label>
             <Input
               id="primaryPhone"
+              className="text-sm sm:text-base"
               value={familyData.primaryPhone}
               onChange={(e) => setFamilyData({ ...familyData, primaryPhone: e.target.value })}
               placeholder="+2519XXXXXXXX / 09XXXXXXXX / 07XXXXXXXX"
@@ -420,6 +422,7 @@ export default function ComprehensiveFamilyForm() {
             <Textarea
               id="notes"
               value={familyData.notes}
+              className="text-sm sm:text-base"
               onChange={(e) => setFamilyData({ ...familyData, notes: e.target.value })}
               placeholder="Any additional information about the family..."
               rows={3}
@@ -435,11 +438,12 @@ export default function ComprehensiveFamilyForm() {
           <CardTitle>Add Family Member</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
   <div className="space-y-2">
     <Label htmlFor="benFullName">Full Name *</Label>
     <Input
       id="benFullName"
+      className="text-sm sm:text-base"
       value={currentBeneficiary.fullName}
       onChange={(e) =>
         setCurrentBeneficiary({ ...currentBeneficiary, fullName: e.target.value })
@@ -642,8 +646,9 @@ export default function ComprehensiveFamilyForm() {
       )}
 
       {/* Submit Button */}
-      <div className="flex justify-end gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 items-center gap-4">
         <Button
+          className="w-full sm:w-auto sm:justify-self-start"
           type="button"
           variant="outline"
           onClick={() => navigate("/dashboard/families")}
@@ -651,7 +656,9 @@ export default function ComprehensiveFamilyForm() {
         >
           Cancel
         </Button>
-        <Button type="submit" disabled={loading || beneficiaries.length === 0}>
+        <Button
+        className="w-full sm:w-auto sm:justify-self-end"
+        type="submit" disabled={loading || beneficiaries.length === 0}>
           {loading ? (
             <>Loading...</>
           ) : (

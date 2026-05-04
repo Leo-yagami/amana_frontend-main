@@ -554,7 +554,7 @@ const SummarySkeleton = () => (
 );
 
 const ReportsAnalytics = () => {
-  const [range, setRange] = useState<RangeType>("month");
+  const [range, setRange] = useState<RangeType>("6m");
   const [activeTab, setActiveTab] = useState("summary");
   const { ref, isInView } = useInView({ threshold: 0.5 });
 
@@ -643,7 +643,7 @@ const ReportsAnalytics = () => {
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+      <div className="flex flex-col lg:flex-row lg:items-center sm:justify-between gap-3 sm:gap-4">
         <div className="min-w-0">
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground truncate">
             Reports & Analytics
@@ -653,7 +653,7 @@ const ReportsAnalytics = () => {
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 items-stretch sm:items-center">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 items-stretch sm:items-stretch mt-2 sm:mt-0">
           <Select value={range} onValueChange={(v: RangeType) => setRange(v)}>
             <SelectTrigger className="w-full sm:w-[170px] text-sm">
               <SelectValue placeholder="Select range" />
@@ -666,7 +666,7 @@ const ReportsAnalytics = () => {
             </SelectContent>
           </Select>
 
-          <Button variant="default" disabled={isLoading || isFetching} size="sm" className="text-xs sm:text-sm">
+          <Button variant="default" disabled={isLoading || isFetching} size="default" className="text-xs sm:text-sm mb-4 sm:mb-0 h">
             <Download className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
             <span className="hidden sm:inline">Export Reports</span>
             <span className="sm:hidden">Export</span>
@@ -683,7 +683,7 @@ const ReportsAnalytics = () => {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="w-full sm:w-auto justify-start overflow-x-auto">
+        <TabsList className="w-auto sm:w-auto justify-start overflow-x-auto mb-3">
           <TabsTrigger value="summary" className="text-xs sm:text-sm">Summary</TabsTrigger>
           <TabsTrigger value="families" className="text-xs sm:text-sm">Families</TabsTrigger>
           <TabsTrigger value="donations" className="text-xs sm:text-sm">Donations</TabsTrigger>
@@ -697,13 +697,13 @@ const ReportsAnalytics = () => {
           ) : (
             <>
               {/* Stats Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-                <Card>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-4">
+                <Card className="">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2">
-                    <CardTitle className="text-xs sm:text-sm font-medium">Families</CardTitle>
-                    <Users className="h-3 sm:h-4 w-3 sm:w-4 text-muted-foreground" />
+                    <CardTitle className="text-sm sm:text-base font-medium">Families</CardTitle>
+                    <Users className="h-5 sm:h-7 w-5 sm:w-7 text-muted-foreground" />
                   </CardHeader>
-                  <CardContent className="pb-2 sm:pb-0">
+                  <CardContent className="pb-6 ">
                     <div className="text-xs text-muted-foreground">
                       Total
                     </div>
@@ -716,12 +716,12 @@ const ReportsAnalytics = () => {
                   </CardContent>
                 </Card>
 
-                <Card>
+                <Card >
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2">
-                    <CardTitle className="text-xs sm:text-sm font-medium">Donations</CardTitle>
-                    <DollarSign className="h-3 sm:h-4 w-3 sm:w-4 text-muted-foreground" />
+                    <CardTitle className="text-sm sm:text-base font-medium">Donations</CardTitle>
+                    <DollarSign className="h-5 sm:h-7 w-5 sm:w-7 text-muted-foreground" />
                   </CardHeader>
-                  <CardContent className="pb-2 sm:pb-0">
+                  <CardContent className="pb-6 sm:pb-0">
                     <div className="text-xs text-muted-foreground">
                       Total
                     </div>
@@ -734,12 +734,12 @@ const ReportsAnalytics = () => {
                   </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2">
-                    <CardTitle className="text-xs sm:text-sm font-medium">Events</CardTitle>
-                    <Calendar className="h-3 sm:h-4 w-3 sm:w-4 text-muted-foreground" />
+                    <CardTitle className="text-sm sm:text-base font-medium">Events</CardTitle>
+                    <Calendar className="h-5 sm:h-7 w-5 sm:w-7 text-muted-foreground" />
                   </CardHeader>
-                  <CardContent className="pb-2 sm:pb-0">
+                  <CardContent className="pb-6 sm:pb-0">
                     <div className="text-xs text-muted-foreground">
                       Total
                     </div>
@@ -754,15 +754,15 @@ const ReportsAnalytics = () => {
               </div>
 
               {/* Monthly Trends */}
-              <Card>
-                <CardHeader className="pb-3 sm:pb-6">
+              <Card className="min-w-0 overflow-hidden [&_canvas]:max-w-full">
+                <CardHeader className="pb-3 ">
                   <CardTitle className="text-lg sm:text-xl">Monthly Family Registrations</CardTitle>
                   <CardDescription className="text-xs sm:text-sm">
                     Families registered in the selected period
                   </CardDescription>
                 </CardHeader>
 
-                <CardContent className="p-3 sm:p-6">
+                {/* <CardContent className="p-3 sm:p-6">
                   <div ref={ref} className="h-64 sm:h-80 lg:h-[330px] w-full">
                     {isInView ? (
                       <DonationTrendsChart
@@ -773,6 +773,21 @@ const ReportsAnalytics = () => {
                     (<Skeleton className="h-full w-full rounded-xl" />
 
                     )}
+                  </div>
+                </CardContent> */}
+                <CardContent className="p-2 min-[400px]:p-3 sm:p-6 min-w-0 overflow-hidden">
+                  <div className="w-full h-[230px] sm:h-[330px] min-w-0 max-w-full overflow-hidden">
+                    <div className="h-48 min-[400px]:h-56 sm:h-80 lg:h-[330px] w-full min-w-0 max-w-full overflow-hidden">
+                      {isInView ? (
+                      <DonationTrendsChart
+                      labels={safeAnalytics.monthlyTrends.labels}
+                      values={safeAnalytics.monthlyTrends.values}
+                    />
+                    ):
+                    (<Skeleton className="h-full w-full rounded-xl" />
+
+                    )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>

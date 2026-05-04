@@ -286,9 +286,10 @@ const DonationProfile = () => {
   }
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <div className="sm:container mx-auto py-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
+      <div className="flex flex-col items-start sm:flex-row sm:items-center gap-4">
+        <div className="flex-1">
         <Button
           variant="ghost"
           size="icon"
@@ -296,7 +297,6 @@ const DonationProfile = () => {
         >
           <ArrowLeft className="w-5 h-5" />
         </Button>
-        <div className="flex-1">
           <div className="flex items-center gap-3">
             <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Donation Details</h1>
             {donation.verificationStatus && getVerificationStatusBadge(donation.verificationStatus)}
@@ -305,9 +305,9 @@ const DonationProfile = () => {
             {donation.donationReference || `DON-${donation._id.slice(0, 8)}`}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {/* Desktop: Show all buttons */}
-          <div className="hidden md:flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {donation.donationType === 'monetary' && (
               <>
                 {donation.verificationStatus === 'submitted' && (
@@ -349,10 +349,10 @@ const DonationProfile = () => {
       {/* Main Card with Amount */}
       <Card>
         <CardContent className="pt-6">
-          <div className="flex items-start justify-between mb-6">
+          <div className="flex items-start justify-between flex-wrap gap-3 sm:gap-0 mb-6">
             <div>
               <p className="text-sm text-muted-foreground mb-2">Donation Amount</p>
-              <p className="text-4xl font-bold text-foreground">
+              <p className="text-xl sm:text-2xl md:text-4xl font-bold text-foreground">
                 {donation.donationType === "monetary" 
                   ? formatCurrency(Number(donation.amount || 0), donation.currency)
                   : donation.donationType.replace('_', ' ').toUpperCase()}

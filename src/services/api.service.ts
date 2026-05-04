@@ -540,6 +540,8 @@ export const dashboardApi = {
   
   getRecentActivities: (params?: { limit?: number }) =>
     api.get<RecentActivity[]>('/dashboard/recent-activities', { params }),
+  getAnalytics: (params: { range: DashboardAnalyticsRange }) =>
+    api.get<DashboardAnalyticsResponse>("/dashboard/analytics", { params }),
 };
 
 // Donation Verification API

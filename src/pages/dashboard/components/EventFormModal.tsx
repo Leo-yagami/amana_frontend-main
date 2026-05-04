@@ -169,7 +169,7 @@ const EventFormModal = ({ open, onClose, event }: EventFormModalProps) => {
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               placeholder="e.g., Annual Fundraising Gala"
-              className={errors.title ? "border-destructive" : ""}
+              className={errors.title ? "border-destructive " : "text-sm sm:text-base"}
             />
             {errors.title && <p className="text-sm text-destructive mt-1">{errors.title}</p>}
           </div>
@@ -179,6 +179,7 @@ const EventFormModal = ({ open, onClose, event }: EventFormModalProps) => {
             <Label htmlFor="description">Description</Label>
             <Textarea
               id="description"
+              className="text-sm sm:text-base"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               placeholder="Describe the event purpose and activities..."
@@ -316,6 +317,7 @@ const EventFormModal = ({ open, onClose, event }: EventFormModalProps) => {
             <Label htmlFor="location">Location</Label>
             <Input
               id="location"
+              className="text-sm sm:text-base"
               value={formData.location}
               onChange={(e) => setFormData({ ...formData, location: e.target.value })}
               placeholder="e.g., Community Center, Downtown"
@@ -332,7 +334,7 @@ const EventFormModal = ({ open, onClose, event }: EventFormModalProps) => {
               value={formData.targetAmount}
               onChange={(e) => setFormData({ ...formData, targetAmount: e.target.value })}
               placeholder="0.00"
-              className={errors.targetAmount ? "border-destructive" : ""}
+              className={errors.targetAmount ? "border-destructive" : "text-sm sm:text-base"}
             />
             {errors.targetAmount && <p className="text-sm text-destructive mt-1">{errors.targetAmount}</p>}
             <p className="text-xs text-muted-foreground mt-1">
@@ -345,6 +347,7 @@ const EventFormModal = ({ open, onClose, event }: EventFormModalProps) => {
             <Label htmlFor="organizedBy">Organized By</Label>
             <Input
               id="organizedBy"
+              className="text-sm sm:text-base"
               value={formData.organizedBy}
               onChange={(e) => setFormData({ ...formData, organizedBy: e.target.value })}
               placeholder="Organization or person name"

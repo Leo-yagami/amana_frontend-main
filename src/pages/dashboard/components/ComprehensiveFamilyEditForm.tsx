@@ -1178,6 +1178,7 @@ export default function ComprehensiveFamilyEditForm({
             <Label htmlFor="familyName">Family Name *</Label>
             <Input
               id="familyName"
+              className="text-sm sm:text-base"
               value={familyData.familyName}
               onChange={(e) =>
                 setFamilyData({ ...familyData, familyName: e.target.value })
@@ -1191,6 +1192,7 @@ export default function ComprehensiveFamilyEditForm({
             <Label htmlFor="primaryPhone">Phone Number *</Label>
             <Input
               id="primaryPhone"
+              className="text-sm sm:text-base"
               value={familyData.primaryPhone}
               onChange={(e) =>
                 setFamilyData({ ...familyData, primaryPhone: e.target.value })
@@ -1225,6 +1227,7 @@ export default function ComprehensiveFamilyEditForm({
             <Label htmlFor="notes">Additional Notes</Label>
             <Textarea
               id="notes"
+              className="text-sm sm:text-base"
               value={familyData.notes}
               onChange={(e) =>
                 setFamilyData({ ...familyData, notes: e.target.value })
@@ -1242,11 +1245,12 @@ export default function ComprehensiveFamilyEditForm({
           <CardTitle>Add Family Member</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="memberFullName">Full Name *</Label>
               <Input
                 id="memberFullName"
+                className="text-sm sm:text-base"
                 value={currentMember.fullName}
                 onChange={(e) =>
                   setCurrentMember({
@@ -1460,7 +1464,33 @@ export default function ComprehensiveFamilyEditForm({
       )}
 
       {/* Submit */}
-      <div className="flex justify-end gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 items-center gap-4">
+              <Button
+                className="w-full sm:w-auto sm:justify-self-start"
+                type="button"
+                variant="outline"
+                onClick={() => navigate("/dashboard/families")}
+                disabled={loading}
+              >
+                Cancel
+              </Button>
+              <Button
+              className="w-full sm:w-auto sm:justify-self-end"
+              type="submit" disabled={loading}>
+                {loading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4 mr-2" />
+                    Save Changes
+                  </>
+                )}
+              </Button>
+            </div>
+      {/* <div className="flex justify-end gap-4">
         <Button
           type="button"
           variant="outline"
@@ -1483,7 +1513,7 @@ export default function ComprehensiveFamilyEditForm({
             </>
           )}
         </Button>
-      </div>
+      </div> */}
     </form>
   );
 }

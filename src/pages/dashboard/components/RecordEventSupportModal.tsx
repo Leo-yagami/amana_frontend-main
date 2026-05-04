@@ -250,6 +250,7 @@ const RecordEventSupportModal = ({
               </Label>
               <Input
                 id="supportDate"
+                className="text-xs sm:text-base"
                 type="date"
                 value={formData.supportDate}
                 onChange={(e) =>
@@ -276,10 +277,10 @@ const RecordEventSupportModal = ({
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Search families by code, name, or region..."
+                placeholder="Search families by code, or name..."
                 value={familySearch}
                 onChange={(e) => setFamilySearch(e.target.value)}
-                className="pl-10"
+                className="pl-10 text-sm sm:text-base"
               />
             </div>
 
@@ -380,6 +381,7 @@ const RecordEventSupportModal = ({
                 <Label htmlFor="totalAmount">Total Amount</Label>
                 <Input
                   id="totalAmount"
+                  className="text-sm sm:text-base"
                   type="number"
                   step="0.01"
                   min="0"
@@ -459,10 +461,11 @@ const RecordEventSupportModal = ({
             )}
 
             <div className="grid grid-cols-12 gap-2">
-              <div className="col-span-5 space-y-2">
+              <div className="col-span-4 sm:col-span-5 space-y-2">
                 <Label htmlFor="itemName">Item Name</Label>
                 <Input
                   id="itemName"
+                  className="text-sm sm:text-base"
                   value={currentItem.name}
                   onChange={(e) =>
                     setCurrentItem({ ...currentItem, name: e.target.value })
@@ -475,6 +478,7 @@ const RecordEventSupportModal = ({
                 <Label htmlFor="quantity">Quantity</Label>
                 <Input
                   id="quantity"
+                  className="text-sm sm:text-base"
                   type="number"
                   step="0.01"
                   value={currentItem.quantity}
@@ -489,6 +493,7 @@ const RecordEventSupportModal = ({
                 <Label htmlFor="unit">Unit</Label>
                 <Input
                   id="unit"
+                  className="text-sm sm:text-base"
                   value={currentItem.unit}
                   onChange={(e) =>
                     setCurrentItem({ ...currentItem, unit: e.target.value })
@@ -497,7 +502,7 @@ const RecordEventSupportModal = ({
                   disabled={loading}
                 />
               </div>
-              <div className="col-span-1 flex items-end">
+              <div className="col-span-2 sm:col-span-1 flex items-end">
                 <Button
                   type="button"
                   variant="outline"
@@ -540,6 +545,7 @@ const RecordEventSupportModal = ({
                 <Label htmlFor="deliveredBy">Delivered By</Label>
                 <Input
                   id="deliveredBy"
+                  className="text-xs sm:text-base"
                   value={formData.deliveredBy}
                   onChange={(e) =>
                     setFormData({ ...formData, deliveredBy: e.target.value })
@@ -557,6 +563,7 @@ const RecordEventSupportModal = ({
               <Label htmlFor="description">Description</Label>
               <Textarea
                 id="description"
+                className="text-sm sm:text-base"
                 value={formData.description}
                 onChange={(e) =>
                   setFormData({ ...formData, description: e.target.value })
@@ -570,6 +577,7 @@ const RecordEventSupportModal = ({
               <Label htmlFor="notes">Additional Notes</Label>
               <Textarea
                 id="notes"
+                className="text-sm sm:text-base"
                 value={formData.notes}
                 onChange={(e) =>
                   setFormData({ ...formData, notes: e.target.value })
@@ -585,7 +593,7 @@ const RecordEventSupportModal = ({
             <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
               Cancel
             </Button>
-            <Button type="submit" disabled={loading || selectedFamilyIds.length === 0}>
+            <Button className="mb-3 sm:mb-0" type="submit" disabled={loading || selectedFamilyIds.length === 0}>
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

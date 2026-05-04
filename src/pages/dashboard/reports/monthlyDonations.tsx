@@ -103,6 +103,7 @@
 // }
 
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Tooltip } from "chart.js";
+import { Layout } from "lucide-react";
 import { Bar } from "react-chartjs-2";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip);
@@ -112,7 +113,8 @@ export default function DonationTrendsChart({ values, labels }) {
     labels,
     datasets: [
       {
-        data: values,
+        // data: values,
+        data: values.map((v) => Number(v)),
         backgroundColor: [
           "#EAF7F5",
           "#EAF7F5",
@@ -121,9 +123,15 @@ export default function DonationTrendsChart({ values, labels }) {
           "#7FF5F1",
           "#EAF7F5",
         ],
+
         borderRadius: 12,
         borderSkipped: false,
-        barThickness: 65,
+        // barThickness: 65,
+        // backgroundColor: values.map((_, i) =>
+        //   i === values.length - 1 ? "#053D35" : "#EAF7F5"
+        // ),
+        barThickness: "flex",
+        maxBarThickness: 50,
       },
     ],
   };
@@ -131,6 +139,10 @@ export default function DonationTrendsChart({ values, labels }) {
   const options = {
     responsive: true,
     maintainAspectRatio: false,
+    resizeDelay: 50,
+    layout: {
+      padding: 0,
+    },
 
     plugins: {
       legend: { display: false },
@@ -190,7 +202,10 @@ export default function DonationTrendsChart({ values, labels }) {
   };
 
   return (
-    <div className="w-full h-full">
+    // <div className="w-full h-full">
+    //   <Bar data={data} options={options} />
+    // </div>
+    <div className="w-full h-full min-w-0 overflow-hidden">
       <Bar data={data} options={options} />
     </div>
   );

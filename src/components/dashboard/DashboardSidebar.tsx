@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { useEffect } from "react";
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
@@ -40,6 +41,77 @@ const DashboardSidebar = () => {
     navigate("/login");
   };
 
+  // const COLLAPSE_BREAKPOINT = 1050;
+
+  // useEffect(() => {
+  //   const media = window.matchMedia(`(max-width: ${COLLAPSE_BREAKPOINT}px)`);
+
+  //   const handleChange = (e: MediaQueryListEvent | MediaQueryList) => {
+  //     setCollapsed(e.matches);
+  //   };
+
+  //   // set initial state
+  //   setCollapsed(media.matches);
+
+  //   // listen for changes
+  //   media.addEventListener("change", handleChange);
+
+  //   return () => media.removeEventListener("change", handleChange);
+  // }, []);
+
+// const COLLAPSE_AT = 1066;
+// const MOBILE_BREAKPOINT = 1024;
+
+// useEffect(() => {
+//   const handleResize = () => {
+//     const width = window.innerWidth;
+
+//     // Mobile mode (hamburger): sidebar should be expanded (not collapsed)
+//     if (width < MOBILE_BREAKPOINT) {
+//       setCollapsed(false);
+//       return;
+//     }
+
+//     // Mid range: collapse
+//     if (width <= COLLAPSE_AT) {
+//       setCollapsed(true);
+//       return;
+//     }
+
+//     // Desktop: expanded
+//     setCollapsed(false);
+//   };
+
+//   handleResize();
+//   window.addEventListener("resize", handleResize);
+//   return () => window.removeEventListener("resize", handleResize);
+// }, []);
+
+useEffect(() => {
+  const collapseMedia = window.matchMedia("(max-width: 1066px)");
+  const mobileMedia = window.matchMedia("(max-width: 1023px)");
+
+  const update = () => {
+    if (mobileMedia.matches) {
+      setCollapsed(false); // mobile mode: expanded
+    } else if (collapseMedia.matches) {
+      setCollapsed(true); // mid range: collapsed
+    } else {
+      setCollapsed(false); // desktop: expanded
+    }
+  };
+
+  update();
+
+  collapseMedia.addEventListener("change", update);
+  mobileMedia.addEventListener("change", update);
+
+  return () => {
+    collapseMedia.removeEventListener("change", update);
+    mobileMedia.removeEventListener("change", update);
+  };
+}, []);
+
   return (
     <aside
       className={cn(
@@ -48,7 +120,7 @@ const DashboardSidebar = () => {
       )}
     >
       {/* Header */}
-      <div className="h-14 sm:h-16 lg:h-20 flex items-center justify-between px-3 sm:px-4 border-b border-sidebar-border">
+      {/* <div className="h-14 sm:h-16 lg:h-20 flex items-center justify-between px-3 sm:px-4 border-b border-sidebar-border">
         <Link to="/" className="flex items-center gap-2 flex-shrink-0">
           <div className="w-10 h-10 rounded-xl gradient-hero flex items-center justify-center shadow-sm flex-shrink-0">
             <Heart className="w-5 h-5 text-primary-foreground fill-current" />
@@ -62,7 +134,12 @@ const DashboardSidebar = () => {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => setCollapsed(!collapsed)}
+          // onClick={() => setCollapsed(!collapsed)}
+          onClick={() => {
+            if (window.innerWidth > COLLAPSE_BREAKPOINT) {
+              setCollapsed((prev) => !prev);
+            }
+          }}
           className="hidden lg:flex h-10 w-10 flex-shrink-0"
         >
           {collapsed ? (
@@ -71,6 +148,58 @@ const DashboardSidebar = () => {
             <ChevronLeft className="w-4 h-4" />
           )}
         </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setCollapsed(!collapsed)}
+          className="hidden lg:flex h-10 w-10 absolute right-2 top-1/2 -translate-y-1/2"
+        >
+          {collapsed ? (
+            <ChevronRight className="w-4 h-4" />
+          ) : (
+            <ChevronLeft className="w-4 h-4" />
+          )}
+        </Button>
+      </div> */}
+      {/* Header */}
+      <div className="h-14 sm:h-16 lg:h-20 flex items-center px-3 sm:px-4 border-b border-sidebar-border">
+        <div className="flex items-center w-full gap-2">
+          
+          {/* Logo */}
+          <Link
+            to="/"
+            className={cn(
+              "flex items-center gap-2 min-w-10",
+              collapsed && "justify-start w-full"
+            )}
+          >
+            <div className="w-10 h-10 rounded-xl gradient-hero flex items-center justify-center shadow-sm flex-shrink-0">
+              <Heart className="w-5 h-5 text-primary-foreground fill-current" />
+            </div>
+
+            {!collapsed && (
+              <span className="text-sm sm:text-base lg:text-lg font-bold text-sidebar-foreground truncate">
+                HopeBridge
+              </span>
+            )}
+          </Link>
+
+          {/* Toggle Button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setCollapsed(!collapsed)}
+            className={cn("hidden min-[1060px]:flex h-10 w-10 ml-2 flex-shrink-0",
+            )}
+          >
+            {collapsed ? (
+              <ChevronRight className="w-4 h-4" />
+            ) : (
+              <ChevronLeft className="w-4 h-4" />
+            )}
+          </Button>
+
+        </div>
       </div>
 
       {/* Navigation */}

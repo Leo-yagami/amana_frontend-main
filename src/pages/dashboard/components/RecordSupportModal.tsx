@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { X } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import { supportHistoryApi, donorApi } from "@/services/api.service";
 import {
   Dialog,
@@ -211,6 +211,7 @@ const RecordSupportModal = ({
               </Label>
               <Input
                 id="supportDate"
+                className="text-xs sm:text-base"
                 type="date"
                 value={formData.supportDate}
                 onChange={(e) =>
@@ -230,6 +231,7 @@ const RecordSupportModal = ({
                 <Label htmlFor="amountValue">Amount</Label>
                 <Input
                   id="amountValue"
+                  className="text-sm sm:text-base"
                   type="number"
                   step="0.01"
                   min="0"
@@ -295,6 +297,7 @@ const RecordSupportModal = ({
                 <Label htmlFor="itemName">Item Name</Label>
                 <Input
                   id="itemName"
+                  className="text-sm sm:text-base"
                   value={currentItem.name}
                   onChange={(e) =>
                     setCurrentItem({ ...currentItem, name: e.target.value })
@@ -307,6 +310,7 @@ const RecordSupportModal = ({
                 <Label htmlFor="itemQuantity">Quantity</Label>
                 <Input
                   id="itemQuantity"
+                  className="text-sm sm:text-base"
                   type="number"
                   step="0.1"
                   min="0"
@@ -322,6 +326,7 @@ const RecordSupportModal = ({
                 <Label htmlFor="itemUnit">Unit</Label>
                 <Input
                   id="itemUnit"
+                  className="text-sm sm:text-base"
                   value={currentItem.unit}
                   onChange={(e) =>
                     setCurrentItem({ ...currentItem, unit: e.target.value })
@@ -338,7 +343,7 @@ const RecordSupportModal = ({
                   disabled={loading || !currentItem.name || !currentItem.quantity || !currentItem.unit}
                   className="w-full"
                 >
-                  Add
+                  <Plus className="w-3 ml-1 sm:ml-0 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
                 </Button>
               </div>
             </div>
@@ -384,6 +389,7 @@ const RecordSupportModal = ({
                 <Label htmlFor="volunteerId">Volunteer/Staff</Label>
                 <Input
                   id="volunteerId"
+                  className="text-sm sm:text-base"
                   value={formData.volunteerId}
                   onChange={(e) =>
                     setFormData({ ...formData, volunteerId: e.target.value })
@@ -397,6 +403,7 @@ const RecordSupportModal = ({
               <Label htmlFor="deliveredBy">Delivered By</Label>
               <Input
                 id="deliveredBy"
+                className="text-sm sm:text-base"
                 value={formData.deliveredBy}
                 onChange={(e) =>
                   setFormData({ ...formData, deliveredBy: e.target.value })
@@ -442,7 +449,9 @@ const RecordSupportModal = ({
             <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button
+            className="mb-3"
+             type="submit" disabled={loading}>
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

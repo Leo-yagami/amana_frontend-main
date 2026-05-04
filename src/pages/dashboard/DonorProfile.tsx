@@ -164,9 +164,9 @@ const DonorProfile = () => {
   }
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <div className="sm:container mx-auto py-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
+      <div className="flex flex-col items-start sm:flex-row sm:items-center gap-4">
         <Button
           variant="ghost"
           size="icon"
@@ -200,7 +200,7 @@ const DonorProfile = () => {
           </div>
 
           {/* Mobile: Show dropdown menu */}
-          <div className="md:hidden flex gap-2">
+          <div className="md:hidden flex items-center gap-2">
             <Button onClick={handleRecordDonation} variant="default" size="sm">
               <Plus className="w-4 h-4 mr-2" />
               Record
@@ -237,15 +237,15 @@ const DonorProfile = () => {
       {/* Profile Header Card */}
       <Card>
         <CardContent className="pt-6">
-          <div className="flex items-start gap-6">
+          <div className="flex flex-col sm:flex-row items-start gap-6 flex-wrap">
             <Avatar className="h-24 w-24">
               <AvatarImage src={donor.avatar || undefined} />
               <AvatarFallback className="bg-primary/10 text-primary text-2xl">
                 {donor.name.split(" ").map((n: string) => n[0]).join("").slice(0, 2)}
               </AvatarFallback>
             </Avatar>
-            <div className="flex-1">
-              <div className="flex items-start justify-between mb-3">
+            <div className="flex-1 ">
+              <div className="flex flex-col gap-4 items-start justify-center sm:flex-row sm:items-start sm:justify-between mb-5 sm:mb-3">
                 <div>
                   <h2 className="text-3xl font-bold text-foreground">{donor.name}</h2>
                   <p className="text-sm text-muted-foreground">{donor.donorCode}</p>
@@ -351,7 +351,7 @@ const DonorProfile = () => {
               <CardTitle>Donation History</CardTitle>
               <CardDescription>All contributions from this donor</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-4 py-3 sm:p-6">
               {donor.donations && donor.donations.length > 0 ? (
                 <div className="space-y-3">
                   {donor.donations.map((donation: any) => (

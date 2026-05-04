@@ -201,12 +201,12 @@ const EventProfile = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col items-start gap-4 sm:flex-row  sm:items-center sm:gap-0 justify-between">
         <Button variant="ghost" onClick={() => navigate("/dashboard/events")}>
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Events
         </Button>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={() => setShowRecordSupportModal(true)}>
             <Heart className="w-4 h-4 mr-2" />
             Record Support
@@ -227,10 +227,10 @@ const EventProfile = () => {
         <CardContent className="p-6">
           <div className="flex flex-col lg:flex-row lg:items-start gap-6">
             <div className="flex-1">
-              <div className="flex items-start justify-between mb-4">
+              <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:gap-0 mb-4">
                 <div>
-                  <h1 className="text-3xl font-bold text-foreground mb-2">{event.title}</h1>
-                  <p className="text-muted-foreground">
+                  <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground mb-2">{event.title}</h1>
+                  <p className="text-sm sm:text-base md:text-lg text-muted-foreground">
                     Event Code: {event.campaignCode || `ID: ${event._id.slice(0, 8)}`}
                   </p>
                 </div>
@@ -245,12 +245,12 @@ const EventProfile = () => {
               </div>
 
               {event.description && (
-                <p className="text-muted-foreground mb-4">{event.description}</p>
+                <p className="text-sm sm:text-base md:text-lg text-muted-foreground mb-4">{event.description}</p>
               )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="text-base sm:text-lg md:text-xl grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex items-center gap-2 text-sm">
-                  <Calendar className="w-4 h-4 text-muted-foreground" />
+                  <Calendar className="w-4 h-4  text-muted-foreground" />
                   <span>
                     <strong>Event Date:</strong> {formatDate(event.eventDate || event.startDate)}
                   </span>
@@ -342,7 +342,7 @@ const EventProfile = () => {
       {event.targetAmount && Number(event.targetAmount) > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-xl sm:text-2xl md:text-3xl">
               <Target className="w-5 h-5" />
               Fundraising Progress
             </CardTitle>
@@ -351,16 +351,16 @@ const EventProfile = () => {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-3xl font-bold">
+                  <p className="text-xl sm:text-2xl md:text-3xl font-bold">
                     ETB {Number(stats?.totalAmount)}
                   </p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-xs sm:text-sm text-muted-foreground">
                     of ETB {Number(event?.targetAmount).toLocaleString()} goal (received)
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-2xl font-bold text-primary">{progress}%</p>
-                  <p className="text-sm text-muted-foreground">Completed</p>
+                  <p className="text-lg sm:text-xl md:text-2xl font-bold text-primary">{progress}%</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Completed</p>
                 </div>
               </div>
               <Progress value={progress} className="h-3" />
@@ -408,7 +408,7 @@ const EventProfile = () => {
 
         <TabsContent value="donations">
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-2 sm:p-6">
               {event.donations && event.donations.length > 0 ? (
                 <div className="space-y-4">
                   {event.donations.map((donation: any) => (
@@ -417,8 +417,8 @@ const EventProfile = () => {
                       className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
                       onClick={() => navigate(`/dashboard/donations/${donation._id}`)}
                     >
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
+                      <div className="flex-1 space-y-3.5 sm:space-y-0">
+                        <div className="flex flex-row items-start gap-2 sm:gap-2 sm:flex-row sm:items-center mb-1">
                           <p className="font-medium">
                             {donation?.donorName || donation.donor?.email || "Anonymous"}
                           </p>
@@ -462,7 +462,7 @@ const EventProfile = () => {
 
         <TabsContent value="support">
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-2 sm:p-6">
               {event.supportHistory && event.supportHistory.length > 0 ? (
                 <div className="space-y-4">
                   {(() => {
@@ -505,7 +505,7 @@ const EventProfile = () => {
                               {formatDateShort(group.supportDate)}
                             </p>
                             {group.amountValue && (
-                              <p className="font-semibold text-lg">
+                              <p className="font-semibold text-base sm:text-lg">
                                 ETB {Number(group.amountValue).toLocaleString()}
                                 {group.families.length > 1 && <span className="text-xs text-muted-foreground"> / family</span>}
                               </p>
