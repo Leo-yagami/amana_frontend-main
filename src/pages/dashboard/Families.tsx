@@ -93,14 +93,14 @@ const Families = () => {
       setLoading(true);
       const response = await familyApi.getAll(filters);
       console.log(response.data)
-      setFamilies(response.data);
+      setFamilies(response.data.data);
       
       // Calculate stats
-      const total = response.data.length;
-      const verified = response.data.filter(f => f.registrationStatus === "verified").length;
-      const pending = response.data.filter(f => f.registrationStatus === "pending").length;
-      const incomplete = response.data.filter(f => f.registrationStatus === "incomplete").length;
-      const urgent = response.data.filter(f => f.urgencyLevel === "high" || f.urgencyLevel === "critical").length;
+      const total = response.data.data.length;
+      const verified = response.data.data.filter(f => f.registrationStatus === "verified").length;
+      const pending = response.data.data.filter(f => f.registrationStatus === "pending").length;
+      const incomplete = response.data.data.filter(f => f.registrationStatus === "incomplete").length;
+      const urgent = response.data.data.filter(f => f.urgencyLevel === "high" || f.urgencyLevel === "critical").length;
       
       setStats({ total, verified, pending, incomplete, urgent });
     } catch (error: any) {
@@ -161,7 +161,7 @@ const Families = () => {
   // Handle select all
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedIds(families.map(f => f._id));
+      setSelectedIds(families.map(f => f.id));
     } else {
       setSelectedIds([]);
     }
@@ -491,11 +491,11 @@ const Families = () => {
                 </TableHeader>
               <TableBody>
                 {families.map((family) => (
-                  <TableRow key={family._id} className="text-xs sm:text-sm">
+                  <TableRow key={family.id} className="text-xs sm:text-sm">
                     <TableCell className="p-2 sm:p-4">
                       <Checkbox
-                        checked={selectedIds.includes(family._id)}
-                        onCheckedChange={(checked) => handleSelectOne(family._id, checked as boolean)}
+                        checked={selectedIds.includes(family.id)}
+                        onCheckedChange={(checked) => handleSelectOne(family.id, checked as boolean)}
                       />
                     </TableCell>
                     <TableCell className="font-medium p-2 sm:p-4">{family.familyCode}</TableCell>
@@ -506,7 +506,7 @@ const Families = () => {
                     </TableCell>
                     <TableCell className="hidden md:table-cell p-2 sm:p-4 truncate">{family.familyHead || "N/A"}</TableCell>
                     <TableCell className="p-2 sm:p-4">
-                      <Badge variant="secondary" className="text-xs">{family.members.length || 0}</Badge>
+                      <Badge variant="secondary" className="text-xs">{family?.members?.length || 0}</Badge>
                     </TableCell>
                     <TableCell className="p-2 sm:p-4">
                       <RegistrationStatusBadge status={family.registrationStatus} />
@@ -538,31 +538,31 @@ const Families = () => {
                         <DropdownMenuContent align="end" className="text-sm">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => navigate(`/dashboard/families/${family._id}`)}>
+                          <DropdownMenuItem onClick={() => navigate(`/dashboard/families/${family.id}`)}>
                             <Eye className="mr-2 h-3 sm:h-4 w-3 sm:w-4" />
                             View Profile
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => navigate(`/dashboard/families/${family._id}/edit`)}>
+                          <DropdownMenuItem onClick={() => navigate(`/dashboard/families/${family.id}/edit`)}>
                             <Edit className="mr-2 h-3 sm:h-4 w-3 sm:w-4" />
                             Edit Family
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => navigate(`/dashboard/families/${family._id}/edit?focus=members`)}>
+                          <DropdownMenuItem onClick={() => navigate(`/dashboard/families/${family.id}/edit?focus=members`)}>
                             <UserPlus className="mr-2 h-3 sm:h-4 w-3 sm:w-4" />
                             Add Member
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => navigate(`/dashboard/families/${family._id}?action=support`)}>
+                          <DropdownMenuItem onClick={() => navigate(`/dashboard/families/${family.id}?action=support`)}>
                             <Zap className="mr-2 h-3 sm:h-4 w-3 sm:w-4" />
                             Record Support
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           {family.registrationStatus !== "verified" && (
-                            <DropdownMenuItem onClick={() => handleVerify(family._id)}>
+                            <DropdownMenuItem onClick={() => handleVerify(family.id)}>
                               <UserCheck className="mr-2 h-3 sm:h-4 w-3 sm:w-4" />
                               Verify Family
                             </DropdownMenuItem>
                           )}
-                          <DropdownMenuItem onClick={() => handleDelete(family._id)} className="text-red-600">
+                          <DropdownMenuItem onClick={() => handleDelete(family.id)} className="text-red-600">
                             <Trash2 className="mr-2 h-3 sm:h-4 w-3 sm:w-4" />
                             Delete Family
                           </DropdownMenuItem>
@@ -573,6 +573,7 @@ const Families = () => {
                 ))}
               </TableBody>
             </Table>
+          </div>
           )}
         </CardContent>
       </Card>

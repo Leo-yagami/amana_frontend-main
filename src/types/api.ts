@@ -321,6 +321,8 @@ export interface FamilyFilters extends PaginationParams {
   urgencyLevel?: string;
   isVerified?: boolean;
   search?: string;
+    registrationStatus?: "verified" | "pending" | "rejected" | "incomplete";
+  registrationCompleted?: boolean;
 }
 
 export interface BeneficiaryFilters extends PaginationParams {
