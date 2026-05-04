@@ -41,6 +41,7 @@ const Settings = () => {
   const [profileLoading, setProfileLoading] = useState(true);
   const [orgLoading, setOrgLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [tabValue, setTabValue] = useState("profile");
 
   // Profile state
   const [profileData, setProfileData] = useState({

@@ -189,22 +189,23 @@ const Donations = () => {
   }[trendRange];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Donations</h1>
-          <p className="text-muted-foreground">Track and manage all contributions</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground truncate">Donations</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground truncate">Track and manage all contributions</p>
         </div>
-        <Button variant="default" onClick={() => navigate("/dashboard/donations/new")}>
-          <Plus className="w-4 h-4 mr-2" />
-          Record Donation
+        <Button variant="default" onClick={() => navigate("/dashboard/donations/new")} size="sm" className="text-xs sm:text-sm">
+          <Plus className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
+          <span className="hidden sm:inline">Record Donation</span>
+          <span className="sm:hidden">Add</span>
         </Button>
       </div>
 
       {/* Stats Cards */}
       {overview && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Donations</CardTitle>
@@ -255,16 +256,16 @@ const Donations = () => {
       {/* Donation Trend Card */}
       
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle>Donation Trend</CardTitle>
-            <CardDescription>
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 pb-3 sm:pb-6">
+          <div className="min-w-0">
+            <CardTitle className="text-lg sm:text-xl">Donation Trend</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">
               Monthly Contribution analysis
             </CardDescription>
           </div>
 
           <Select value={trendRange} onValueChange={(v: any) => setTrendRange(v)}>
-            <SelectTrigger className="w-[160px]">
+            <SelectTrigger className="w-full sm:w-[160px] text-sm">
               <SelectValue placeholder="Time range" />
             </SelectTrigger>
 
@@ -276,19 +277,19 @@ const Donations = () => {
           </Select>
         </CardHeader>
 
-        <CardContent>
-          <div className="h-[330px] w-full">
-          <DonationTrendsChart
-            values={trendData.values}
-            labels={trendData.months}
-          />
+        <CardContent className="p-3 sm:p-6">
+          <div className="h-64 sm:h-80 lg:h-[330px] w-full">
+            <DonationTrendsChart
+              values={trendData.values}
+              labels={trendData.months}
+            />
           </div>
         </CardContent>
       </Card>
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="flex-1 flex items-center gap-2 bg-card border border-border rounded-lg px-4 py-2">
-          <Search className="w-4 h-4 text-muted-foreground" />
+      <div className="flex flex-col gap-3 sm:gap-4">
+        <div className="flex items-center gap-2 bg-card border border-border rounded-lg px-3 py-2 text-sm">
+          <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
           <input
             type="text"
             placeholder="Search donations..."
@@ -300,56 +301,58 @@ const Donations = () => {
             className="bg-transparent border-none outline-none text-sm flex-1 placeholder:text-muted-foreground"
           />
         </div>
-        <Select
-          value={statusFilter}
-          onValueChange={(value) => {
-            setStatusFilter(value);
-            setPage(1);
-          }}
-        >
-          <SelectTrigger className="w-[180px]">
-            <Filter className="w-4 h-4 mr-2" />
-            <SelectValue placeholder="Filter by status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="received">Received</SelectItem>
-            <SelectItem value="pledged">Promised</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select
-          value={typeFilter}
-          onValueChange={(value) => {
-            setTypeFilter(value);
-            setPage(1);
-          }}
-        >
-          <SelectTrigger className="w-[180px]">
-            <Filter className="w-4 h-4 mr-2" />
-            <SelectValue placeholder="Filter by type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Types</SelectItem>
-            <SelectItem value="monetary">Money</SelectItem>
-            <SelectItem value="in_kind">In-Kind</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="grid grid-cols-2 gap-2 sm:gap-4">
+          <Select
+            value={statusFilter}
+            onValueChange={(value) => {
+              setStatusFilter(value);
+              setPage(1);
+            }}
+          >
+            <SelectTrigger className="text-sm">
+              <Filter className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="received">Received</SelectItem>
+              <SelectItem value="pledged">Promised</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select
+            value={typeFilter}
+            onValueChange={(value) => {
+              setTypeFilter(value);
+              setPage(1);
+            }}
+          >
+            <SelectTrigger className="text-sm">
+              <Filter className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
+              <SelectValue placeholder="Type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Types</SelectItem>
+              <SelectItem value="monetary">Money</SelectItem>
+              <SelectItem value="in_kind">In-Kind</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Donations Table */}
       <Card>
-        <CardContent className="p-0">
-          <Table>
+        <CardContent className="p-0 overflow-x-auto">
+          <Table className="min-w-full">
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[140px]">Reference</TableHead>
-                <TableHead>Donor</TableHead>
-                <TableHead className="w-[120px]">Type</TableHead>
-                <TableHead className="w-[130px] text-right">Amount</TableHead>
-                <TableHead className="w-[110px]">Status</TableHead>
-                <TableHead className="w-[120px]">Date</TableHead>
-                <TableHead>Allocated To</TableHead>
-                <TableHead className="w-[120px] text-right">Actions</TableHead>
+                <TableHead className="text-xs sm:text-sm w-24 sm:w-[140px]">Reference</TableHead>
+                <TableHead className="text-xs sm:text-sm hidden sm:table-cell">Donor</TableHead>
+                <TableHead className="text-xs sm:text-sm w-16 sm:w-[120px]">Type</TableHead>
+                <TableHead className="text-xs sm:text-sm w-20 sm:w-[130px] text-right">Amount</TableHead>
+                <TableHead className="text-xs sm:text-sm w-16 sm:w-[110px]">Status</TableHead>
+                <TableHead className="text-xs sm:text-sm hidden md:table-cell w-24 sm:w-[120px]">Date</TableHead>
+                <TableHead className="text-xs sm:text-sm hidden lg:table-cell">Allocated To</TableHead>
+                <TableHead className="text-xs sm:text-sm w-16 sm:w-[120px] text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -380,40 +383,40 @@ const Donations = () => {
                 donationsData.data.map((donation: any) => (
                   <TableRow 
                     key={donation._id}
-                    className="cursor-pointer hover:bg-muted/50"
+                    className="text-xs sm:text-sm cursor-pointer hover:bg-muted/50"
                     onClick={() => navigate(`/dashboard/donations/${donation._id}`)}
                   >
-                    <TableCell className="font-medium font-mono text-sm">
-                      {donation.donationReference }
+                    <TableCell className="font-medium font-mono text-xs sm:text-sm p-2 sm:p-4">
+                      {donation.donationReference.substring(0, 10)}
                     </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <User className="w-4 h-4 text-muted-foreground" />
-                        <span className="font-medium">
+                    <TableCell className="hidden sm:table-cell p-2 sm:p-4">
+                      <div className="flex items-center gap-2 truncate">
+                        <User className="w-3 sm:w-4 h-3 sm:h-4 text-muted-foreground flex-shrink-0" />
+                        <span className="font-medium text-xs sm:text-sm truncate">
                           {donation.donorName || "Anonymous"}
                         </span>
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={getTypeColor(donation.donationType)}>
+                    <TableCell className="p-2 sm:p-4">
+                      <Badge variant="outline" className={`${getTypeColor(donation.donationType)} text-xs`}>
                         {getTypeLabel(donation.donationType)}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right font-semibold">
+                    <TableCell className="text-right font-semibold text-xs sm:text-sm p-2 sm:p-4">
                       {donation.donationType === "monetary" 
                         ? formatCurrency(Number(donation.amount || 0))
                         : "-"}
                     </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={getStatusColor(donation.status)}>
+                    <TableCell className="p-2 sm:p-4">
+                      <Badge variant="outline" className={`${getStatusColor(donation.status)} text-xs`}>
                         {getStatusLabel(donation.status)}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
+                    <TableCell className="hidden md:table-cell text-xs text-muted-foreground p-2 sm:p-4">
                       {formatDate(donation.receivedAt)}
                     </TableCell>
-                    <TableCell>
-                      <div className="text-sm">
+                    <TableCell className="hidden lg:table-cell p-2 sm:p-4">
+                      <div className="text-xs sm:text-sm truncate">
                         {donation.family && (
                           <span className="text-foreground">{donation.family.familyName}</span>
                         )}
@@ -428,32 +431,34 @@ const Donations = () => {
                         )}
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <div className="flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+                    <TableCell className="p-2 sm:p-4">
+                      <div className="flex justify-end gap-0.5" onClick={(e) => e.stopPropagation()}>
                         <Button
                           size="sm"
                           variant="ghost"
                           onClick={() => navigate(`/dashboard/donations/${donation._id}`)}
                           title="View Details"
+                          className="h-8 w-8 p-0"
                         >
-                          <Eye className="w-4 h-4" />
+                          <Eye className="w-3 sm:w-4 h-3 sm:h-4" />
                         </Button>
                         <Button
                           size="sm"
                           variant="ghost"
                           onClick={() => navigate(`/dashboard/donations/edit/${donation._id}`)}
                           title="Edit"
+                          className="h-8 w-8 p-0"
                         >
-                          <Edit className="w-4 h-4" />
+                          <Edit className="w-3 sm:w-4 h-3 sm:h-4" />
                         </Button>
                         <Button
                           size="sm"
                           variant="ghost"
                           onClick={() => handleDeleteClick(donation)}
                           title="Delete"
-                          className="text-destructive hover:text-destructive"
+                          className="text-destructive hover:text-destructive h-8 w-8 p-0"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-3 sm:w-4 h-3 sm:h-4" />
                         </Button>
                       </div>
                     </TableCell>
@@ -473,9 +478,9 @@ const Donations = () => {
 
       {/* Pagination */}
       {donationsData && donationsData.pagination && donationsData.pagination.totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
-            Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, donationsData.pagination.total)} of {donationsData.pagination.total} donations
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+          <p className="text-xs sm:text-sm text-muted-foreground text-center sm:text-left">
+            Page {page} of {donationsData.pagination.totalPages} ({donationsData.pagination.total} total)
           </p>
           <div className="flex gap-2">
             <Button

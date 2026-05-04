@@ -13,27 +13,28 @@ const transactions = [
 
 const Finances = () => {
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Finances</h1>
-          <p className="text-muted-foreground">Track income, expenses, and financial health</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground truncate">Finances</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground truncate">Track income, expenses, and financial health</p>
         </div>
-        <div className="flex gap-3">
-          <Button variant="outline">
-            <Download className="w-4 h-4 mr-2" />
-            Export
+        <div className="flex flex-wrap gap-2 sm:gap-3">
+          <Button variant="outline" size="sm" className="text-xs sm:text-sm">
+            <Download className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Export</span>
           </Button>
-          <Button variant="default">
-            <DollarSign className="w-4 h-4 mr-2" />
-            Record Transaction
+          <Button variant="default" size="sm" className="text-xs sm:text-sm">
+            <DollarSign className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Record</span>
+            <span className="sm:hidden">Add</span>
           </Button>
         </div>
       </div>
 
       {/* Stats */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
         <StatCard
           title="Total Income (MTD)"
           value="$124,500"
@@ -71,33 +72,34 @@ const Finances = () => {
       </div>
 
       {/* Transactions */}
-      <div className="bg-card rounded-xl border border-border">
-        <div className="flex items-center justify-between p-6 border-b border-border">
-          <h2 className="text-lg font-semibold text-foreground">Recent Transactions</h2>
+      <div className="bg-card rounded-lg sm:rounded-xl border border-border">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 p-4 sm:p-6 border-b border-border">
+          <h2 className="text-base sm:text-lg font-semibold text-foreground">Recent Transactions</h2>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm">
-              <Filter className="w-4 h-4 mr-2" />
-              Filter
+            <Button variant="outline" size="sm" className="text-xs sm:text-sm">
+              <Filter className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Filter</span>
             </Button>
-            <Button variant="ghost" size="sm">
-              View All
-              <ArrowUpRight className="w-4 h-4 ml-1" />
+            <Button variant="ghost" size="sm" className="text-xs sm:text-sm">
+              <span className="hidden sm:inline">View All</span>
+              <span className="sm:hidden">All</span>
+              <ArrowUpRight className="w-3 sm:w-4 h-3 sm:h-4 ml-1" />
             </Button>
           </div>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full min-w-full">
             <thead>
               <tr className="border-b border-border bg-muted/50">
-                <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">Transaction</th>
-                <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">Category</th>
-                <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">Date</th>
-                <th className="text-right py-4 px-6 text-sm font-semibold text-foreground">Amount</th>
+                <th className="text-left py-3 sm:py-4 px-3 sm:px-6 text-xs sm:text-sm font-semibold text-foreground">Transaction</th>
+                <th className="text-left py-3 sm:py-4 px-3 sm:px-6 text-xs sm:text-sm font-semibold text-foreground hidden sm:table-cell">Category</th>
+                <th className="text-left py-3 sm:py-4 px-3 sm:px-6 text-xs sm:text-sm font-semibold text-foreground hidden md:table-cell">Date</th>
+                <th className="text-right py-3 sm:py-4 px-3 sm:px-6 text-xs sm:text-sm font-semibold text-foreground">Amount</th>
               </tr>
             </thead>
             <tbody>
               {transactions.map((txn) => (
-                <tr key={txn.id} className="border-b border-border hover:bg-muted/30 transition-colors">
+                <tr key={txn.id} className="border-b border-border hover:bg-muted/30 transition-colors text-xs sm:text-sm">
                   <td className="py-4 px-6">
                     <div>
                       <p className="font-medium text-foreground">{txn.description}</p>

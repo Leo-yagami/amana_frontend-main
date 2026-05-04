@@ -143,35 +143,38 @@ const Events = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Events</h1>
-          <p className="text-muted-foreground">Plan and manage charity events</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground truncate">Events</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground truncate">Plan and manage charity events</p>
         </div>
-        <Button onClick={handleCreateEvent}>
-          <Plus className="w-4 h-4 mr-2" />
-          Create Event
+        <Button onClick={handleCreateEvent} size="sm" className="text-xs sm:text-sm">
+          <Plus className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
+          <span className="hidden sm:inline">Create Event</span>
+          <span className="sm:hidden">Create</span>
         </Button>
       </div>
 
       {/* Search and Filters */}
-      <div className="flex flex-col lg:flex-row gap-4">
+      <div className="flex flex-col gap-3 sm:gap-4">
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="Search events by title or event code..."
+            placeholder="Search events..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-10"
+            className="pl-10 text-sm"
           />
         </div>
         <Button
           variant="outline"
           onClick={() => setShowFilters(!showFilters)}
+          size="sm"
+          className="text-xs sm:text-sm"
         >
-          <Filter className="w-4 h-4 mr-2" />
+          <Filter className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
           Filters
         </Button>
       </div>
@@ -180,11 +183,11 @@ const Events = () => {
       {showFilters && (
         <Card>
           <CardContent className="p-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
-                <label className="text-sm font-medium mb-2 block">Status</label>
+                <label className="text-xs sm:text-sm font-medium mb-2 block">Status</label>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger>
+                  <SelectTrigger className="text-sm">
                     <SelectValue placeholder="All statuses" />
                   </SelectTrigger>
                   <SelectContent>
@@ -198,9 +201,9 @@ const Events = () => {
                 </Select>
               </div>
               <div>
-                <label className="text-sm font-medium mb-2 block">Event Type</label>
+                <label className="text-xs sm:text-sm font-medium mb-2 block">Event Type</label>
                 <Select value={typeFilter} onValueChange={setTypeFilter}>
-                  <SelectTrigger>
+                  <SelectTrigger className="text-sm">
                     <SelectValue placeholder="All types" />
                   </SelectTrigger>
                   <SelectContent>
@@ -247,92 +250,81 @@ const Events = () => {
               
               return (
                 <Card key={event._id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleViewEvent(event.id)}>
-                  <CardContent className="p-6">
-                    <div className="flex flex-col lg:flex-row lg:items-center gap-6">
+                  <CardContent className="p-4 sm:p-6">
+                    <div className="flex flex-col lg:flex-row lg:items-center gap-4 sm:gap-6">
                       {/* Date Box */}
-                      <div className="flex-shrink-0 w-20 h-20 rounded-xl bg-primary/10 flex flex-col items-center justify-center">
-                        {/* <span className="text-2xl font-bold text-primary">
-                          {dateInfo.day}
-                        </span> */}
-                        {/* <span className="text-xs text-primary uppercase">
-                          {dateInfo.month}
-                        </span> */}
-                      </div>
+                      <div className="flex-shrink-0 w-16 sm:w-20 h-16 sm:h-20 rounded-lg sm:rounded-xl bg-primary/10 flex flex-col items-center justify-center" />
 
                       {/* Event Details */}
-                      <div className="flex-1">
-                        <div className="flex items-start justify-between mb-2">
-                          <div>
-                            <h3 className="text-lg font-semibold text-foreground">{event.title}</h3>
-                            <p className="text-sm text-muted-foreground">
-                              Event Code: {event.campaignCode || event._id.slice(0, 8)}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-2">
+                          <div className="min-w-0">
+                            <h3 className="text-base sm:text-lg font-semibold text-foreground truncate">{event.title}</h3>
+                            <p className="text-xs sm:text-sm text-muted-foreground truncate">
+                              Code: {event.campaignCode || event._id.slice(0, 8)}
                             </p>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline" className={getEventTypeColor(event.eventType)}>
+                          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+                            <Badge variant="outline" className={`${getEventTypeColor(event.eventType)} text-xs`}>
                               {getEventTypeLabel(event.eventType)}
                             </Badge>
-                            <Badge variant="outline" className={getStatusColor(event.status)}>
+                            <Badge variant="outline" className={`${getStatusColor(event.status)} text-xs`}>
                               {getStatusLabel(event.status)}
                             </Badge>
                           </div>
                         </div>
 
                         {event.description && (
-                          <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                          <p className="text-xs sm:text-sm text-muted-foreground mb-2 sm:mb-3 line-clamp-2">
                             {event.description}
                           </p>
                         )}
 
-                        <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                          <div className="flex items-center gap-1">
-                            <Calendar className="w-4 h-4" />
-                            {/* <span>{dateInfo.full}</span> */}
-                          </div>
+                        <div className="flex flex-wrap gap-3 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
                           {event.location && (
                             <div className="flex items-center gap-1">
-                              <MapPin className="w-4 h-4" />
-                              <span>{event.location}</span>
+                              <MapPin className="w-3 sm:w-4 h-3 sm:h-4 flex-shrink-0" />
+                              <span className="truncate">{event.location}</span>
                             </div>
                           )}
                           {event.participantCount > 0 && (
-                            <div className="flex items-center gap-1">
-                              <Users className="w-4 h-4" />
-                              <span>{event.participantCount} participants</span>
+                            <div className="flex items-center gap-1 flex-shrink-0">
+                              <Users className="w-3 sm:w-4 h-3 sm:h-4" />
+                              <span>{event.participantCount}</span>
                             </div>
                           )}
                           {event._count && event._count.donations > 0 && (
-                            <div className="flex items-center gap-1">
-                              <DollarSign className="w-4 h-4" />
-                              <span>{event._count.donations} donations</span>
+                            <div className="flex items-center gap-1 flex-shrink-0">
+                              <DollarSign className="w-3 sm:w-4 h-3 sm:h-4" />
+                              <span>{event._count.donations}</span>
                             </div>
                           )}
                         </div>
 
                         {/* Fundraising Progress */}
                         {event.targetAmount && Number(event.targetAmount) > 0 && (
-                          <div className="mt-3">
-                            <div className="flex items-center justify-between text-sm mb-1">
-                              <span className="text-muted-foreground">Fundraising Progress</span>
-                              <span className="font-medium">
+                          <div className="mt-2 sm:mt-3">
+                            <div className="flex items-center justify-between text-xs sm:text-sm mb-1 gap-2">
+                              <span className="text-muted-foreground flex-shrink-0">Goal</span>
+                              <span className="font-medium text-xs sm:text-sm text-right">
                                 ETB {Number(event?.collectedAmount).toLocaleString()} / ETB {Number(event?.targetAmount).toLocaleString()}
                               </span>
                             </div>
-                            <div className="w-full bg-muted rounded-full h-2">
+                            <div className="w-full bg-muted rounded-full h-1.5 sm:h-2">
                               <div
-                                className="bg-primary h-2 rounded-full transition-all"
+                                className="bg-primary h-1.5 sm:h-2 rounded-full transition-all"
                                 style={{ width: `${progress}%` }}
                               />
                             </div>
                             <p className="text-xs text-muted-foreground mt-1">
-                              {progress}% of goal reached
+                              {progress}% reached
                             </p>
                           </div>
                         )}
                       </div>
 
                       {/* Actions */}
-                      <div className="flex gap-2">
+                      <div className="flex gap-1 sm:gap-2 flex-shrink-0">
                         <Button 
                           variant="outline" 
                           size="sm"
@@ -340,13 +332,16 @@ const Events = () => {
                             e.stopPropagation();
                             handleViewEvent(event._id);
                           }}
+                          className="text-xs sm:text-sm"
                         >
-                          View Details
+                          <span className="hidden sm:inline">View Details</span>
+                          <span className="sm:hidden">View</span>
                         </Button>
                         <Button 
                           variant="default" 
                           size="sm"
                           onClick={(e) => handleEditEvent(event, e)}
+                          className="text-xs sm:text-sm"
                         >
                           Edit
                         </Button>
@@ -360,11 +355,11 @@ const Events = () => {
 
           {/* Pagination */}
           {data.pagination && data.pagination.totalPages > 1 && (
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">
-                Showing page {data.pagination.page} of {data.pagination.totalPages} ({data.pagination.total} total events)
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+              <p className="text-xs sm:text-sm text-muted-foreground text-center sm:text-left">
+                Page {data.pagination.page} of {data.pagination.totalPages} ({data.pagination.total} total)
               </p>
-              <div className="flex gap-2">
+              <div className="flex gap-2 justify-center">
                 <Button
                   variant="outline"
                   size="sm"

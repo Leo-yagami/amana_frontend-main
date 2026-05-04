@@ -104,47 +104,46 @@ const Donors = () => {
     }
   };
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Donors</h1>
-          <p className="text-muted-foreground">Manage donor relationships and track contributions</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground truncate">Donors</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground truncate">Manage donor relationships and track contributions</p>
         </div>
-        <Button variant="default" onClick={() => navigate("/dashboard/donors/new")}>
-          <Plus className="w-4 h-4 mr-2" />
-          Add Donor
+        <Button variant="default" onClick={() => navigate("/dashboard/donors/new")} size="sm" className="text-xs sm:text-sm">
+          <Plus className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
+          <span className="hidden sm:inline">Add Donor</span>
+          <span className="sm:hidden">Add</span>
         </Button>
       </div>
 
       {/* Stats */}
-
-          <div className="grid sm:grid-cols-3 gap-4">
-            <div className="bg-card rounded-xl border border-border p-6">
-              <p className="text-muted-foreground text-sm mb-1">Total Donors</p>
-              <p className="text-3xl font-bold text-foreground">
-                
-                {overview ? overview?.donors?.total : '-' }
-              </p>
-            </div>
-            <div className="bg-card rounded-xl border border-border p-6">
-              <p className="text-muted-foreground text-sm mb-1">Active Donors</p>
-              <p className="text-3xl font-bold text-success">
-                {overview ? overview?.donors?.active?.toLocaleString() : '-' }
-              </p>
-            </div>
-            <div className="bg-card rounded-xl border border-border p-6">
-              <p className="text-muted-foreground text-sm mb-1">Total Donated</p>
-              <p className="text-3xl font-bold text-primary">
-                {overview ? `$${overview?.donations?.totalAmount?.toLocaleString()}` : '-' || 0}
-              </p>
-            </div>
-          </div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+        <div className="bg-card rounded-lg sm:rounded-xl border border-border p-4 sm:p-6">
+          <p className="text-muted-foreground text-xs sm:text-sm mb-1">Total Donors</p>
+          <p className="text-2xl sm:text-3xl font-bold text-foreground">
+            {overview ? overview?.donors?.total : '-' }
+          </p>
+        </div>
+        <div className="bg-card rounded-lg sm:rounded-xl border border-border p-4 sm:p-6">
+          <p className="text-muted-foreground text-xs sm:text-sm mb-1">Active Donors</p>
+          <p className="text-2xl sm:text-3xl font-bold text-success">
+            {overview ? overview?.donors?.active?.toLocaleString() : '-' }
+          </p>
+        </div>
+        <div className="bg-card rounded-lg sm:rounded-xl border border-border p-4 sm:p-6">
+          <p className="text-muted-foreground text-xs sm:text-sm mb-1">Total Donated</p>
+          <p className="text-2xl sm:text-3xl font-bold text-primary">
+            {overview ? `$${overview?.donations?.totalAmount?.toLocaleString()}` : '-' || 0}
+          </p>
+        </div>
+      </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="flex-1 flex items-center gap-2 bg-card border border-border rounded-lg px-4 py-2">
-          <Search className="w-4 h-4 text-muted-foreground" />
+      <div className="flex flex-col gap-3 sm:gap-4">
+        <div className="flex items-center gap-2 bg-card border border-border rounded-lg px-3 py-2 text-sm">
+          <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
           <input
             type="text"
             placeholder="Search donors..."
@@ -163,8 +162,8 @@ const Donors = () => {
             setPage(1);
           }}
         >
-          <SelectTrigger className="w-[180px]">
-            <Filter className="w-4 h-4 mr-2" />
+          <SelectTrigger className="text-sm">
+            <Filter className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
             <SelectValue placeholder="Filter by type" />
           </SelectTrigger>
           <SelectContent>
@@ -187,7 +186,7 @@ const Donors = () => {
       )}
 
       {/* Donor Cards */}
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
         {isLoading ? (
           <>
             {[...Array(4)].map((_, i) => (
@@ -209,47 +208,47 @@ const Donors = () => {
           donorsData.data.map((donor) => (
           <div
             key={donor._id}
-            className="bg-card rounded-xl border border-border p-6 hover:shadow-md transition-shadow"
+            className="bg-card rounded-lg sm:rounded-xl border border-border p-4 sm:p-6 hover:shadow-md transition-shadow"
           >
-            <div className="flex items-start gap-4 mb-4">
-              <Avatar className="h-14 w-14">
+            <div className="flex items-start gap-3 sm:gap-4 mb-4">
+              <Avatar className="h-10 sm:h-14 w-10 sm:w-14 flex-shrink-0">
                 <AvatarImage src={donor.avatar || undefined} />
-                <AvatarFallback className="bg-primary/10 text-primary text-lg">
+                <AvatarFallback className="bg-primary/10 text-primary text-sm sm:text-lg">
                   {donor.name.split(" ").map((n) => n[0]).join("").slice(0, 2)}
                 </AvatarFallback>
               </Avatar>
-              <div className="flex-1">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h3 className="font-semibold text-foreground">{donor.name}</h3>
-                    <p className="text-xs text-muted-foreground">{donor.donorCode}</p>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start justify-between gap-2 mb-1">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold text-foreground text-sm sm:text-base truncate">{donor.name}</h3>
+                    <p className="text-xs text-muted-foreground truncate">{donor.donorCode}</p>
                   </div>
-                  <Badge variant="outline" className={getTypeColor(donor.donorType)}>
+                  <Badge variant="outline" className={`${getTypeColor(donor.donorType)} text-xs flex-shrink-0`}>
                     {donor.donorType}
                   </Badge>
                 </div>
               </div>
             </div>
 
-            <div className="space-y-2 mb-4">
+            <div className="space-y-1.5 mb-4">
               {donor.email && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Mail className="w-4 h-4" />
-                  <span>{donor.email}</span>
+                <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground truncate">
+                  <Mail className="w-3 sm:w-4 h-3 sm:h-4 flex-shrink-0" />
+                  <span className="truncate">{donor.email}</span>
                 </div>
               )}
               {donor.phone && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Phone className="w-4 h-4" />
-                  <span>{donor.phone}</span>
+                <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground truncate">
+                  <Phone className="w-3 sm:w-4 h-3 sm:h-4 flex-shrink-0" />
+                  <span className="truncate">{donor.phone}</span>
                 </div>
               )}
             </div>
 
-            <div className="flex items-center justify-between pt-4 border-t border-border">
+            <div className="flex items-center justify-between pt-3 sm:pt-4 border-t border-border">
               <div>
                 <p className="text-xs text-muted-foreground">Registered</p>
-                <p className="text-sm font-medium text-foreground">
+                <p className="text-xs sm:text-sm font-medium text-foreground">
                   {new Date(donor.registeredAt).toLocaleDateString()}
                 </p>
               </div>
@@ -259,25 +258,27 @@ const Donors = () => {
                   variant="ghost"
                   onClick={() => navigate(`/dashboard/donors/${donor._id}`)}
                   title="View Details"
+                  className="h-8 w-8 p-0"
                 >
-                  <Eye className="w-4 h-4" />
+                  <Eye className="w-3 sm:w-4 h-3 sm:h-4" />
                 </Button>
                 <Button
                   size="sm"
                   variant="ghost"
                   onClick={() => navigate(`/dashboard/donors/edit/${donor._id}`)}
                   title="Edit"
+                  className="h-8 w-8 p-0"
                 >
-                  <Edit className="w-4 h-4" />
+                  <Edit className="w-3 sm:w-4 h-3 sm:h-4" />
                 </Button>
                 <Button
                   size="sm"
                   variant="ghost"
                   onClick={() => handleDeleteClick(donor)}
                   title="Delete"
-                  className="text-destructive hover:text-destructive"
+                  className="text-destructive hover:text-destructive h-8 w-8 p-0"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-3 sm:w-4 h-3 sm:h-4" />
                 </Button>
               </div>
             </div>
@@ -292,11 +293,11 @@ const Donors = () => {
 
       {/* Pagination */}
       {donorsData && donorsData.pagination && donorsData.pagination.totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
-            Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, donorsData.pagination.total)} of {donorsData.pagination.total} donors
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+          <p className="text-xs sm:text-sm text-muted-foreground text-center sm:text-left">
+            Page {page} of {donorsData.pagination.totalPages} ({donorsData.pagination.total} total)
           </p>
-          <div className="flex gap-2">
+          <div className="flex gap-2 justify-center">
             <Button
               variant="outline"
               size="sm"

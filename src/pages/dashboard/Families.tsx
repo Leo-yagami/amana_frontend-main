@@ -265,64 +265,74 @@ const Families = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Families</h1>
-          <p className="text-muted-foreground">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-bold truncate">Families</h1>
+          <p className="text-sm sm:text-base text-muted-foreground truncate">
             {selectedIds.length > 0 
               ? `${selectedIds.length} selected`
               : "Manage family registrations and information"}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {selectedIds.length > 0 ? (
             <>
-              <Button variant="outline" onClick={handleExport}>
-                <Download className="mr-2 h-4 w-4" />
-                Export Selected ({selectedIds.length})
+              <Button variant="outline" size="sm" onClick={handleExport} className="text-xs sm:text-sm">
+                <Download className="mr-1 sm:mr-2 h-3 sm:h-4 w-3 sm:w-4" />
+                <span className="hidden sm:inline">Export Selected</span>
+                <span className="sm:hidden">Export</span>
               </Button>
               <Button
                 variant="outline"
+                size="sm"
                 onClick={() => {
                   setBulkStatus("verified");
                   setShowBulkStatusDialog(true);
                 }}
+                className="text-xs sm:text-sm"
               >
-                <CheckCircle className="mr-2 h-4 w-4" />
-                Mark as Verified
+                <CheckCircle className="mr-1 sm:mr-2 h-3 sm:h-4 w-3 sm:w-4" />
+                <span className="hidden sm:inline">Verified</span>
+                <span className="sm:hidden">✓</span>
               </Button>
               <Button
                 variant="outline"
+                size="sm"
                 onClick={() => {
                   setBulkStatus("pending");
                   setShowBulkStatusDialog(true);
                 }}
+                className="text-xs sm:text-sm"
               >
-                <AlertCircle className="mr-2 h-4 w-4" />
-                Mark as Pending
+                <AlertCircle className="mr-1 sm:mr-2 h-3 sm:h-4 w-3 sm:w-4" />
+                <span className="hidden sm:inline">Pending</span>
+                <span className="sm:hidden">⏳</span>
               </Button>
               <Button
                 variant="outline"
+                size="sm"
                 onClick={() => setSelectedIds([])}
+                className="text-xs sm:text-sm"
               >
-                Clear Selection
+                Clear
               </Button>
             </>
           ) : (
             <>
-              <Button variant="outline" onClick={handleExport}>
-                <Download className="mr-2 h-4 w-4" />
-                Export All
+              <Button variant="outline" size="sm" onClick={handleExport} className="text-xs sm:text-sm">
+                <Download className="mr-1 sm:mr-2 h-3 sm:h-4 w-3 sm:w-4" />
+                <span className="hidden sm:inline">Export</span>
               </Button>
-              <Button variant="outline" onClick={() => setShowQuickAddModal(true)}>
-                <Zap className="mr-2 h-4 w-4" />
-                Quick Add
+              <Button variant="outline" size="sm" onClick={() => setShowQuickAddModal(true)} className="text-xs sm:text-sm">
+                <Zap className="mr-1 sm:mr-2 h-3 sm:h-4 w-3 sm:w-4" />
+                <span className="hidden sm:inline">Quick Add</span>
               </Button>
-              <Button onClick={() => navigate("/dashboard/families/new")}>
-                <Plus className="mr-2 h-4 w-4" />
-                Register New Family
+              <Button onClick={() => navigate("/dashboard/families/new")} size="sm" className="text-xs sm:text-sm">
+                <Plus className="mr-1 sm:mr-2 h-3 sm:h-4 w-3 sm:w-4" />
+                <span className="hidden sm:inline">Register</span>
+                <span className="sm:hidden">Add</span>
               </Button>
             </>
           )}
@@ -330,175 +340,178 @@ const Families = () => {
       </div>
 
       {/* Quick Stats */}
-      <div className="grid gap-4 md:grid-cols-5">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-4">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Families</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium">Total</CardTitle>
+            <Users className="h-3 sm:h-4 w-3 sm:w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.total}</div>
+          <CardContent className="pb-2 sm:pb-0">
+            <div className="text-xl sm:text-2xl font-bold">{stats.total}</div>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Verified</CardTitle>
-            <UserCheck className="h-4 w-4 text-green-500" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium">Verified</CardTitle>
+            <UserCheck className="h-3 sm:h-4 w-3 sm:w-4 text-green-500" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.verified}</div>
+          <CardContent className="pb-2 sm:pb-0">
+            <div className="text-xl sm:text-2xl font-bold">{stats.verified}</div>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending</CardTitle>
-            <Clock className="h-4 w-4 text-orange-500" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium">Pending</CardTitle>
+            <Clock className="h-3 sm:h-4 w-3 sm:w-4 text-orange-500" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.pending}</div>
+          <CardContent className="pb-2 sm:pb-0">
+            <div className="text-xl sm:text-2xl font-bold">{stats.pending}</div>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Incomplete</CardTitle>
-            <AlertCircle className="h-4 w-4 text-yellow-500" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium">Incomplete</CardTitle>
+            <AlertCircle className="h-3 sm:h-4 w-3 sm:w-4 text-yellow-500" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.incomplete}</div>
+          <CardContent className="pb-2 sm:pb-0">
+            <div className="text-xl sm:text-2xl font-bold">{stats.incomplete}</div>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Urgent Cases</CardTitle>
-            <AlertCircle className="h-4 w-4 text-red-500" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium">Urgent</CardTitle>
+            <AlertCircle className="h-3 sm:h-4 w-3 sm:w-4 text-red-500" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.urgent}</div>
+          <CardContent className="pb-2 sm:pb-0">
+            <div className="text-xl sm:text-2xl font-bold">{stats.urgent}</div>
           </CardContent>
         </Card>
       </div>
 
       {/* Filters */}
       <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-col md:flex-row gap-4">
+        <CardContent className="pt-4 sm:pt-6">
+          <div className="flex flex-col gap-3 sm:gap-4">
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search by family name, code, or head of family..."
-                  className="pl-10"
+                  placeholder="Search families..."
+                  className="pl-10 text-sm"
                   value={filters.search}
                   onChange={(e) => handleSearch(e.target.value)}
                 />
               </div>
             </div>
-            <Select
-              value={filters.registrationStatus || "all"}
-              onValueChange={(value) => 
-                handleFilterChange("registrationStatus", value === "all" ? undefined : value)
-              }
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="verified">Verified</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="rejected">Rejected</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select
-              value={filters.urgencyLevel || "all"}
-              onValueChange={(value) => 
-                handleFilterChange("urgencyLevel", value === "all" ? undefined : value)
-              }
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Urgency" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Urgency</SelectItem>
-                <SelectItem value="low">Low</SelectItem>
-                <SelectItem value="medium">Medium</SelectItem>
-                <SelectItem value="high">High</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select
-              value={filters.registrationCompleted === undefined ? "all" : filters.registrationCompleted ? "true" : "false"}
-              onValueChange={(value) => 
-                handleFilterChange("registrationCompleted", value === "all" ? undefined : value === "true")
-              }
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Registration" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-                <SelectItem value="true">Complete</SelectItem>
-                <SelectItem value="false">Incomplete</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
+              <Select
+                value={filters.registrationStatus || "all"}
+                onValueChange={(value) => 
+                  handleFilterChange("registrationStatus", value === "all" ? undefined : value)
+                }
+              >
+                <SelectTrigger className="text-sm">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="verified">Verified</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="rejected">Rejected</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select
+                value={filters.urgencyLevel || "all"}
+                onValueChange={(value) => 
+                  handleFilterChange("urgencyLevel", value === "all" ? undefined : value)
+                }
+              >
+                <SelectTrigger className="text-sm">
+                  <SelectValue placeholder="Urgency" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Urgency</SelectItem>
+                  <SelectItem value="low">Low</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select
+                value={filters.registrationCompleted === undefined ? "all" : filters.registrationCompleted ? "true" : "false"}
+                onValueChange={(value) => 
+                  handleFilterChange("registrationCompleted", value === "all" ? undefined : value === "true")
+                }
+              >
+                <SelectTrigger className="text-sm col-span-2 sm:col-span-1">
+                  <SelectValue placeholder="Registration" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="true">Complete</SelectItem>
+                  <SelectItem value="false">Incomplete</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </CardContent>
       </Card>
 
       {/* Families Table */}
       <Card>
-        <CardHeader>
-          <CardTitle>All Families ({families.length})</CardTitle>
+        <CardHeader className="pb-3 sm:pb-6">
+          <CardTitle className="text-lg sm:text-xl">Families ({families.length})</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           {loading ? (
-            <div className="text-center py-8">Loading...</div>
+            <div className="text-center py-8 text-sm">Loading...</div>
           ) : families.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
+            <div className="text-center py-8 text-sm text-muted-foreground">
               No families found. Register your first family to get started.
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-12">
-                    <Checkbox
-                      checked={selectedIds.length === families.length && families.length > 0}
-                      onCheckedChange={handleSelectAll}
-                    />
-                  </TableHead>
-                  <TableHead>Family Code</TableHead>
-                  <TableHead>Family Name</TableHead>
-                  <TableHead>Head of Family</TableHead>
-                  <TableHead>Members</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Urgency</TableHead>
-                  <TableHead>Registered</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-10 sm:w-12">
+                      <Checkbox
+                        checked={selectedIds.length === families.length && families.length > 0}
+                        onCheckedChange={handleSelectAll}
+                      />
+                    </TableHead>
+                    <TableHead className="text-xs sm:text-sm">Code</TableHead>
+                    <TableHead className="text-xs sm:text-sm hidden sm:table-cell">Family Name</TableHead>
+                    <TableHead className="text-xs sm:text-sm hidden md:table-cell">Head</TableHead>
+                    <TableHead className="text-xs sm:text-sm">Members</TableHead>
+                    <TableHead className="text-xs sm:text-sm">Status</TableHead>
+                    <TableHead className="text-xs sm:text-sm hidden lg:table-cell">Urgency</TableHead>
+                    <TableHead className="text-xs sm:text-sm hidden md:table-cell">Registered</TableHead>
+                    <TableHead className="text-xs sm:text-sm text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
               <TableBody>
                 {families.map((family) => (
-                  <TableRow key={family._id}>
-                    <TableCell>
+                  <TableRow key={family._id} className="text-xs sm:text-sm">
+                    <TableCell className="p-2 sm:p-4">
                       <Checkbox
                         checked={selectedIds.includes(family._id)}
                         onCheckedChange={(checked) => handleSelectOne(family._id, checked as boolean)}
                       />
                     </TableCell>
-                    <TableCell className="font-medium">{family.familyCode}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
+                    <TableCell className="font-medium p-2 sm:p-4">{family.familyCode}</TableCell>
+                    <TableCell className="hidden sm:table-cell p-2 sm:p-4">
+                      <div className="flex items-center gap-2 truncate">
                         {family.familyName}
                       </div>
                     </TableCell>
-                    <TableCell>{family.familyHead || "N/A"}</TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">{family.members.length || 0}</Badge>
+                    <TableCell className="hidden md:table-cell p-2 sm:p-4 truncate">{family.familyHead || "N/A"}</TableCell>
+                    <TableCell className="p-2 sm:p-4">
+                      <Badge variant="secondary" className="text-xs">{family.members.length || 0}</Badge>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="p-2 sm:p-4">
                       <RegistrationStatusBadge status={family.registrationStatus} />
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden lg:table-cell p-2 sm:p-4">
                       <Badge
                         variant={
                           family.urgencyLevel === "high"
@@ -507,50 +520,50 @@ const Families = () => {
                             ? "secondary"
                             : "outline"
                         }
-                        className="capitalize"
+                        className="capitalize text-xs"
                       >
                         {family.urgencyLevel || "N/A"}
                       </Badge>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden md:table-cell p-2 sm:p-4 text-xs">
                       {new Date(family.createdAt).toLocaleDateString()}
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right p-2 sm:p-4">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            <MoreVertical className="h-4 w-4" />
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                            <MoreVertical className="h-3 sm:h-4 w-3 sm:w-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
+                        <DropdownMenuContent align="end" className="text-sm">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={() => navigate(`/dashboard/families/${family._id}`)}>
-                            <Eye className="mr-2 h-4 w-4" />
+                            <Eye className="mr-2 h-3 sm:h-4 w-3 sm:w-4" />
                             View Profile
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => navigate(`/dashboard/families/${family._id}/edit`)}>
-                            <Edit className="mr-2 h-4 w-4" />
+                            <Edit className="mr-2 h-3 sm:h-4 w-3 sm:w-4" />
                             Edit Family
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={() => navigate(`/dashboard/families/${family._id}/edit?focus=members`)}>
-                            <UserPlus className="mr-2 h-4 w-4" />
+                            <UserPlus className="mr-2 h-3 sm:h-4 w-3 sm:w-4" />
                             Add Member
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => navigate(`/dashboard/families/${family._id}?action=support`)}>
-                            <Zap className="mr-2 h-4 w-4" />
+                            <Zap className="mr-2 h-3 sm:h-4 w-3 sm:w-4" />
                             Record Support
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           {family.registrationStatus !== "verified" && (
                             <DropdownMenuItem onClick={() => handleVerify(family._id)}>
-                              <UserCheck className="mr-2 h-4 w-4" />
+                              <UserCheck className="mr-2 h-3 sm:h-4 w-3 sm:w-4" />
                               Verify Family
                             </DropdownMenuItem>
                           )}
                           <DropdownMenuItem onClick={() => handleDelete(family._id)} className="text-red-600">
-                            <Trash2 className="mr-2 h-4 w-4" />
+                            <Trash2 className="mr-2 h-3 sm:h-4 w-3 sm:w-4" />
                             Delete Family
                           </DropdownMenuItem>
                         </DropdownMenuContent>
