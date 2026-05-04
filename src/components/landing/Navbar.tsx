@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Heart, Menu, X } from "lucide-react";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const navLinks = [
   { label: "About Us", href: "#about" },
@@ -43,13 +45,14 @@ const Navbar = () => {
 
           {/* Desktop Actions */}
           <div className="hidden lg:flex items-center gap-3">
+            <ThemeToggle />
+            <LanguageSwitcher />
             <Link to="/dashboard">
               <Button variant="ghost">Dashboard</Button>
             </Link>
             <Link to="/payment">
               <Button variant="default">Donate Now</Button>
             </Link>
-            
           </div>
 
           {/* Mobile Menu Button */}
@@ -75,6 +78,10 @@ const Navbar = () => {
                   {link.label}
                 </a>
               ))}
+              <div className="flex gap-2 mt-4 px-4">
+                <ThemeToggle />
+                <LanguageSwitcher />
+              </div>
               <div className="flex flex-col gap-2 mt-4 px-4">
                 <Link to="/login" onClick={() => setIsOpen(false)}>
                   <Button variant="outline" className="w-full">

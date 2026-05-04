@@ -46,24 +46,24 @@ const campaigns = [
 
 const CampaignsSection = () => {
   return (
-    <section id="campaigns" className="py-20 lg:py-32 bg-background">
+    <section id="campaigns" className="py-12 sm:py-16 md:py-20 lg:py-32 bg-background">
       <div className="container mx-auto px-4">
         {/* Header */}
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-semibold mb-4">
+        <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-12 md:mb-16">
+          <span className="inline-block px-3 py-1 sm:px-4 sm:py-1.5 rounded-full bg-primary/10 text-primary text-xs sm:text-sm font-semibold mb-3 sm:mb-4">
             Active Campaigns
           </span>
-          <h2 className="text-3xl lg:text-5xl font-bold text-foreground mb-4">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-3 sm:mb-4">
             Support a Cause Today
           </h2>
-          <p className="text-lg text-muted-foreground">
+          <p className="text-sm sm:text-base lg:text-lg text-muted-foreground px-2">
             Every campaign represents real people with real needs. Your
             contribution directly impacts lives.
           </p>
         </div>
 
         {/* Campaign Cards */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-6 md:gap-8 mb-10 sm:mb-12">
           {campaigns.map((campaign, index) => (
             <article
               key={campaign.id}
@@ -71,25 +71,25 @@ const CampaignsSection = () => {
               style={{ animationDelay: `${index * 0.1}s` }}
             >
               {/* Image */}
-              <div className="relative h-52 overflow-hidden">
+              <div className="relative h-40 sm:h-48 md:h-52 overflow-hidden">
                 <img
                   src={campaign.image}
                   alt={campaign.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
-                <div className="absolute top-4 left-4">
-                  <span className="px-3 py-1 rounded-full bg-card/90 backdrop-blur-sm text-xs font-semibold text-primary">
+                <div className="absolute top-2 sm:top-4 left-2 sm:left-4">
+                  <span className="px-2 sm:px-3 py-0.5 sm:py-1 rounded-full bg-card/90 backdrop-blur-sm text-xs font-semibold text-primary">
                     {campaign.category}
                   </span>
                 </div>
               </div>
 
               {/* Content */}
-              <div className="p-6">
-                <h3 className="text-xl font-bold text-card-foreground mb-2 group-hover:text-primary transition-colors">
+              <div className="p-4 sm:p-5 md:p-6">
+                <h3 className="text-lg sm:text-xl font-bold text-card-foreground mb-2 group-hover:text-primary transition-colors line-clamp-2">
                   {campaign.title}
                 </h3>
-                <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
+                <p className="text-muted-foreground text-xs sm:text-sm mb-4 line-clamp-2">
                   {campaign.description}
                 </p>
 
@@ -110,18 +110,18 @@ const CampaignsSection = () => {
                 </div>
 
                 {/* Meta */}
-                <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
+                <div className="flex items-center justify-between text-xs sm:text-sm text-muted-foreground mb-4">
                   <div className="flex items-center gap-1">
-                    <Users className="w-4 h-4" />
+                    <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     <span>{campaign.donors} donors</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <Calendar className="w-4 h-4" />
-                    <span>{campaign.daysLeft} days left</span>
+                    <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    <span>{campaign.daysLeft}d left</span>
                   </div>
                 </div>
 
-                <Button variant="default" className="w-full">
+                <Button variant="default" className="w-full min-h-10 text-sm">
                   Donate Now
                 </Button>
               </div>

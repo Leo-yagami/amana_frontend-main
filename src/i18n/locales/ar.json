@@ -1,0 +1,104 @@
+{
+  "common": {
+    "appName": "أمانة",
+    "language": "اللغة",
+    "theme": "المظهر",
+    "light": "فاتح",
+    "dark": "غامق",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "edit": "تحرير",
+    "create": "إنشاء",
+    "back": "رجوع",
+    "next": "التالي",
+    "previous": "السابق",
+    "loading": "جاري التحميل...",
+    "error": "خطأ",
+    "success": "نجح",
+    "warning": "تحذير",
+    "info": "معلومة",
+    "noData": "لا توجد بيانات",
+    "search": "بحث",
+    "filter": "تصفية",
+    "sort": "ترتيب",
+    "export": "تصدير",
+    "import": "استيراد",
+    "download": "تحميل",
+    "upload": "رفع"
+  },
+  "navigation": {
+    "home": "الرئيسية",
+    "about": "حول",
+    "contact": "اتصل بنا",
+    "login": "تسجيل الدخول",
+    "signup": "إنشاء حساب",
+    "logout": "تسجيل الخروج",
+    "dashboard": "لوحة التحكم",
+    "profile": "الملف الشخصي",
+    "settings": "الإعدادات"
+  },
+  "dashboard": {
+    "title": "لوحة التحكم",
+    "welcome": "أهلا بك في لوحة التحكم",
+    "overview": "النظرة العامة",
+    "families": "الأسر",
+    "donors": "المانحون",
+    "donations": "التبرعات",
+    "campaigns": "الحملات",
+    "events": "الأحداث",
+    "finances": "المالية",
+    "reports": "التقارير",
+    "settings": "الإعدادات",
+    "addNew": "إضافة جديد",
+    "edit": "تحرير",
+    "delete": "حذف",
+    "view": "عرض",
+    "totalFamilies": "إجمالي الأسر",
+    "totalDonors": "إجمالي المانحين",
+    "totalDonations": "إجمالي التبرعات",
+    "totalCampaigns": "إجمالي الحملات"
+  },
+  "landing": {
+    "hero": {
+      "title": "تمكين المجتمعات من خلال التبرعات الخيرية",
+      "subtitle": "تواصل مع الأسر المحتاجة وأحدث تأثيراً دائماً",
+      "cta": "ابدأ الآن"
+    },
+    "campaigns": {
+      "title": "حملاتنا",
+      "description": "دعم مختلف المبادرات الخيرية"
+    },
+    "impact": {
+      "title": "تأثيرنا",
+      "description": "قصص حقيقية، تغيير حقيقي"
+    },
+    "stories": {
+      "title": "قصص النجاح",
+      "description": "شهادات من مجتمعنا"
+    }
+  },
+  "auth": {
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "confirmPassword": "تأكيد كلمة المرور",
+    "login": "تسجيل الدخول",
+    "signup": "إنشاء حساب",
+    "forgotPassword": "هل نسيت كلمة المرور؟",
+    "rememberMe": "تذكرني",
+    "dontHaveAccount": "ليس لديك حساب؟",
+    "alreadyHaveAccount": "هل لديك حساب بالفعل؟",
+    "invalidCredentials": "البريد الإلكتروني أو كلمة المرور غير صحيحة",
+    "passwordMismatch": "كلمات المرور غير متطابقة",
+    "fieldRequired": "هذا الحقل مطلوب",
+    "invalidEmail": "عنوان بريد إلكتروني غير صحيح"
+  },
+  "messages": {
+    "welcome": "أهلا بك!",
+    "goodbye": "وداعا!",
+    "thankyou": "شكراً لك!",
+    "confirmDelete": "هل تريد حقاً حذف هذا؟",
+    "operationSuccessful": "تمت العملية بنجاح",
+    "operationFailed": "فشلت العملية. يرجى المحاولة مرة أخرى."
+  }
+}

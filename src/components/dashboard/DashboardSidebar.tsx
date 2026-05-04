@@ -44,17 +44,17 @@ const DashboardSidebar = () => {
     <aside
       className={cn(
         "h-screen bg-sidebar border-r border-sidebar-border flex flex-col transition-all duration-300",
-        collapsed ? "w-20" : "w-64"
+        collapsed ? "w-20" : "w-56 sm:w-60 lg:w-64"
       )}
     >
       {/* Header */}
-      <div className="h-16 lg:h-20 flex items-center justify-between px-4 border-b border-sidebar-border">
-        <Link to="/" className="flex items-center gap-2">
-          <div className="w-10 h-10 rounded-xl gradient-hero flex items-center justify-center shadow-sm">
+      <div className="h-14 sm:h-16 lg:h-20 flex items-center justify-between px-3 sm:px-4 border-b border-sidebar-border">
+        <Link to="/" className="flex items-center gap-2 flex-shrink-0">
+          <div className="w-10 h-10 rounded-xl gradient-hero flex items-center justify-center shadow-sm flex-shrink-0">
             <Heart className="w-5 h-5 text-primary-foreground fill-current" />
           </div>
           {!collapsed && (
-            <span className="text-lg font-bold text-sidebar-foreground">
+            <span className="text-sm sm:text-base lg:text-lg font-bold text-sidebar-foreground truncate">
               HopeBridge
             </span>
           )}
@@ -63,7 +63,7 @@ const DashboardSidebar = () => {
           variant="ghost"
           size="icon"
           onClick={() => setCollapsed(!collapsed)}
-          className="hidden lg:flex"
+          className="hidden lg:flex h-10 w-10 flex-shrink-0"
         >
           {collapsed ? (
             <ChevronRight className="w-4 h-4" />
@@ -74,8 +74,8 @@ const DashboardSidebar = () => {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 py-6 px-3 overflow-y-auto">
-        <ul className="space-y-1">
+      <nav className="flex-1 py-4 sm:py-6 px-2 sm:px-3 overflow-y-auto">
+        <ul className="space-y-0.5 sm:space-y-1">
           {menuItems.map((item) => {
             const isActive = location.pathname === item.href;
             return (
@@ -83,14 +83,15 @@ const DashboardSidebar = () => {
                 <Link
                   to={item.href}
                   className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-all duration-200",
+                    "flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg font-medium text-sm sm:text-base transition-all duration-200 min-h-10",
                     isActive
                       ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
                       : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                   )}
+                  title={collapsed ? item.label : undefined}
                 >
-                  <item.icon className="w-5 h-5 flex-shrink-0" />
-                  {!collapsed && <span>{item.label}</span>}
+                  <item.icon className="w-4 sm:w-5 h-4 sm:h-5 flex-shrink-0" />
+                  {!collapsed && <span className="truncate">{item.label}</span>}
                 </Link>
               </li>
             );
@@ -99,13 +100,14 @@ const DashboardSidebar = () => {
       </nav>
 
       {/* Footer */}
-      <div className="p-3 border-t border-sidebar-border">
+      <div className="p-2 sm:p-3 border-t border-sidebar-border">
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium text-destructive hover:bg-destructive/10 transition-all duration-200 w-full"
+          className="flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg font-medium text-destructive hover:bg-destructive/10 transition-all duration-200 w-full text-sm sm:text-base min-h-10"
+          title={collapsed ? "Log Out" : undefined}
         >
-          <LogOut className="w-5 h-5 flex-shrink-0" />
-          {!collapsed && <span>Log Out</span>}
+          <LogOut className="w-4 sm:w-5 h-4 sm:h-5 flex-shrink-0" />
+          {!collapsed && <span className="truncate">Log Out</span>}
         </button>
       </div>
     </aside>

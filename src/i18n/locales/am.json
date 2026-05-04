@@ -1,0 +1,104 @@
+{
+  "common": {
+    "appName": "አማና",
+    "language": "ቋንቋ",
+    "theme": "ቴማ",
+    "light": "밝음",
+    "dark": "암",
+    "save": "ቁምጣቦ",
+    "cancel": "ሞቅ",
+    "delete": "ሰርዝ",
+    "edit": "ስዕል",
+    "create": "ፈጠር",
+    "back": "ወደ ኋላ",
+    "next": "ቀጣይ",
+    "previous": "ቀድሞ",
+    "loading": "በሚጫን ላይ...",
+    "error": "ስህተት",
+    "success": "ስኬት",
+    "warning": "ማስጠንቀቂያ",
+    "info": "መረጃ",
+    "noData": "ምንም መረጃ የለም",
+    "search": "ፍለጋ",
+    "filter": "ማጣሪያ",
+    "sort": "ደርድር",
+    "export": "መላክ",
+    "import": "ማስገባት",
+    "download": "ማውረድ",
+    "upload": "ማስቀመጥ"
+  },
+  "navigation": {
+    "home": "መገናኛ",
+    "about": "ስለ",
+    "contact": "ይติኩ",
+    "login": "ግባ",
+    "signup": "ምዝገባ",
+    "logout": "ውጣ",
+    "dashboard": " dashoard",
+    "profile": "መገለጫ",
+    "settings": "ማስተካከያ"
+  },
+  "dashboard": {
+    "title": "ড্যাশবোর্ড",
+    "welcome": "ወደ ড్యాશবోর్డ დ स्वागതम",
+    "overview": "አጠቃላይ እይታ",
+    "families": "ቤተሰቦች",
+    "donors": "ሰጪዎች",
+    "donations": "መሞላት",
+    "campaigns": "ዝግጅቶች",
+    "events": "ክስተቶች",
+    "finances": "ፋይናንስ",
+    "reports": "ዘገባዎች",
+    "settings": "ማስተካከያ",
+    "addNew": "አዲስ ጨምር",
+    "edit": "ስዕል",
+    "delete": "ሰርዝ",
+    "view": "ይመልከቱ",
+    "totalFamilies": "ጠቅላላ ቤተሰቦች",
+    "totalDonors": "ጠቅላላ ሰጪዎች",
+    "totalDonations": "ጠቅላላ መሞላት",
+    "totalCampaigns": "ጠቅላላ ዝግጅቶች"
+  },
+  "landing": {
+    "hero": {
+      "title": "ማህበረሰቦችን በወርቅ መሞላት ሃይል ይስጡ",
+      "subtitle": "ከፈለገ ቤተሰቦች ጋር ግንኙነት ይኑር እና ቆይታ ፅንሱ ሁሉ ይሁን",
+      "cta": "ቦታ አስቀምጥ"
+    },
+    "campaigns": {
+      "title": "የእኛ ዝግጅቶች",
+      "description": "የተለያዩ የወርቅ መሞላት ድርጊቶች ድጋፍ ማግኘት"
+    },
+    "impact": {
+      "title": "የእኛ ተጽእኖ",
+      "description": "ትክክለኛ ታሪኮች፣ ትክክለኛ ለውጥ"
+    },
+    "stories": {
+      "title": "ስኬታማ ታሪኮች",
+      "description": "ከእኛ ማህበረሰብ ምስክርነት"
+    }
+  },
+  "auth": {
+    "email": "ኢሜይል",
+    "password": "ሚስጥር",
+    "confirmPassword": "ሚስጥር ያረጋግጡ",
+    "login": "ግባ",
+    "signup": "ምዝገባ",
+    "forgotPassword": "ሚስጥር ረሱ?",
+    "rememberMe": "ከዚህ ወቅት ጀምሮ",
+    "dontHaveAccount": "ሂሳብ ይዖት አይደሉም?",
+    "alreadyHaveAccount": "ሂሳብ አለዎት?",
+    "invalidCredentials": "ልክ ያልሆነ ኢሜይል ወይም ሚስጥር",
+    "passwordMismatch": "ሚስጥር አይመሳሰለም",
+    "fieldRequired": "ይህ መስክ አስፈላጊ ነው",
+    "invalidEmail": "ልክ ያልሆነ ኢሜይል አድራሻ"
+  },
+  "messages": {
+    "welcome": "ወደ ሞልዋታ በደህና!!!",
+    "goodbye": "በሞታ!",
+    "thankyou": "አመሰግናለሁ!",
+    "confirmDelete": "ይህን ለመሰረዝ በእርግጠኝነት እንደሚፈልጉ?",
+    "operationSuccessful": "ሥራው በስኬት ተጠናቅቆአል",
+    "operationFailed": "ሥራው ወደ ውድቅ ወስደዋል ። እባክዎ ደግ ይግቡ።"
+  }
+}
