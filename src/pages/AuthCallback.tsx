@@ -24,7 +24,7 @@ const AuthCallback = () => {
         const { token, user } = response.data;
 
         // Store raw JWT only (no "Bearer " prefix)
-        localStorage.setItem("token", token);
+        // localStorage.setItem("token", token);
         localStorage.setItem("user", JSON.stringify(user));
 
         navigate("/payment", { replace: true });
