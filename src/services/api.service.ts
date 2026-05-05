@@ -331,7 +331,8 @@ export const authApi = {
   
   // Google OAuth: full-page redirect (server sets HttpOnly cookie on callback)
   loginWithGoogle: () => {
-    window.location.href = `http://localhost:3000/api/auth/google`;
+    const apiOrigin = import.meta.env.VITE_API_URL || "http://localhost:3000";
+    window.location.href = `${apiOrigin}/api/auth/google`;
   },
   
   // Only used if your backend supports popup/code-exchange flow

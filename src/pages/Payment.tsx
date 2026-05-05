@@ -315,11 +315,10 @@ const Payment = () => {
   const totalAmount = useMemo(() => +(displayAmount + processingFee).toFixed(2), [displayAmount, processingFee]);
 
   const onSubmit = async (data) => {
-    // const apiOrigin = import.meta.env.VITE_API_URL || "http://localhost:3000/initialize";
-    const apiOrigin = "http://localhost:3000/initialize";
+    const apiOrigin = import.meta.env.VITE_API_URL || "http://localhost:3000";
     
     console.log("Validated form data:", data);
-    const response = await fetch(apiOrigin, {
+    const response = await fetch(`${apiOrigin}/initialize`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json', 
@@ -330,7 +329,7 @@ const Payment = () => {
     const result = await response.json();
     console.log('POST Result', result)
     // console.log(response)
-    window.location.assign(`${apiOrigin}`);
+    window.location.assign(`${apiOrigin}/initialize`);
   };
 
   return (
