@@ -331,7 +331,7 @@ export const authApi = {
   
   // Google OAuth: full-page redirect (server sets HttpOnly cookie on callback)
   loginWithGoogle: () => {
-    const apiOrigin = import.meta.env.VITE_API_URL || "http://localhost:3000";
+    const apiOrigin = import.meta.env.VITE_API_URL || "https://amana-bckend-api.vercel.app";
     window.location.href = `${apiOrigin}/api/auth/google`;
   },
   
