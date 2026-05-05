@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Users,
   HandHeart,
@@ -22,6 +23,7 @@ import type {
 } from "@/types/api";
 
 const Dashboard = () => {
+  const { t } = useTranslation();
   // State for all dashboard data
   const [overview, setOverview] = useState<DashboardOverview | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
@@ -60,10 +62,7 @@ const Dashboard = () => {
         console.log("activity data: ", activitiesRes.data)
       } catch (err: any) {
         console.error("Failed to fetch dashboard data:", err);
-        setError(
-          err.response?.data?.message ||
-            "Failed to load dashboard. Please try again."
-        );
+        setError(err.response?.data?.message || t("dashboard.home.loadError"));
       } finally {
         setLoading(false);
       }
@@ -89,20 +88,20 @@ const Dashboard = () => {
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold text-foreground">
-            Dashboard
+            {t("dashboard.home.title")}
           </h1>
           <p className="text-muted-foreground">
-            Welcome back! Here&apos;s what&apos;s happening today.
+            {t("dashboard.home.subtitle")}
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3">
           <Button variant="outline">
             <Calendar className="w-4 h-4 mr-2" />
-            This Month
+            {t("dashboard.home.thisMonth")}
           </Button>
           <Button variant="default">
             <TrendingUp className="w-4 h-4 mr-2" />
-            Generate Report
+            {t("dashboard.home.generateReport")}
           </Button>
         </div>
       </div>
@@ -125,27 +124,27 @@ const Dashboard = () => {
         ) : overview ? (
           <>
             <StatCard
-              title="Active Donors"
+              title={t("dashboard.home.activeDonors")}
               value={overview.donors.active.toLocaleString()}
-              change={`${overview.donors.total} total`}
+              change={`${overview.donors.total} ${t("dashboard.home.totalSuffix")}`}
               trend="up"
               icon={HandHeart}
               iconColor="text-success"
               iconBgColor="bg-success/10"
             />
             <StatCard
-              title="Funds Raised (MTD)"
+              title={t("dashboard.home.fundsMtd")}
               value={`$${overview.donations.monthlyAmount.toLocaleString()}`}
-              change={`${overview.donations.totalCount} donations`}
+              change={`${overview.donations.totalCount} ${t("dashboard.home.donationsSuffix")}`}
               trend="up"
               icon={DollarSign}
               iconColor="text-warning"
               iconBgColor="bg-warning/10"
             />
             <StatCard
-              title="Active Events"
+              title={t("dashboard.home.activeEvents")}
               value={overview?.events?.active?.toString()}
-              change={`${overview?.events?.total} total`}
+              change={`${overview?.events?.total} ${t("dashboard.home.totalSuffix")}`}
               trend="up"
               icon={Megaphone}
               iconColor="text-primary"
@@ -161,10 +160,10 @@ const Dashboard = () => {
         <div className="lg:col-span-2 bg-card rounded-xl border border-border p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-semibold text-foreground">
-              Recent Activity
+              {t("dashboard.home.recentActivity")}
             </h2>
             <Button variant="ghost" size="sm">
-              View All
+              {t("dashboard.home.viewAll")}
               <ArrowUpRight className="w-4 h-4 ml-1" />
             </Button>
           </div>
@@ -210,10 +209,10 @@ const Dashboard = () => {
         <div className="bg-card rounded-xl border border-border p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-semibold text-foreground">
-              Upcoming Events
+              {t("dashboard.home.upcomingEvents")}
             </h2>
             <Button variant="ghost" size="sm">
-              View All
+              {t("dashboard.home.viewAll")}
               <ArrowUpRight className="w-4 h-4 ml-1" />
             </Button>
           </div>
@@ -240,7 +239,7 @@ const Dashboard = () => {
                     <span>
                       {event.startDate
                         ? new Date(event.startDate).toLocaleDateString()
-                        : "TBD"}
+                        : t("common.tbd")}
                     </span>
                     <span className="capitalize">{event.eventType}</span>
                   </div>
@@ -248,7 +247,7 @@ const Dashboard = () => {
               ))
             ) : (
               <p className="text-muted-foreground text-sm text-center py-4">
-                No upcoming events
+                {t("dashboard.home.noEvents")}
               </p>
             )}
           </div>
@@ -258,9 +257,9 @@ const Dashboard = () => {
       {/* Top Donors / Campaigns */}
       <div className="bg-card rounded-xl border border-border p-6">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-semibold text-foreground">Top Donors</h2>
+          <h2 className="text-lg font-semibold text-foreground">{t("dashboard.home.topDonors")}</h2>
           <Button variant="ghost" size="sm">
-            View All
+            {t("dashboard.home.viewAll")}
             <ArrowUpRight className="w-4 h-4 ml-1" />
           </Button>
         </div>
@@ -283,7 +282,7 @@ const Dashboard = () => {
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="font-medium text-foreground">{donor.name}</h3>
                   <span className="text-sm text-muted-foreground">
-                    {donor.donationCount} donations
+                    {t("dashboard.home.donationCount", { count: donor.donationCount })}
                   </span>
                 </div>
                 <div className="flex items-center gap-4">
@@ -296,7 +295,7 @@ const Dashboard = () => {
             ))
           ) : (
             <p className="text-muted-foreground text-sm text-center py-4">
-              No donor data available
+              {t("dashboard.home.noDonors")}
             </p>
           )}
         </div>

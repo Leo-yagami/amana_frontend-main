@@ -256,8 +256,8 @@
 
 // export default Payment;
 
-const axios = import('axios')
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   CreditCard,
   Wallet,
@@ -270,114 +270,15 @@ import {
 
 //form validation libraries
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { createPaymentSchema } from "./paymentSchema";
 
 const PRESET_AMOUNTS = [10, 25, 50];
 
-// Zod Schema (Validation Rules)
-const paymentSchema = z
-  .object({
-    selectedAmount: z.coerce.number().min(1),
-    customAmount: z.string().optional(),
-    paymentMethod: z.enum(["card", "telebirr"]),
-    telebirrPhone: z.string().optional(),
-
-    // Card fields
-    cardNumber: z.string().optional(),
-    expiryDate: z.string().optional(),
-    cvv: z.string().optional(),
-  })
-  .superRefine((data, ctx) => {
-    // Handle custom amount validation
-    if (data.customAmount && data.customAmount.trim() !== "") {
-      const custom = Number(data.customAmount);
-
-      if (Number.isNaN(custom)) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["customAmount"],
-          message: "Custom amount must be a valid number.",
-        });
-      } else if (custom <= 0) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["customAmount"],
-          message: "Custom amount must be greater than 0.",
-        });
-      } else if (custom > 100000) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["customAmount"],
-          message: "Custom amount is too large.",
-        });
-      }
-    }
-
-    // Telebirr validation
-    if (data.paymentMethod === "telebirr") {
-      if (!data.telebirrPhone || data.telebirrPhone.trim() === "") {
-        ctx.addIssue({
-          code: "custom",
-          path: ["telebirrPhone"],
-          message: "Telebirr phone number is required.",
-        });
-      } else if (!/^09\d{8}$/.test(data.telebirrPhone)) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["telebirrPhone"],
-          message: "Telebirr phone must be like 09XXXXXXXX.",
-        });
-      }
-    }
-
-    // Card validation
-    if (data.paymentMethod === "card") {
-      if (!data.cardNumber || data.cardNumber.trim() === "") {
-        ctx.addIssue({
-          code: "custom",
-          path: ["cardNumber"],
-          message: "Card number is required.",
-        });
-      } else if (!/^\d{16}$/.test(data.cardNumber.replace(/\s/g, ""))) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["cardNumber"],
-          message: "Card number must be 16 digits.",
-        });
-      }
-
-      if (!data.expiryDate || data.expiryDate.trim() === "") {
-        ctx.addIssue({
-          code: "custom",
-          path: ["expiryDate"],
-          message: "Expiry date is required.",
-        });
-      } else if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(data.expiryDate.replace(/\s/g, ""))) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["expiryDate"],
-          message: "Expiry must be in MM/YY format.",
-        });
-      }
-
-      if (!data.cvv || data.cvv.trim() === "") {
-        ctx.addIssue({
-          code: "custom",
-          path: ["cvv"],
-          message: "CVV is required.",
-        });
-      } else if (!/^\d{3,4}$/.test(data.cvv)) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["cvv"],
-          message: "CVV must be 3 or 4 digits.",
-        });
-      }
-    }
-  });
-
 const Payment = () => {
+  const { t, i18n } = useTranslation();
+  const paymentSchema = useMemo(() => createPaymentSchema(t), [t, i18n.language]);
+
   const [selectedAmount, setSelectedAmount] = useState(25);
   const [customAmount, setCustomAmount] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("card");
@@ -439,10 +340,9 @@ const Payment = () => {
           {/* Main Column */}
           <div className="lg:col-span-8 space-y-10">
             <header>
-              <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4">Complete Your Donation</h1>
+              <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4">{t("payment.title")}</h1>
               <p className="text-muted-foreground text-lg leading-relaxed max-w-2xl">
-                Your contribution empowers our mission to drive positive change and support vital causes in communities
-                across the globe.
+                {t("payment.subtitle")}
               </p>
             </header>
 
@@ -450,7 +350,7 @@ const Payment = () => {
             <section className="space-y-6">
               <div className="flex items-center gap-2">
                 <Wallet className="w-5 h-5 text-primary" />
-                <h2 className="text-xl font-bold">Select Donation Amount</h2>
+                <h2 className="text-xl font-bold">{t("payment.selectAmount")}</h2>
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -476,7 +376,11 @@ const Payment = () => {
                         ${amount}
                       </div>
                       <div className="text-xs text-muted-foreground">
-                        {amount === 10 ? "Simple Gift" : amount === 25 ? "Impactful" : "Generous"}
+                        {amount === 10
+                          ? t("payment.amountSimple")
+                          : amount === 25
+                            ? t("payment.amountImpact")
+                            : t("payment.amountGenerous")}
                       </div>
                     </button>
                   );
@@ -487,7 +391,7 @@ const Payment = () => {
                     type="number"
                     min="1"
                     step="0.01"
-                    placeholder="Custom"
+                    placeholder={t("payment.customPlaceholder")}
                     value={customAmount}
                     onChange={(e) => {
                       setCustomAmount(e.target.value);
@@ -506,7 +410,7 @@ const Payment = () => {
             <section className="space-y-6">
               <div className="flex items-center gap-2">
                 <CreditCard className="w-5 h-5 text-primary" />
-                <h2 className="text-xl font-bold">Payment Method</h2>
+                <h2 className="text-xl font-bold">{t("payment.paymentMethod")}</h2>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -527,8 +431,8 @@ const Payment = () => {
                     <CreditCard className="w-5 h-5 text-primary" />
                   </div>
                   <div>
-                    <div className="font-bold text-sm">Credit/Debit Card</div>
-                    <div className="text-xs text-muted-foreground">Secure checkout</div>
+                    <div className="font-bold text-sm">{t("payment.cardTitle")}</div>
+                    <div className="text-xs text-muted-foreground">{t("payment.cardSubtitle")}</div>
                   </div>
                 </div>
 
@@ -549,8 +453,8 @@ const Payment = () => {
                     <Building2 className="w-5 h-5 text-muted-foreground" />
                   </div>
                   <div>
-                    <div className="font-bold text-sm">Telebirr</div>
-                    <div className="text-xs text-muted-foreground">Mobile payment</div>
+                    <div className="font-bold text-sm">{t("payment.telebirrTitle")}</div>
+                    <div className="text-xs text-muted-foreground">{t("payment.telebirrSubtitle")}</div>
                   </div>
                 </div>
               </div>
@@ -559,7 +463,7 @@ const Payment = () => {
 
                 {watchedPaymentMethod === "telebirr" && (
                   <div className="space-y-2">
-                    <label className="text-sm font-semibold text-muted-foreground">Telebirr Phone Number</label>
+                    <label className="text-sm font-semibold text-muted-foreground">{t("payment.telebirrPhone")}</label>
                     <input
                       type="tel"
                       placeholder="09XXXXXXXX"
@@ -578,11 +482,11 @@ const Payment = () => {
                 <section className="bg-muted/40 p-8 rounded-2xl space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="md:col-span-2 space-y-2">
-                      <label className="text-sm font-semibold text-muted-foreground">Card Number</label>
+                      <label className="text-sm font-semibold text-muted-foreground">{t("payment.cardNumber")}</label>
                       <div className="relative">
                         <input
                           type="text"
-                          placeholder="0000 0000 0000 0000"
+                          placeholder={t("payment.cardPlaceholder")}
                           {...register("cardNumber")}
                           className="w-full px-5 py-4 rounded-xl border border-border bg-background"
                         />
@@ -592,10 +496,10 @@ const Payment = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-sm font-semibold text-muted-foreground">Expiry Date</label>
+                      <label className="text-sm font-semibold text-muted-foreground">{t("payment.expiry")}</label>
                       <input
                         type="text"
-                        placeholder="MM/YY"
+                        placeholder={t("payment.expiryPlaceholder")}
                         {...register("expiryDate")}
                         className="w-full px-5 py-4 rounded-xl border border-border bg-background"
                       />
@@ -603,11 +507,11 @@ const Payment = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-sm font-semibold text-muted-foreground">CVV Code</label>
+                      <label className="text-sm font-semibold text-muted-foreground">{t("payment.cvv")}</label>
                       <div className="relative">
                         <input
                           type="password"
-                          placeholder="***"
+                          placeholder={t("payment.cvvPlaceholder")}
                           {...register("cvv")}
                           className="w-full px-5 py-4 rounded-xl border border-border bg-background"
                         />
@@ -624,21 +528,21 @@ const Payment = () => {
             <aside className="lg:col-span-4 sticky top-10">
               <div className="bg-card rounded-2xl border border-border overflow-hidden">
                 <div className="p-8">
-                  <h3 className="text-xl font-bold mb-6">Donation Summary</h3>
+                  <h3 className="text-xl font-bold mb-6">{t("payment.summaryTitle")}</h3>
 
                   <div className="space-y-4 mb-8">
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Donation</span>
+                      <span className="text-muted-foreground">{t("payment.donationLine")}</span>
                       <span className="font-semibold">${displayAmount.toFixed(2)}</span>
                     </div>
 
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Processing Fee</span>
+                      <span className="text-muted-foreground">{t("payment.processingFee")}</span>
                       <span className="font-semibold">${processingFee.toFixed(2)}</span>
                     </div>
 
                     <div className="pt-4 mt-4 border-t border-border flex justify-between items-end">
-                      <span className="text-sm font-medium">Total Amount</span>
+                      <span className="text-sm font-medium">{t("payment.total")}</span>
                       <span className="text-3xl font-extrabold text-primary">${totalAmount.toFixed(2)}</span>
                     </div>
                   </div>
@@ -647,12 +551,12 @@ const Payment = () => {
                     type="submit"
                     className="w-full py-5 bg-primary text-primary-foreground rounded-full font-bold text-lg hover:opacity-90 transition flex items-center justify-center gap-3"
                   >
-                    Complete Donation
+                    {t("payment.complete")}
                     <HeartHandshake className="w-5 h-5" />
                   </button>
 
                   <p className="mt-6 text-[11px] text-center text-muted-foreground leading-relaxed px-4">
-                    By clicking &quot;Complete Donation&quot;, you agree to our Terms of Service and Privacy Policy.
+                    {t("payment.legal")}
                   </p>
                 </div>
               </div>
@@ -660,8 +564,8 @@ const Payment = () => {
             <div className="mt-6 p-4 border border-border rounded-xl flex items-center gap-4 bg-muted/30">
               <ShieldCheck className="w-8 h-8 text-primary" />
               <div>
-                <p className="text-xs font-bold uppercase tracking-wider">Secure Transaction</p>
-                <p className="text-[10px] text-muted-foreground">256-bit SSL encryption protects your data.</p>
+                <p className="text-xs font-bold uppercase tracking-wider">{t("payment.secureTitle")}</p>
+                <p className="text-[10px] text-muted-foreground">{t("payment.secureDesc")}</p>
               </div>
             </div>
           </aside>

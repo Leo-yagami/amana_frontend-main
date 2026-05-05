@@ -559,6 +559,7 @@
 //CLAUDE DEBUT!!!!!!!!
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Plus, Search, Filter, Eye, Edit, Trash2, DollarSign, Calendar, User, ArrowUpDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -602,6 +603,7 @@ import {
 import  DonationTrendsChart  from "@/pages/dashboard/reports/monthlyDonations";
 
 const Donations = () => {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
@@ -648,8 +650,8 @@ const Donations = () => {
     try {
       await donationApi.delete(donationToDelete._id);
       toast({
-        title: "Success",
-        description: "Donation deleted successfully",
+        title: t("dashboard.donationsPage.toastDeletedTitle"),
+        description: t("dashboard.donationsPage.toastDeletedDesc"),
       });
       queryClient.invalidateQueries({ queryKey: ['donations'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
@@ -692,16 +694,25 @@ const Donations = () => {
   const getTypeLabel = (type: string) => {
     switch (type) {
       case "monetary":
-        return "Money";
+        return t("dashboard.donationsPage.typeMonetary");
       case "in_kind":
-        return "In-Kind";
+        return t("dashboard.donationsPage.typeInKind");
       default:
         return type;
     }
   };
 
   const getStatusLabel = (status: string) => {
-    return status === "pledged" ? "Promised" : status.charAt(0).toUpperCase() + status.slice(1);
+    switch (status) {
+      case "pledged":
+        return t("dashboard.donationsPage.statusPromised");
+      case "received":
+        return t("dashboard.donationsPage.statusReceived");
+      case "processing":
+        return t("dashboard.donationsPage.statusProcessing");
+      default:
+        return status.charAt(0).toUpperCase() + status.slice(1);
+    }
   };
 
   const formatCurrency = (amount: number) => {
@@ -712,10 +723,10 @@ const Donations = () => {
   };
 
   const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
+    return new Date(date).toLocaleDateString(i18n.language || "en", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
 
@@ -808,7 +819,7 @@ const trendLoading = trendQueries.some((q) => q.isLoading);
       <div className="flex items-center gap-1.5">
         <User className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
         <span className="text-sm font-medium text-foreground truncate">
-          {donation.donorName || "Anonymous"}
+          {donation.donorName || t("dashboard.donationsPage.anonymous")}
         </span>
       </div>
 
@@ -830,7 +841,7 @@ const trendLoading = trendQueries.some((q) => q.isLoading);
       {/* Row 4: allocated to (if present) */}
       {(donation.family || donation.event || donation.beneficiary) && (
         <div className="text-[11px] text-muted-foreground border-t border-border pt-2">
-          Allocated to:{" "}
+          {t("dashboard.donationsPage.allocatedTo")}{" "}
           <span className="text-foreground font-medium">
             {donation.family?.familyName ||
               donation.event?.title ||
@@ -850,7 +861,7 @@ const trendLoading = trendQueries.some((q) => q.isLoading);
           onClick={() => navigate(`/dashboard/donations/${donation._id}`)}
           className="h-7 px-2 text-xs gap-1"
         >
-          <Eye className="w-3 h-3" /> View
+          <Eye className="w-3 h-3" /> {t("dashboard.donationsPage.viewShort")}
         </Button>
         <Button
           size="sm"
@@ -858,7 +869,7 @@ const trendLoading = trendQueries.some((q) => q.isLoading);
           onClick={() => navigate(`/dashboard/donations/edit/${donation._id}`)}
           className="h-7 px-2 text-xs gap-1"
         >
-          <Edit className="w-3 h-3" /> Edit
+          <Edit className="w-3 h-3" /> {t("dashboard.donationsPage.editTitle")}
         </Button>
         <Button
           size="sm"
@@ -866,7 +877,7 @@ const trendLoading = trendQueries.some((q) => q.isLoading);
           onClick={() => handleDeleteClick(donation)}
           className="h-7 px-2 text-xs gap-1 text-destructive hover:text-destructive ml-auto"
         >
-          <Trash2 className="w-3 h-3" /> Delete
+          <Trash2 className="w-3 h-3" /> {t("common.delete")}
         </Button>
       </div>
     </div>
@@ -893,10 +904,10 @@ const trendLoading = trendQueries.some((q) => q.isLoading);
       <div className="flex items-center justify-between gap-2">
         <div className="min-w-0">
           <h1 className="text-lg min-[400px]:text-xl sm:text-2xl lg:text-3xl font-bold text-foreground truncate">
-            Donations
+            {t("dashboard.donationsPage.title")}
           </h1>
           <p className="text-[11px] min-[400px]:text-xs sm:text-sm text-muted-foreground truncate">
-            Track and manage all contributions
+            {t("dashboard.donationsPage.subtitleDetail")}
           </p>
         </div>
         <Button
@@ -906,9 +917,9 @@ const trendLoading = trendQueries.some((q) => q.isLoading);
           className="text-xs sm:text-sm shrink-0"
         >
           <Plus className="w-3 ml-1 sm:ml-0 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
-          <span className="hidden min-[400px]:inline">Record</span>
+          <span className="hidden min-[400px]:inline">{t("dashboard.donationsPage.record")}</span>
           {/* <span className="min-[400px]:hidden">+</span> */}
-          <span className="hidden sm:inline"> Donation</span>
+          <span className="hidden sm:inline"> {t("dashboard.donationsPage.recordDonation")}</span>
         </Button>
       </div>
 
@@ -917,7 +928,7 @@ const trendLoading = trendQueries.some((q) => q.isLoading);
         <div className="grid grid-cols-1 min-[500px]:grid-cols-3 gap-2 min-[400px]:gap-3 sm:gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 pt-3 px-3 sm:pb-2 sm:pt-4 sm:px-4">
-              <CardTitle className="text-xs sm:text-sm font-medium">Total Donations</CardTitle>
+              <CardTitle className="text-xs sm:text-sm font-medium">{t("dashboard.donationsPage.totalDonationsCard")}</CardTitle>
               <DollarSign className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent className="px-3 pb-3 sm:px-4 sm:pb-4">
@@ -925,14 +936,16 @@ const trendLoading = trendQueries.some((q) => q.isLoading);
                 {formatCurrency(overview?.donations?.totalAmount || 0)}
               </div>
               <p className="text-[10px] sm:text-xs text-muted-foreground">
-                {overview?.donations?.totalCount || 0} donations
+                {t("dashboard.donationsPage.donationsCountLabel", {
+                  count: overview?.donations?.totalCount || 0,
+                })}
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 pt-3 px-3 sm:pb-2 sm:pt-4 sm:px-4">
-              <CardTitle className="text-xs sm:text-sm font-medium">This Month</CardTitle>
+              <CardTitle className="text-xs sm:text-sm font-medium">{t("dashboard.donationsPage.thisMonth")}</CardTitle>
               <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent className="px-3 pb-3 sm:px-4 sm:pb-4">
@@ -940,14 +953,14 @@ const trendLoading = trendQueries.some((q) => q.isLoading);
                 {formatCurrency(overview?.donations?.monthlyAmount || 0)}
               </div>
               <p className="text-[10px] sm:text-xs text-muted-foreground">
-                Current month
+                {t("dashboard.donationsPage.currentMonth")}
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 pt-3 px-3 sm:pb-2 sm:pt-4 sm:px-4">
-              <CardTitle className="text-xs sm:text-sm font-medium">Active Donors</CardTitle>
+              <CardTitle className="text-xs sm:text-sm font-medium">{t("dashboard.donationsPage.activeDonorsCard")}</CardTitle>
               <User className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent className="px-3 pb-3 sm:px-4 sm:pb-4">
@@ -955,7 +968,7 @@ const trendLoading = trendQueries.some((q) => q.isLoading);
                 {overview?.donors?.active.toLocaleString() || 0}
               </div>
               <p className="text-[10px] sm:text-xs text-muted-foreground">
-                Donated this month
+                {t("dashboard.donationsPage.donatedThisMonth")}
               </p>
             </CardContent>
           </Card>
@@ -968,19 +981,19 @@ const trendLoading = trendQueries.some((q) => q.isLoading);
         <CardHeader className="grid grid-cols-1 min-[500px]:grid-cols-2 min-[500px]:items-center min-[500px]:justify-items-between gap-2 min-[500px]:gap-4 pb-2 sm:pb-4 pt-3 px-3 sm:pt-4 sm:px-4">
         
           <div className="min-w-0">
-            <CardTitle className="text-base sm:text-lg lg:text-xl">Donation Trend</CardTitle>
+            <CardTitle className="text-base sm:text-lg lg:text-xl">{t("dashboard.donationsPage.trendTitle")}</CardTitle>
             <CardDescription className="text-[11px] sm:text-sm">
-              Monthly Contribution analysis
+              {t("dashboard.donationsPage.trendDesc")}
             </CardDescription>
           </div>
           <Select value={trendRange} onValueChange={(v: any) => setTrendRange(v)}>
             <SelectTrigger className="w-full min-[500px]:w-[150px] text-xs sm:text-sm h-8 sm:h-9">
-              <SelectValue placeholder="Time range" />
+              <SelectValue placeholder={t("dashboard.donationsPage.timeRangePh")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="3m">Last 3 months</SelectItem>
-              <SelectItem value="6m">Last 6 months</SelectItem>
-              <SelectItem value="1y">Last year</SelectItem>
+              <SelectItem value="3m">{t("dashboard.donationsPage.trend3m")}</SelectItem>
+              <SelectItem value="6m">{t("dashboard.donationsPage.trend6m")}</SelectItem>
+              <SelectItem value="1y">{t("dashboard.donationsPage.trend1y")}</SelectItem>
             </SelectContent>
           </Select>
         </CardHeader>
@@ -993,7 +1006,7 @@ const trendLoading = trendQueries.some((q) => q.isLoading);
                 /> */}
                 {trendLoading ? (
                   <div className="h-full w-full flex items-center justify-center text-sm text-muted-foreground">
-                    Loading chart...
+                    {t("dashboard.donationsPage.loadingChart")}
                   </div>
                 ) : (
                   <DonationTrendsChart
@@ -1009,7 +1022,7 @@ const trendLoading = trendQueries.some((q) => q.isLoading);
             <div className="h-48 min-[400px]:h-56 sm:h-80 lg:h-[330px] w-full min-w-0 max-w-full overflow-hidden">
               {trendLoading ? (
                 <div className="h-full w-full flex items-center justify-center text-sm text-muted-foreground">
-                  Loading chart...
+                  {t("dashboard.donationsPage.loadingChart")}
                 </div>
               ) : (
                 <DonationTrendsChart
@@ -1029,7 +1042,7 @@ const trendLoading = trendQueries.some((q) => q.isLoading);
           <Search className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-muted-foreground flex-shrink-0" />
           <input
             type="text"
-            placeholder="Search donations..."
+            placeholder={t("dashboard.donationsPage.searchPh")}
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
@@ -1049,12 +1062,12 @@ const trendLoading = trendQueries.some((q) => q.isLoading);
           >
             <SelectTrigger className="text-xs sm:text-sm h-8 sm:h-9">
               <Filter className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
-              <SelectValue placeholder="Status" />
+              <SelectValue placeholder={t("dashboard.donationsPage.statusPh")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="received">Received</SelectItem>
-              <SelectItem value="pledged">Promised</SelectItem>
+              <SelectItem value="all">{t("dashboard.donationsPage.allStatus")}</SelectItem>
+              <SelectItem value="received">{t("dashboard.donationsPage.statusReceived")}</SelectItem>
+              <SelectItem value="pledged">{t("dashboard.donationsPage.statusPromised")}</SelectItem>
             </SelectContent>
           </Select>
           <Select
@@ -1066,12 +1079,12 @@ const trendLoading = trendQueries.some((q) => q.isLoading);
           >
             <SelectTrigger className="text-xs sm:text-sm h-8 sm:h-9">
               <Filter className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
-              <SelectValue placeholder="Type" />
+              <SelectValue placeholder={t("dashboard.donationsPage.typePh")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Types</SelectItem>
-              <SelectItem value="monetary">Money</SelectItem>
-              <SelectItem value="in_kind">In-Kind</SelectItem>
+              <SelectItem value="all">{t("dashboard.donationsPage.allTypes")}</SelectItem>
+              <SelectItem value="monetary">{t("dashboard.donationsPage.typeMonetary")}</SelectItem>
+              <SelectItem value="in_kind">{t("dashboard.donationsPage.typeInKind")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -1085,7 +1098,7 @@ const trendLoading = trendQueries.some((q) => q.isLoading);
           Array.from({ length: 5 }).map((_, i) => <SkeletonCard key={i} />)
         ) : error ? (
           <Alert variant="destructive">
-            <AlertDescription>Failed to load donations. Please try again.</AlertDescription>
+            <AlertDescription>{t("dashboard.donationsPage.loadErr")}</AlertDescription>
           </Alert>
         ) : donationsData && donationsData.data.length > 0 ? (
           donationsData.data.map((donation: any) => (
@@ -1093,7 +1106,7 @@ const trendLoading = trendQueries.some((q) => q.isLoading);
           ))
         ) : (
           <div className="text-center py-12 text-sm text-muted-foreground">
-            No donations found
+            {t("dashboard.donationsPage.empty")}
           </div>
         )}
       </div>
@@ -1105,21 +1118,21 @@ const trendLoading = trendQueries.some((q) => q.isLoading);
             <TableHeader>
               <TableRow>
                 {/* Always visible ≥ sm */}
-                <TableHead className="text-xs sm:text-sm w-[120px] sm:w-[140px]">Reference</TableHead>
+                <TableHead className="text-xs sm:text-sm w-[120px] sm:w-[140px]">{t("dashboard.donationsPage.colReference")}</TableHead>
                 {/* Donor: visible ≥ sm */}
-                <TableHead className="text-xs sm:text-sm">Donor</TableHead>
+                <TableHead className="text-xs sm:text-sm">{t("dashboard.donationsPage.colDonor")}</TableHead>
                 {/* Type: hidden sm, visible ≥ md */}
-                <TableHead className="text-xs sm:text-sm w-[110px] text-right">Amount</TableHead>
+                <TableHead className="text-xs sm:text-sm w-[110px] text-right">{t("dashboard.donationsPage.colAmount")}</TableHead>
                 {/* Status: always visible ≥ sm */}
-                <TableHead className="text-xs sm:text-sm hidden min-[787px]:table-cell w-[110px]">Type</TableHead>
+                <TableHead className="text-xs sm:text-sm hidden min-[787px]:table-cell w-[110px]">{t("dashboard.donationsPage.colType")}</TableHead>
                 {/* Amount: always visible ≥ sm */}
-                <TableHead className="text-xs sm:text-sm w-[100px]">Status</TableHead>
+                <TableHead className="text-xs sm:text-sm w-[100px]">{t("dashboard.donationsPage.colStatus")}</TableHead>
                 {/* Date: hidden sm, visible ≥ md */}
-                <TableHead className="text-xs sm:text-sm hidden md:table-cell w-[110px]">Date</TableHead>
+                <TableHead className="text-xs sm:text-sm hidden md:table-cell w-[110px]">{t("dashboard.donationsPage.colDate")}</TableHead>
                 {/* Allocated To: hidden until lg */}
-                <TableHead className="text-xs sm:text-sm hidden min-[1166px]:table-cell">Allocated To</TableHead>
+                <TableHead className="text-xs sm:text-sm hidden min-[1166px]:table-cell">{t("dashboard.donationsPage.colAllocatedTo")}</TableHead>
                 {/* Actions: always visible */}
-                <TableHead className="text-xs sm:text-sm w-[100px] text-right">Actions</TableHead>
+                <TableHead className="text-xs sm:text-sm w-[100px] text-right">{t("dashboard.donationsPage.colActions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -1142,7 +1155,7 @@ const trendLoading = trendQueries.some((q) => q.isLoading);
                   <TableCell colSpan={8}>
                     <Alert variant="destructive">
                       <AlertDescription>
-                        Failed to load donations. Please try again.
+                        {t("dashboard.donationsPage.loadErr")}
                       </AlertDescription>
                     </Alert>
                   </TableCell>
@@ -1161,7 +1174,7 @@ const trendLoading = trendQueries.some((q) => q.isLoading);
                       <div className="flex items-center gap-2 truncate">
                         <User className="w-3 sm:w-4 h-3 sm:h-4 text-muted-foreground flex-shrink-0" />
                         <span className="font-medium text-xs sm:text-sm truncate">
-                          {donation.donorName || "Anonymous"}
+                          {donation.donorName || t("dashboard.donationsPage.anonymous")}
                         </span>
                       </div>
                     </TableCell>
@@ -1196,7 +1209,7 @@ const trendLoading = trendQueries.some((q) => q.isLoading);
                           <span className="text-foreground">{donation.beneficiary.fullName}</span>
                         )}
                         {!donation.family && !donation.event && !donation.beneficiary && (
-                          <span className="text-muted-foreground">General</span>
+                          <span className="text-muted-foreground">{t("dashboard.donationsPage.generalAllocation")}</span>
                         )}
                       </div>
                     </TableCell>
@@ -1206,7 +1219,7 @@ const trendLoading = trendQueries.some((q) => q.isLoading);
                           size="sm"
                           variant="ghost"
                           onClick={() => navigate(`/dashboard/donations/${donation._id}`)}
-                          title="View Details"
+                          title={t("dashboard.donationsPage.viewDetailsTitle")}
                           className="h-8 w-8 p-0"
                         >
                           <Eye className="w-3 sm:w-4 h-3 sm:h-4" />
@@ -1215,7 +1228,7 @@ const trendLoading = trendQueries.some((q) => q.isLoading);
                           size="sm"
                           variant="ghost"
                           onClick={() => navigate(`/dashboard/donations/edit/${donation._id}`)}
-                          title="Edit"
+                          title={t("dashboard.donationsPage.editTitle")}
                           className="h-8 w-8 p-0"
                         >
                           <Edit className="w-3 sm:w-4 h-3 sm:h-4" />
@@ -1224,7 +1237,7 @@ const trendLoading = trendQueries.some((q) => q.isLoading);
                           size="sm"
                           variant="ghost"
                           onClick={() => handleDeleteClick(donation)}
-                          title="Delete"
+                          title={t("dashboard.donationsPage.deleteTitleAction")}
                           className="text-destructive hover:text-destructive h-8 w-8 p-0"
                         >
                           <Trash2 className="w-3 sm:w-4 h-3 sm:h-4" />
@@ -1236,7 +1249,7 @@ const trendLoading = trendQueries.some((q) => q.isLoading);
               ) : (
                 <TableRow>
                   <TableCell colSpan={8} className="text-center py-12 text-muted-foreground">
-                    No donations found
+                    {t("dashboard.donationsPage.empty")}
                   </TableCell>
                 </TableRow>
               )}
@@ -1249,7 +1262,11 @@ const trendLoading = trendQueries.some((q) => q.isLoading);
       {donationsData && donationsData.pagination && donationsData.pagination.totalPages > 1 && (
         <div className="flex flex-col min-[500px]:flex-row min-[500px]:items-center min-[500px]:justify-between gap-2 min-[500px]:gap-4">
           <p className="text-[11px] sm:text-sm text-muted-foreground text-center min-[500px]:text-left">
-            Page {page} of {donationsData.pagination.totalPages} ({donationsData.pagination.total} total)
+            {t("dashboard.donationsPage.pageInfo", {
+              page,
+              totalPages: donationsData.pagination.totalPages,
+              total: donationsData.pagination.total,
+            })}
           </p>
           <div className="flex items-center justify-center gap-1">
             <Button
@@ -1259,7 +1276,7 @@ const trendLoading = trendQueries.some((q) => q.isLoading);
               disabled={page === 1}
               className="text-xs h-7 sm:h-8 px-2 sm:px-3"
             >
-              Prev
+              {t("dashboard.donationsPage.prev")}
             </Button>
             <div className="flex items-center gap-0.5 sm:gap-1">
               {Array.from({ length: Math.min(5, donationsData.pagination.totalPages) }, (_, i) => {
@@ -1293,7 +1310,7 @@ const trendLoading = trendQueries.some((q) => q.isLoading);
               disabled={page === donationsData.pagination.totalPages}
               className="text-xs h-7 sm:h-8 px-2 sm:px-3"
             >
-              Next
+              {t("dashboard.donationsPage.next")}
             </Button>
           </div>
         </div>
@@ -1303,20 +1320,20 @@ const trendLoading = trendQueries.some((q) => q.isLoading);
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent className="w-[calc(100vw-2rem)] max-w-md mx-auto rounded-lg">
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Donation</AlertDialogTitle>
+            <AlertDialogTitle>{t("dashboard.donationsPage.deleteTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this donation? This action cannot be undone.
+              {t("dashboard.donationsPage.deleteDesc")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-col min-[400px]:flex-row gap-2 min-[400px]:gap-0">
             <AlertDialogCancel onClick={() => setDonationToDelete(null)}>
-              Cancel
+              {t("common.cancel")}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteConfirm}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Delete
+              {t("common.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

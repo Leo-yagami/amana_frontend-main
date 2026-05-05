@@ -433,6 +433,7 @@
 
 
 import { useMemo, useState, useRef } from "react";
+import { useTranslation } from "react-i18next";
 // import { useQuery } from "@tanstack/react-query";
 import { useQueries } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -554,6 +555,7 @@ const SummarySkeleton = () => (
 );
 
 const ReportsAnalytics = () => {
+  const { t } = useTranslation();
   const [range, setRange] = useState<RangeType>("6m");
   const [activeTab, setActiveTab] = useState("summary");
   const { ref, isInView } = useInView({ threshold: 0.5 });
@@ -637,8 +639,7 @@ const ReportsAnalytics = () => {
   //   "Failed to load analytics. Please try again.";
 
   const errorMessage =
-  firstError?.response?.data?.message ??
-  "Failed to load analytics. Please try again.";
+    firstError?.response?.data?.message ?? t("dashboard.reports2.loadError");
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -646,30 +647,30 @@ const ReportsAnalytics = () => {
       <div className="flex flex-col lg:flex-row lg:items-center sm:justify-between gap-3 sm:gap-4">
         <div className="min-w-0">
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground truncate">
-            Reports & Analytics
+            {t("dashboard.reports2.title")}
           </h1>
           <p className="text-xs sm:text-sm text-muted-foreground truncate">
-            Analyze families, donations, and event performance
+            {t("dashboard.reports2.subtitle")}
           </p>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 items-stretch sm:items-stretch mt-2 sm:mt-0">
           <Select value={range} onValueChange={(v: RangeType) => setRange(v)}>
             <SelectTrigger className="w-full sm:w-[170px] text-sm">
-              <SelectValue placeholder="Select range" />
+              <SelectValue placeholder={t("dashboard.reports2.selectRange")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="month">This Month</SelectItem>
-              <SelectItem value="3m">Last 3 Months</SelectItem>
-              <SelectItem value="6m">Last 6 Months</SelectItem>
-              <SelectItem value="1y">Last Year</SelectItem>
+              <SelectItem value="month">{t("dashboard.reports2.rangeMonth")}</SelectItem>
+              <SelectItem value="3m">{t("dashboard.reports2.range3m")}</SelectItem>
+              <SelectItem value="6m">{t("dashboard.reports2.range6m")}</SelectItem>
+              <SelectItem value="1y">{t("dashboard.reports2.range1y")}</SelectItem>
             </SelectContent>
           </Select>
 
           <Button variant="default" disabled={isLoading || isFetching} size="default" className="text-xs sm:text-sm mb-4 sm:mb-0 h">
             <Download className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
-            <span className="hidden sm:inline">Export Reports</span>
-            <span className="sm:hidden">Export</span>
+            <span className="hidden sm:inline">{t("dashboard.reports2.exportFull")}</span>
+            <span className="sm:hidden">{t("dashboard.reports2.export")}</span>
           </Button>
         </div>
       </div>
@@ -684,10 +685,10 @@ const ReportsAnalytics = () => {
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="w-auto sm:w-auto justify-start overflow-x-auto mb-3">
-          <TabsTrigger value="summary" className="text-xs sm:text-sm">Summary</TabsTrigger>
-          <TabsTrigger value="families" className="text-xs sm:text-sm">Families</TabsTrigger>
-          <TabsTrigger value="donations" className="text-xs sm:text-sm">Donations</TabsTrigger>
-          <TabsTrigger value="events" className="text-xs sm:text-sm">Events</TabsTrigger>
+          <TabsTrigger value="summary" className="text-xs sm:text-sm">{t("dashboard.reports2.tabSummary")}</TabsTrigger>
+          <TabsTrigger value="families" className="text-xs sm:text-sm">{t("dashboard.reports2.tabFamilies")}</TabsTrigger>
+          <TabsTrigger value="donations" className="text-xs sm:text-sm">{t("dashboard.reports2.tabDonations")}</TabsTrigger>
+          <TabsTrigger value="events" className="text-xs sm:text-sm">{t("dashboard.reports2.tabEvents")}</TabsTrigger>
         </TabsList>
 
         {/* Summary */}
@@ -700,12 +701,12 @@ const ReportsAnalytics = () => {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-4">
                 <Card className="">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2">
-                    <CardTitle className="text-sm sm:text-base font-medium">Families</CardTitle>
+                    <CardTitle className="text-sm sm:text-base font-medium">{t("dashboard.reports2.cardFamilies")}</CardTitle>
                     <Users className="h-5 sm:h-7 w-5 sm:w-7 text-muted-foreground" />
                   </CardHeader>
                   <CardContent className="pb-6 ">
                     <div className="text-xs text-muted-foreground">
-                      Total
+                      {t("common.total")}
                     </div>
                     <div className="text-xl sm:text-2xl font-bold">
                       {safeAnalytics.stats.families.total}
@@ -718,12 +719,12 @@ const ReportsAnalytics = () => {
 
                 <Card >
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2">
-                    <CardTitle className="text-sm sm:text-base font-medium">Donations</CardTitle>
+                    <CardTitle className="text-sm sm:text-base font-medium">{t("dashboard.reports2.cardDonations")}</CardTitle>
                     <DollarSign className="h-5 sm:h-7 w-5 sm:w-7 text-muted-foreground" />
                   </CardHeader>
                   <CardContent className="pb-6 sm:pb-0">
                     <div className="text-xs text-muted-foreground">
-                      Total
+                      {t("common.total")}
                     </div>
                     <div className="text-xl sm:text-2xl font-bold">
                       {formatCurrency(safeAnalytics.stats.donations.total)}
@@ -736,12 +737,12 @@ const ReportsAnalytics = () => {
 
                 <Card className="">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2">
-                    <CardTitle className="text-sm sm:text-base font-medium">Events</CardTitle>
+                    <CardTitle className="text-sm sm:text-base font-medium">{t("dashboard.reports2.cardEvents")}</CardTitle>
                     <Calendar className="h-5 sm:h-7 w-5 sm:w-7 text-muted-foreground" />
                   </CardHeader>
                   <CardContent className="pb-6 sm:pb-0">
                     <div className="text-xs text-muted-foreground">
-                      Total
+                      {t("common.total")}
                     </div>
                     <div className="text-xl sm:text-2xl font-bold">
                       {safeAnalytics.stats.events.total}
@@ -756,9 +757,9 @@ const ReportsAnalytics = () => {
               {/* Monthly Trends */}
               <Card className="min-w-0 overflow-hidden [&_canvas]:max-w-full">
                 <CardHeader className="pb-3 ">
-                  <CardTitle className="text-lg sm:text-xl">Monthly Family Registrations</CardTitle>
+                  <CardTitle className="text-lg sm:text-xl">{t("dashboard.reports2.monthlyRegTitle")}</CardTitle>
                   <CardDescription className="text-xs sm:text-sm">
-                    Families registered in the selected period
+                    {t("dashboard.reports2.monthlyRegDesc")}
                   </CardDescription>
                 </CardHeader>
 
@@ -796,8 +797,8 @@ const ReportsAnalytics = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 <Card>
                   <CardHeader className="pb-2 sm:pb-4">
-                    <CardTitle className="text-base sm:text-lg">Family Urgency Levels</CardTitle>
-                    <CardDescription className="text-xs sm:text-sm">Urgency distribution</CardDescription>
+                    <CardTitle className="text-base sm:text-lg">{t("dashboard.reports2.urgencyTitle")}</CardTitle>
+                    <CardDescription className="text-xs sm:text-sm">{t("dashboard.reports2.urgencyDesc")}</CardDescription>
                   </CardHeader>
                   <CardContent className="p-2 sm:p-6">
                     <div ref={ref} className="h-52 sm:h-60 overflow-y-auto scrollbar-hide">
@@ -810,8 +811,8 @@ const ReportsAnalytics = () => {
 
                 <Card>
                   <CardHeader className="pb-2 sm:pb-4">
-                    <CardTitle className="text-base sm:text-lg">Donation Sources</CardTitle>
-                    <CardDescription className="text-xs sm:text-sm">Where donations come from</CardDescription>
+                    <CardTitle className="text-base sm:text-lg">{t("dashboard.reports2.sourcesTitle")}</CardTitle>
+                    <CardDescription className="text-xs sm:text-sm">{t("dashboard.reports2.sourcesDesc")}</CardDescription>
                   </CardHeader>
                   <CardContent className="p-2 sm:p-6">
                     <div ref={ref} className="h-52 sm:h-60 overflow-y-auto scrollbar-hide">
@@ -824,8 +825,8 @@ const ReportsAnalytics = () => {
 
                 <Card className="sm:col-span-2 lg:col-span-1">
                   <CardHeader className="pb-2 sm:pb-4">
-                    <CardTitle className="text-base sm:text-lg">Event Types</CardTitle>
-                    <CardDescription className="text-xs sm:text-sm">Breakdown of event categories</CardDescription>
+                    <CardTitle className="text-base sm:text-lg">{t("dashboard.reports2.eventTypesTitle")}</CardTitle>
+                    <CardDescription className="text-xs sm:text-sm">{t("dashboard.reports2.eventTypesDesc")}</CardDescription>
                   </CardHeader>
                   <CardContent className="p-2 sm:p-6">
                     <div ref={ref} className="h-52 sm:h-60 overflow-y-auto scrollbar-hide">
@@ -844,8 +845,8 @@ const ReportsAnalytics = () => {
         <TabsContent value="families">
           <Card>
             <CardHeader>
-              <CardTitle>Families Analytics</CardTitle>
-              <CardDescription>More detailed family analytics coming soon...</CardDescription>
+              <CardTitle>{t("dashboard.reports2.famAnalyticsTitle")}</CardTitle>
+              <CardDescription>{t("dashboard.reports2.famAnalyticsDesc")}</CardDescription>
             </CardHeader>
             <CardContent className="text-muted-foreground text-sm">
               
@@ -856,8 +857,8 @@ const ReportsAnalytics = () => {
         <TabsContent value="donations">
           <Card>
             <CardHeader>
-              <CardTitle>Donations Analytics</CardTitle>
-              <CardDescription>More detailed donation analytics coming soon...</CardDescription>
+              <CardTitle>{t("dashboard.reports2.donAnalyticsTitle")}</CardTitle>
+              <CardDescription>{t("dashboard.reports2.donAnalyticsDesc")}</CardDescription>
             </CardHeader>
             <CardContent className="text-muted-foreground text-sm">
               
@@ -868,8 +869,8 @@ const ReportsAnalytics = () => {
         <TabsContent value="events">
           <Card>
             <CardHeader>
-              <CardTitle>Events Analytics</CardTitle>
-              <CardDescription>More detailed event analytics coming soon...</CardDescription>
+              <CardTitle>{t("dashboard.reports2.evAnalyticsTitle")}</CardTitle>
+              <CardDescription>{t("dashboard.reports2.evAnalyticsDesc")}</CardDescription>
             </CardHeader>
             <CardContent className="text-muted-foreground text-sm">
               

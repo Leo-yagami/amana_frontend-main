@@ -3,6 +3,7 @@ import { initReactI18next } from 'react-i18next';
 import enTranslations from './locales/en.json';
 import arTranslations from './locales/ar.json';
 import amTranslations from './locales/am.json';
+import { syncDocumentDirection } from './syncDocumentDir';
 
 const resources = {
   en: {
@@ -28,5 +29,8 @@ i18n.use(initReactI18next).init({
     escapeValue: false,
   },
 });
+
+syncDocumentDirection(i18n.language);
+i18n.on('languageChanged', syncDocumentDirection);
 
 export default i18n;

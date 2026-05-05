@@ -2,7 +2,6 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Heart,
   LayoutDashboard,
-  Users,
   UsersRound,
   HandHeart,
   Gift,
@@ -14,23 +13,23 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 
 const menuItems = [
-  { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
-  { icon: UsersRound, label: "Families", href: "/dashboard/families" },
-  // { icon: Users, label: "Beneficiaries", href: "/dashboard/beneficiaries" },
-  { icon: HandHeart, label: "Donors", href: "/dashboard/donors" },
-  { icon: Gift, label: "Donations", href: "/dashboard/donations" },
-  { icon: Calendar, label: "Events", href: "/dashboard/events" },
-  { icon: FileText, label: "Reports", href: "/dashboard/reports" },
-  { icon: Settings, label: "Settings", href: "/dashboard/settings" },
-];
+  { icon: LayoutDashboard, labelKey: "dashboard.sidebar.dashboard", href: "/dashboard" },
+  { icon: UsersRound, labelKey: "dashboard.sidebar.families", href: "/dashboard/families" },
+  { icon: HandHeart, labelKey: "dashboard.sidebar.donors", href: "/dashboard/donors" },
+  { icon: Gift, labelKey: "dashboard.sidebar.donations", href: "/dashboard/donations" },
+  { icon: Calendar, labelKey: "dashboard.sidebar.events", href: "/dashboard/events" },
+  { icon: FileText, labelKey: "dashboard.sidebar.reports", href: "/dashboard/reports" },
+  { icon: Settings, labelKey: "dashboard.sidebar.settings", href: "/dashboard/settings" },
+] as const;
 
 const DashboardSidebar = () => {
+  const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
   const { logout } = useAuth();
@@ -179,7 +178,8 @@ useEffect(() => {
 
             {!collapsed && (
               <span className="text-sm sm:text-base lg:text-lg font-bold text-sidebar-foreground truncate">
-                HopeBridge
+                {t("brand.hope")}
+                {t("brand.bridge")}
               </span>
             )}
           </Link>
@@ -208,7 +208,7 @@ useEffect(() => {
           {menuItems.map((item) => {
             const isActive = location.pathname === item.href;
             return (
-              <li key={item.label}>
+              <li key={item.labelKey}>
                 <Link
                   to={item.href}
                   className={cn(
@@ -217,10 +217,10 @@ useEffect(() => {
                       ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
                       : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                   )}
-                  title={collapsed ? item.label : undefined}
+                  title={collapsed ? t(item.labelKey) : undefined}
                 >
                   <item.icon className="w-4 sm:w-5 h-4 sm:h-5 flex-shrink-0" />
-                  {!collapsed && <span className="truncate">{item.label}</span>}
+                  {!collapsed && <span className="truncate">{t(item.labelKey)}</span>}
                 </Link>
               </li>
             );
@@ -233,10 +233,10 @@ useEffect(() => {
         <button
           onClick={handleLogout}
           className="flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg font-medium text-destructive hover:bg-destructive/10 transition-all duration-200 w-full text-sm sm:text-base min-h-10"
-          title={collapsed ? "Log Out" : undefined}
+          title={collapsed ? t("dashboard.sidebar.logout") : undefined}
         >
           <LogOut className="w-4 sm:w-5 h-4 sm:h-5 flex-shrink-0" />
-          {!collapsed && <span className="truncate">Log Out</span>}
+          {!collapsed && <span className="truncate">{t("dashboard.sidebar.logout")}</span>}
         </button>
       </div>
     </aside>

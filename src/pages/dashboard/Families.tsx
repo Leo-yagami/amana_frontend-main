@@ -463,10 +463,10 @@
 //         </CardHeader>
 //         <CardContent className="p-0">
 //           {loading ? (
-//             <div className="text-center py-8 text-sm">Loading...</div>
+//             <div className="text-center py-8 text-sm">{t("dashboard.familiesPage.loading")}</div>
 //           ) : families.length === 0 ? (
 //             <div className="text-center py-8 text-sm text-muted-foreground">
-//               No families found. Register your first family to get started.
+//               {t("dashboard.familiesPage.empty")}
 //             </div>
 //           ) : (
 //             <div className="overflow-x-auto">
@@ -540,31 +540,31 @@
 //                           <DropdownMenuSeparator />
 //                           <DropdownMenuItem onClick={() => navigate(`/dashboard/families/${family.id}`)}>
 //                             <Eye className="mr-2 h-3 sm:h-4 w-3 sm:w-4" />
-//                             View Profile
+//                             {t("dashboard.familiesPage.viewProfile")}
 //                           </DropdownMenuItem>
 //                           <DropdownMenuItem onClick={() => navigate(`/dashboard/families/${family.id}/edit`)}>
 //                             <Edit className="mr-2 h-3 sm:h-4 w-3 sm:w-4" />
-//                             Edit Family
+//                             {t("dashboard.familiesPage.editFamily")}
 //                           </DropdownMenuItem>
 //                           <DropdownMenuSeparator />
 //                           <DropdownMenuItem onClick={() => navigate(`/dashboard/families/${family.id}/edit?focus=members`)}>
 //                             <UserPlus className="mr-2 h-3 sm:h-4 w-3 sm:w-4" />
-//                             Add Member
+//                             {t("dashboard.familiesPage.addMember")}
 //                           </DropdownMenuItem>
 //                           <DropdownMenuItem onClick={() => navigate(`/dashboard/families/${family.id}?action=support`)}>
 //                             <Zap className="mr-2 h-3 sm:h-4 w-3 sm:w-4" />
-//                             Record Support
+//                             {t("dashboard.familiesPage.recordSupport")}
 //                           </DropdownMenuItem>
 //                           <DropdownMenuSeparator />
 //                           {family.registrationStatus !== "verified" && (
 //                             <DropdownMenuItem onClick={() => handleVerify(family.id)}>
 //                               <UserCheck className="mr-2 h-3 sm:h-4 w-3 sm:w-4" />
-//                               Verify Family
+//                               {t("dashboard.familiesPage.verifyFamily")}
 //                             </DropdownMenuItem>
 //                           )}
 //                           <DropdownMenuItem onClick={() => handleDelete(family.id)} className="text-red-600">
 //                             <Trash2 className="mr-2 h-3 sm:h-4 w-3 sm:w-4" />
-//                             Delete Family
+//                             {t("dashboard.familiesPage.deleteFamily")}
 //                           </DropdownMenuItem>
 //                         </DropdownMenuContent>
 //                       </DropdownMenu>
@@ -661,6 +661,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import QuickFamilyRegistrationModal from "./components/QuickFamilyRegistrationModal";
 import RegistrationStatusBadge from "@/components/RegistrationStatusBadge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -676,6 +677,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 const Families = () => {
+  const { t } = useTranslation();
   const [families, setFamilies] = useState<Family[]>([]);
   const [loading, setLoading] = useState(true);
   const [showQuickAddModal, setShowQuickAddModal] = useState(false);
@@ -730,8 +732,8 @@ const Families = () => {
       setStats({ total, verified, pending, incomplete, urgent });
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to fetch families",
+        title: t("common.error"),
+        description: error.response?.data?.message || t("dashboard.familiesPage.toastFetchErr"),
         variant: "destructive",
       });
     } finally {
@@ -781,8 +783,8 @@ const Families = () => {
       fetchFamilies();
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to verify family",
+        title: t("common.error"),
+        description: error.response?.data?.message || t("dashboard.familiesPage.toastVerifyErr"),
         variant: "destructive",
       });
     }
@@ -810,8 +812,8 @@ const Families = () => {
   const handleBulkStatusUpdate = async (status: string) => {
     if (selectedIds.length === 0) {
       toast({
-        title: "No selection",
-        description: "Please select families to update",
+        title: t("dashboard.familiesPage.toastNoSelection"),
+        description: t("dashboard.familiesPage.toastSelectFirst"),
         variant: "destructive",
       });
       return;
@@ -825,19 +827,19 @@ const Families = () => {
       );
 
       toast({
-        title: "Success",
-        description: `Updated ${selectedIds.length} famil${
-          selectedIds.length === 1 ? "y" : "ies"
-        }`,
+        title: t("common.success"),
+        description:
+          selectedIds.length === 1
+            ? t("dashboard.familiesPage.toastBulkOkOne")
+            : t("dashboard.familiesPage.toastBulkOk", { count: selectedIds.length }),
       });
 
       setSelectedIds([]);
       fetchFamilies();
     } catch (error: any) {
       toast({
-        title: "Error",
-        description:
-          error.response?.data?.message || "Failed to update families",
+        title: t("common.error"),
+        description: error.response?.data?.message || t("dashboard.familiesPage.toastBulkErr"),
         variant: "destructive",
       });
     }
@@ -886,10 +888,11 @@ const Families = () => {
 
     if (selectedIds.length > 0) {
       toast({
-        title: "Export Complete",
-        description: `Exported ${selectedIds.length} selected famil${
-          selectedIds.length === 1 ? "y" : "ies"
-        }`,
+        title: t("dashboard.familiesPage.toastExport"),
+        description:
+          selectedIds.length === 1
+            ? t("dashboard.familiesPage.toastExportOne")
+            : t("dashboard.familiesPage.toastExportSelected", { count: selectedIds.length }),
       });
     }
   };
@@ -900,15 +903,15 @@ const Families = () => {
       await familyApi.delete(id);
 
       toast({
-        title: "Deleted",
-        description: "Family deleted successfully",
+        title: t("common.deleted"),
+        description: t("dashboard.familiesPage.toastDeleted"),
       });
 
       fetchFamilies();
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to delete family",
+        title: t("common.error"),
+        description: error.response?.data?.message || t("dashboard.familiesPage.toastDeleteErr"),
         variant: "destructive",
       });
     }
@@ -919,11 +922,11 @@ const Families = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
         <div className="min-w-0">
-          <h1 className="text-2xl sm:text-3xl font-bold truncate">Families</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold truncate">{t("dashboard.familiesPage.title")}</h1>
           <p className="text-sm sm:text-base text-muted-foreground">
             {selectedIds.length > 0
-              ? `${selectedIds.length} selected`
-              : "Manage family registrations and information"}
+              ? t("dashboard.familiesPage.selected", { count: selectedIds.length })
+              : t("dashboard.familiesPage.subtitle")}
           </p>
         </div>
 
@@ -1179,10 +1182,10 @@ const Families = () => {
 
         <CardContent className="p-0">
           {loading ? (
-            <div className="text-center py-8 text-sm">Loading...</div>
+            <div className="text-center py-8 text-sm">{t("dashboard.familiesPage.loading")}</div>
           ) : families.length === 0 ? (
             <div className="text-center py-8 text-sm text-muted-foreground">
-              No families found. Register your first family to get started.
+              {t("dashboard.familiesPage.empty")}
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -1199,30 +1202,30 @@ const Families = () => {
                       />
                     </TableHead>
 
-                    <TableHead className="text-xs sm:text-sm">Code</TableHead>
+                    <TableHead className="text-xs sm:text-sm">{t("dashboard.familiesPage.tableCode")}</TableHead>
 
                     <TableHead className="text-xs sm:text-sm hidden sm:table-cell">
-                      Family Name
+                      {t("dashboard.familiesPage.tableFamilyName")}
                     </TableHead>
 
                     <TableHead className="text-xs sm:text-sm hidden md:table-cell">
-                      Head
+                      {t("dashboard.familiesPage.tableHead")}
                     </TableHead>
 
-                    <TableHead className="text-xs sm:text-sm">Members</TableHead>
+                    <TableHead className="text-xs sm:text-sm">{t("dashboard.familiesPage.tableMembers")}</TableHead>
 
-                    <TableHead className="text-xs sm:text-sm">Status</TableHead>
+                    <TableHead className="text-xs sm:text-sm">{t("dashboard.familiesPage.tableStatus")}</TableHead>
 
                     <TableHead className="text-xs sm:text-sm hidden lg:table-cell">
-                      Urgency
+                      {t("dashboard.familiesPage.tableUrgency")}
                     </TableHead>
 
                     <TableHead className="text-xs sm:text-sm hidden md:table-cell">
-                      Registered
+                      {t("dashboard.familiesPage.tableRegistered")}
                     </TableHead>
 
                     <TableHead className="text-xs sm:text-sm text-right">
-                      Actions
+                      {t("dashboard.familiesPage.tableActions")}
                     </TableHead>
                   </TableRow>
                 </TableHeader>
@@ -1250,7 +1253,7 @@ const Families = () => {
                       </TableCell>
 
                       <TableCell className="hidden md:table-cell p-2 sm:p-4 truncate">
-                        {family.familyHead || "N/A"}
+                        {family.familyHead || t("common.na")}
                       </TableCell>
 
                       <TableCell className="p-2 sm:p-4">
@@ -1276,7 +1279,7 @@ const Families = () => {
                           }
                           className="capitalize text-xs"
                         >
-                          {family.urgencyLevel || "N/A"}
+                          {family.urgencyLevel || t("common.na")}
                         </Badge>
                       </TableCell>
 
@@ -1300,7 +1303,7 @@ const Families = () => {
                             align="end"
                             className="text-sm"
                           >
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuLabel>{t("dashboard.familiesPage.actionsLabel")}</DropdownMenuLabel>
                             <DropdownMenuSeparator />
 
                             <DropdownMenuItem
@@ -1309,7 +1312,7 @@ const Families = () => {
                               }
                             >
                               <Eye className="mr-2 h-3 sm:h-4 w-3 sm:w-4" />
-                              View Profile
+                              {t("dashboard.familiesPage.viewProfile")}
                             </DropdownMenuItem>
 
                             <DropdownMenuItem
@@ -1320,7 +1323,7 @@ const Families = () => {
                               }
                             >
                               <Edit className="mr-2 h-3 sm:h-4 w-3 sm:w-4" />
-                              Edit Family
+                              {t("dashboard.familiesPage.editFamily")}
                             </DropdownMenuItem>
 
                             <DropdownMenuSeparator />
@@ -1333,7 +1336,7 @@ const Families = () => {
                               }
                             >
                               <UserPlus className="mr-2 h-3 sm:h-4 w-3 sm:w-4" />
-                              Add Member
+                              {t("dashboard.familiesPage.addMember")}
                             </DropdownMenuItem>
 
                             <DropdownMenuItem
@@ -1344,7 +1347,7 @@ const Families = () => {
                               }
                             >
                               <Zap className="mr-2 h-3 sm:h-4 w-3 sm:w-4" />
-                              Record Support
+                              {t("dashboard.familiesPage.recordSupport")}
                             </DropdownMenuItem>
 
                             <DropdownMenuSeparator />
@@ -1354,7 +1357,7 @@ const Families = () => {
                                 onClick={() => handleVerify(family._id)}
                               >
                                 <UserCheck className="mr-2 h-3 sm:h-4 w-3 sm:w-4" />
-                                Verify Family
+                                {t("dashboard.familiesPage.verifyFamily")}
                               </DropdownMenuItem>
                             )}
 
@@ -1363,7 +1366,7 @@ const Families = () => {
                               className="text-red-600"
                             >
                               <Trash2 className="mr-2 h-3 sm:h-4 w-3 sm:w-4" />
-                              Delete Family
+                              {t("dashboard.familiesPage.deleteFamily")}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -1386,10 +1389,10 @@ const Families = () => {
 
         <CardContent className="p-0">
           {loading ? (
-            <div className="text-center py-8 text-sm">Loading...</div>
+            <div className="text-center py-8 text-sm">{t("dashboard.familiesPage.loading")}</div>
           ) : families.length === 0 ? (
             <div className="text-center py-8 text-sm text-muted-foreground px-4">
-              No families found. Register your first family to get started.
+              {t("dashboard.familiesPage.empty")}
             </div>
           ) : (
             <>
@@ -1432,7 +1435,7 @@ const Families = () => {
                     <div className="text-xs text-muted-foreground space-y-1">
                       <p className="truncate">
                         <span className="font-medium text-foreground">Head:</span>{" "}
-                        {family.familyHead || "N/A"}
+                        {family.familyHead || t("common.na")}
                       </p>
 
                       <p className="truncate">
@@ -1443,7 +1446,7 @@ const Families = () => {
                       <p className="truncate">
                         <span className="font-medium text-foreground">Urgency:</span>{" "}
                         <span className="capitalize">
-                          {family.urgencyLevel || "N/A"}
+                          {family.urgencyLevel || t("common.na")}
                         </span>
                       </p>
                     </div>
@@ -1487,7 +1490,7 @@ const Families = () => {
                             }
                           >
                             <UserPlus className="mr-2 h-4 w-4" />
-                            Add Member
+                            {t("dashboard.familiesPage.addMember")}
                           </DropdownMenuItem>
 
                           <DropdownMenuItem
@@ -1496,7 +1499,7 @@ const Families = () => {
                             }
                           >
                             <Zap className="mr-2 h-4 w-4" />
-                            Record Support
+                            {t("dashboard.familiesPage.recordSupport")}
                           </DropdownMenuItem>
 
                           <DropdownMenuSeparator />
@@ -1504,7 +1507,7 @@ const Families = () => {
                           {family.registrationStatus !== "verified" && (
                             <DropdownMenuItem onClick={() => handleVerify(family._id)}>
                               <UserCheck className="mr-2 h-4 w-4" />
-                              Verify Family
+                              {t("dashboard.familiesPage.verifyFamily")}
                             </DropdownMenuItem>
                           )}
 
@@ -1513,7 +1516,7 @@ const Families = () => {
                             className="text-red-600"
                           >
                             <Trash2 className="mr-2 h-4 w-4" />
-                            Delete Family
+                            {t("dashboard.familiesPage.deleteFamily")}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -1587,7 +1590,7 @@ const Families = () => {
                         </TableCell>
 
                         <TableCell className="hidden md:table-cell p-2 sm:p-4 truncate">
-                          {family.familyHead || "N/A"}
+                          {family.familyHead || t("common.na")}
                         </TableCell>
 
                         <TableCell className="p-2 sm:p-4">
@@ -1611,7 +1614,7 @@ const Families = () => {
                             }
                             className="capitalize text-xs"
                           >
-                            {family.urgencyLevel || "N/A"}
+                            {family.urgencyLevel || t("common.na")}
                           </Badge>
                         </TableCell>
 
@@ -1628,14 +1631,14 @@ const Families = () => {
                             </DropdownMenuTrigger>
 
                             <DropdownMenuContent align="end" className="text-sm">
-                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                              <DropdownMenuLabel>{t("dashboard.familiesPage.actionsLabel")}</DropdownMenuLabel>
                               <DropdownMenuSeparator />
 
                               <DropdownMenuItem
                                 onClick={() => navigate(`/dashboard/families/${family._id}`)}
                               >
                                 <Eye className="mr-2 h-3 sm:h-4 w-3 sm:w-4" />
-                                View Profile
+                                {t("dashboard.familiesPage.viewProfile")}
                               </DropdownMenuItem>
 
                               <DropdownMenuItem
@@ -1644,7 +1647,7 @@ const Families = () => {
                                 }
                               >
                                 <Edit className="mr-2 h-3 sm:h-4 w-3 sm:w-4" />
-                                Edit Family
+                                {t("dashboard.familiesPage.editFamily")}
                               </DropdownMenuItem>
 
                               <DropdownMenuSeparator />
@@ -1655,7 +1658,7 @@ const Families = () => {
                                 }
                               >
                                 <UserPlus className="mr-2 h-3 sm:h-4 w-3 sm:w-4" />
-                                Add Member
+                                {t("dashboard.familiesPage.addMember")}
                               </DropdownMenuItem>
 
                               <DropdownMenuItem
@@ -1664,7 +1667,7 @@ const Families = () => {
                                 }
                               >
                                 <Zap className="mr-2 h-3 sm:h-4 w-3 sm:w-4" />
-                                Record Support
+                                {t("dashboard.familiesPage.recordSupport")}
                               </DropdownMenuItem>
 
                               <DropdownMenuSeparator />
@@ -1672,7 +1675,7 @@ const Families = () => {
                               {family.registrationStatus !== "verified" && (
                                 <DropdownMenuItem onClick={() => handleVerify(family._id)}>
                                   <UserCheck className="mr-2 h-3 sm:h-4 w-3 sm:w-4" />
-                                  Verify Family
+                                  {t("dashboard.familiesPage.verifyFamily")}
                                 </DropdownMenuItem>
                               )}
 
@@ -1681,7 +1684,7 @@ const Families = () => {
                                 className="text-red-600"
                               >
                                 <Trash2 className="mr-2 h-3 sm:h-4 w-3 sm:w-4" />
-                                Delete Family
+                                {t("dashboard.familiesPage.deleteFamily")}
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -1705,10 +1708,10 @@ const Families = () => {
 
         <CardContent className="p-0">
           {loading ? (
-            <div className="text-center py-8 text-sm">Loading...</div>
+            <div className="text-center py-8 text-sm">{t("dashboard.familiesPage.loading")}</div>
           ) : families.length === 0 ? (
             <div className="text-center py-8 text-sm text-muted-foreground">
-              No families found. Register your first family to get started.
+              {t("dashboard.familiesPage.empty")}
             </div>
           ) : (
             <>
@@ -1785,7 +1788,7 @@ const Families = () => {
                         {/* Head (925px+) */}
                         <TableCell className="hidden min-[925px]:table-cell p-2">
                           <div className="truncate max-w-[170px]">
-                            {family.familyHead || "N/A"}
+                            {family.familyHead || t("common.na")}
                           </div>
                         </TableCell>
 
@@ -1813,7 +1816,7 @@ const Families = () => {
                             }
                             className="capitalize text-xs"
                           >
-                            {family.urgencyLevel || "N/A"}
+                            {family.urgencyLevel || t("common.na")}
                           </Badge>
                         </TableCell>
 
@@ -1835,7 +1838,7 @@ const Families = () => {
                             </DropdownMenuTrigger>
 
                             <DropdownMenuContent align="end" className="text-sm">
-                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                              <DropdownMenuLabel>{t("dashboard.familiesPage.actionsLabel")}</DropdownMenuLabel>
                               <DropdownMenuSeparator />
 
                               <DropdownMenuItem
@@ -1844,7 +1847,7 @@ const Families = () => {
                                 }
                               >
                                 <Eye className="mr-2 h-4 w-4" />
-                                View Profile
+                                {t("dashboard.familiesPage.viewProfile")}
                               </DropdownMenuItem>
 
                               <DropdownMenuItem
@@ -1853,7 +1856,7 @@ const Families = () => {
                                 }
                               >
                                 <Edit className="mr-2 h-4 w-4" />
-                                Edit Family
+                                {t("dashboard.familiesPage.editFamily")}
                               </DropdownMenuItem>
 
                               <DropdownMenuSeparator />
@@ -1866,7 +1869,7 @@ const Families = () => {
                                 }
                               >
                                 <UserPlus className="mr-2 h-4 w-4" />
-                                Add Member
+                                {t("dashboard.familiesPage.addMember")}
                               </DropdownMenuItem>
 
                               <DropdownMenuItem
@@ -1877,7 +1880,7 @@ const Families = () => {
                                 }
                               >
                                 <Zap className="mr-2 h-4 w-4" />
-                                Record Support
+                                {t("dashboard.familiesPage.recordSupport")}
                               </DropdownMenuItem>
 
                               <DropdownMenuSeparator />
@@ -1887,7 +1890,7 @@ const Families = () => {
                                   onClick={() => handleVerify(family._id)}
                                 >
                                   <UserCheck className="mr-2 h-4 w-4" />
-                                  Verify Family
+                                  {t("dashboard.familiesPage.verifyFamily")}
                                 </DropdownMenuItem>
                               )}
 
@@ -1896,7 +1899,7 @@ const Families = () => {
                                 className="text-red-600"
                               >
                                 <Trash2 className="mr-2 h-4 w-4" />
-                                Delete Family
+                                {t("dashboard.familiesPage.deleteFamily")}
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -1954,7 +1957,7 @@ const Families = () => {
                             }
                           >
                             <Eye className="mr-2 h-4 w-4" />
-                            View Profile
+                            {t("dashboard.familiesPage.viewProfile")}
                           </DropdownMenuItem>
 
                           <DropdownMenuItem
@@ -1963,7 +1966,7 @@ const Families = () => {
                             }
                           >
                             <Edit className="mr-2 h-4 w-4" />
-                            Edit Family
+                            {t("dashboard.familiesPage.editFamily")}
                           </DropdownMenuItem>
 
                           <DropdownMenuSeparator />
@@ -1976,7 +1979,7 @@ const Families = () => {
                             }
                           >
                             <UserPlus className="mr-2 h-4 w-4" />
-                            Add Member
+                            {t("dashboard.familiesPage.addMember")}
                           </DropdownMenuItem>
 
                           <DropdownMenuItem
@@ -1987,7 +1990,7 @@ const Families = () => {
                             }
                           >
                             <Zap className="mr-2 h-4 w-4" />
-                            Record Support
+                            {t("dashboard.familiesPage.recordSupport")}
                           </DropdownMenuItem>
 
                           <DropdownMenuSeparator />
@@ -1997,7 +2000,7 @@ const Families = () => {
                               onClick={() => handleVerify(family._id)}
                             >
                               <UserCheck className="mr-2 h-4 w-4" />
-                              Verify Family
+                              {t("dashboard.familiesPage.verifyFamily")}
                             </DropdownMenuItem>
                           )}
 
@@ -2006,7 +2009,7 @@ const Families = () => {
                             className="text-red-600"
                           >
                             <Trash2 className="mr-2 h-4 w-4" />
-                            Delete Family
+                            {t("dashboard.familiesPage.deleteFamily")}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>

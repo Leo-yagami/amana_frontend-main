@@ -33,8 +33,10 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import api from "@/lib/api";
+import { useTranslation } from "react-i18next";
 
 const Settings = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
 
   // Loading states
@@ -130,9 +132,9 @@ const Settings = () => {
     try {
       setSaving(true);
       await api.put("/auth/me", profileData);
-      toast.success("Profile updated successfully");
+      toast.success(t("dashboard.settingsScreen.toastProfileOk"));
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Failed to update profile");
+      toast.error(error?.response?.data?.message || t("dashboard.settingsScreen.toastProfileErr"));
     } finally {
       setSaving(false);
     }
@@ -141,11 +143,11 @@ const Settings = () => {
   // Handle password change
   const handlePasswordChange = async () => {
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      toast.error("Passwords do not match");
+      toast.error(t("dashboard.settingsScreen.toastPwdMismatch"));
       return;
     }
     if (passwordData.newPassword.length < 6) {
-      toast.error("Password must be at least 6 characters");
+      toast.error(t("dashboard.settingsScreen.toastPwdShort"));
       return;
     }
     try {
@@ -154,16 +156,14 @@ const Settings = () => {
         currentPassword: passwordData.currentPassword,
         newPassword: passwordData.newPassword,
       });
-      toast.success("Password changed successfully");
+      toast.success(t("dashboard.settingsScreen.toastPwdOk"));
       setPasswordData({
         currentPassword: "",
         newPassword: "",
         confirmPassword: "",
       });
     } catch (error: any) {
-      toast.error(
-        error?.response?.data?.message || "Failed to change password"
-      );
+      toast.error(error?.response?.data?.message || t("dashboard.settingsScreen.toastPwdErr"));
     } finally {
       setSaving(false);
     }
@@ -194,10 +194,10 @@ const Settings = () => {
       {/* Header */}
       <div>
         <h1 className="text-2xl lg:text-3xl font-bold text-foreground">
-          Settings
+          {t("dashboard.settingsScreen.title")}
         </h1>
         <p className="text-muted-foreground">
-          Manage your account and application preferences
+          {t("dashboard.settingsScreen.subtitle")}
         </p>
       </div>
 
@@ -206,7 +206,7 @@ const Settings = () => {
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="profile" className="flex items-center gap-2">
             <User className="w-4 h-4" />
-            <span className="hidden sm:inline">Profile</span>
+            <span className="hidden sm:inline">{t("dashboard.settingsScreen.tabProfile")}</span>
           </TabsTrigger>
           {false && (<TabsTrigger value="organization" className="flex items-center gap-2">
             <Building className="w-4 h-4" />
@@ -214,7 +214,7 @@ const Settings = () => {
           </TabsTrigger>)}
           <TabsTrigger value="security" className="flex items-center gap-2">
             <Shield className="w-4 h-4" />
-            <span className="hidden sm:inline">Security</span>
+            <span className="hidden sm:inline">{t("dashboard.settingsScreen.tabSecurity")}</span>
           </TabsTrigger>
           {false && (<TabsTrigger value="notifications" className="flex items-center gap-2">
             <Bell className="w-4 h-4" />
@@ -233,9 +233,9 @@ const Settings = () => {
           ) : (
             <Card>
               <CardHeader>
-                <CardTitle>Profile Information</CardTitle>
+                <CardTitle>{t("dashboard.settingsScreen.profileCardTitle")}</CardTitle>
                 <CardDescription>
-                  Update your personal information and profile picture
+                  {t("dashboard.settingsScreen.profileCardDesc")}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -250,10 +250,10 @@ const Settings = () => {
                   <div>
                     <Button variant="outline" size="sm">
                       <Upload className="w-4 h-4 mr-2" />
-                      Change Photo
+                      {t("dashboard.settingsScreen.changePhoto")}
                     </Button>
                     <p className="text-xs text-muted-foreground mt-2">
-                      JPG, PNG or GIF. Max size 2MB.
+                      {t("dashboard.settingsScreen.photoHint")}
                     </p>
                   </div>
                 </div>
@@ -263,7 +263,7 @@ const Settings = () => {
                 {/* Profile Fields */}
                 <div className="grid gap-4">
                   <div className="grid gap-2">
-                    <Label htmlFor="fullName">Full Name</Label>
+                    <Label htmlFor="fullName">{t("auth.fullName")}</Label>
                     <div className="relative">
                       <User className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
                       <Input
@@ -281,7 +281,7 @@ const Settings = () => {
                   </div>
 
                   <div className="grid gap-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="email">{t("auth.email")}</Label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
                       <Input
@@ -300,7 +300,7 @@ const Settings = () => {
                   </div>
 
                   <div className="grid gap-2">
-                    <Label htmlFor="phone">Phone Number</Label>
+                    <Label htmlFor="phone">{t("common.phone")}</Label>
                     <div className="relative">
                       <Phone className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
                       <Input
@@ -314,13 +314,13 @@ const Settings = () => {
                           })
                         }
                         className="pl-10"
-                        placeholder="+251 xxx xxx xxx"
+                        placeholder={t("dashboard.settingsScreen.phonePh")}
                       />
                     </div>
                   </div>
 
                   <div className="grid gap-2">
-                    <Label htmlFor="role">Role</Label>
+                    <Label htmlFor="role">{t("common.role")}</Label>
                     <Input
                       id="role"
                       value={profileData.role}
@@ -328,7 +328,7 @@ const Settings = () => {
                       className="bg-muted"
                     />
                     <p className="text-xs text-muted-foreground">
-                      Contact an administrator to change your role
+                      {t("common.contactAdminRole")}
                     </p>
                   </div>
                 </div>
@@ -338,12 +338,12 @@ const Settings = () => {
                     {saving ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Saving...
+                        {t("common.saving")}
                       </>
                     ) : (
                       <>
                         <Save className="w-4 h-4 mr-2" />
-                        Save Changes
+                        {t("dashboard.settingsScreen.saveChanges")}
                       </>
                     )}
                   </Button>
@@ -538,14 +538,14 @@ const Settings = () => {
         <TabsContent value="security" className="space-y-6 mt-6">
           <Card>
             <CardHeader>
-              <CardTitle>Change Password</CardTitle>
+              <CardTitle>{t("dashboard.settingsScreen.securityTitle")}</CardTitle>
               <CardDescription>
-                Update your password to keep your account secure
+                {t("dashboard.settingsScreen.securityDesc")}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-2">
-                <Label htmlFor="currentPassword">Current Password</Label>
+                <Label htmlFor="currentPassword">{t("dashboard.settingsScreen.currentPassword")}</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
                   <Input
@@ -564,7 +564,7 @@ const Settings = () => {
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="newPassword">New Password</Label>
+                <Label htmlFor="newPassword">{t("dashboard.settingsScreen.newPassword")}</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
                   <Input
@@ -581,12 +581,12 @@ const Settings = () => {
                   />
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Must be at least 6 characters long
+                  {t("dashboard.settingsScreen.passwordHint")}
                 </p>
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                <Label htmlFor="confirmPassword">{t("dashboard.settingsScreen.confirmNewPassword")}</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
                   <Input
@@ -609,12 +609,12 @@ const Settings = () => {
                   {saving ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Changing...
+                      {t("dashboard.settingsScreen.changingPassword")}
                     </>
                   ) : (
                     <>
                       <Shield className="w-4 h-4 mr-2" />
-                      Change Password
+                      {t("dashboard.settingsScreen.changePasswordButton")}
                     </>
                   )}
                 </Button>

@@ -12,6 +12,7 @@ import { eventApi } from "@/services/api.service";
 import { Event } from "@/types/api";
 import { toast } from "sonner";
 import EventFormModal from "./components/EventFormModal";
+import { useTranslation } from "react-i18next";
 
 const getEventTypeLabel = (type: string) => {
   const labels: Record<string, string> = {
@@ -55,6 +56,7 @@ const getStatusLabel = (status: string) => {
 };
 
 const Events = () => {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
@@ -131,11 +133,11 @@ const Events = () => {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Events</h1>
+          <h1 className="text-2xl lg:text-3xl font-bold text-foreground">{t("dashboard.eventsPage.title")}</h1>
         </div>
         <Card>
           <CardContent className="p-6">
-            <p className="text-destructive">Failed to load events. Please try again.</p>
+            <p className="text-destructive">{t("dashboard.eventsPage.loadErr")}</p>
           </CardContent>
         </Card>
       </div>
@@ -147,13 +149,13 @@ const Events = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div className="min-w-0">
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground truncate">Events</h1>
-          <p className="text-xs sm:text-sm text-muted-foreground truncate">Plan and manage charity events</p>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground truncate">{t("dashboard.eventsPage.title")}</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground truncate">{t("dashboard.eventsPage.subtitleDetail")}</p>
         </div>
         <Button onClick={handleCreateEvent} size="sm" className="text-xs sm:text-sm">
           <Plus className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
-          <span className="hidden sm:inline">Create Event</span>
-          <span className="sm:hidden">Create</span>
+          <span className="hidden sm:inline">{t("dashboard.eventsPage.createEvent")}</span>
+          <span className="sm:hidden">{t("dashboard.eventsPage.createShort")}</span>
         </Button>
       </div>
 
@@ -162,7 +164,7 @@ const Events = () => {
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="Search events..."
+            placeholder={t("dashboard.eventsPage.searchPh")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-10 text-sm"
@@ -175,7 +177,7 @@ const Events = () => {
           className="text-xs sm:text-sm"
         >
           <Filter className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
-          Filters
+          {t("dashboard.eventsPage.filters")}
         </Button>
       </div>
 
@@ -185,29 +187,29 @@ const Events = () => {
           <CardContent className="p-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
-                <label className="text-xs sm:text-sm font-medium mb-2 block">Status</label>
+                <label className="text-xs sm:text-sm font-medium mb-2 block">{t("dashboard.eventsPage.status")}</label>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className="text-sm">
-                    <SelectValue placeholder="All statuses" />
+                    <SelectValue placeholder={t("dashboard.eventsPage.allStatusesPh")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Statuses</SelectItem>
-                    <SelectItem value="draft">Draft</SelectItem>
-                    <SelectItem value="upcoming">Upcoming</SelectItem>
-                    <SelectItem value="ongoing">Ongoing</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
-                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                    <SelectItem value="all">{t("dashboard.donorsPage.allTypes")}</SelectItem>
+                    <SelectItem value="draft">{t("dashboard.eventsPage.statusDraft")}</SelectItem>
+                    <SelectItem value="upcoming">{t("dashboard.eventsPage.statusUpcoming")}</SelectItem>
+                    <SelectItem value="ongoing">{t("dashboard.eventsPage.statusOngoing")}</SelectItem>
+                    <SelectItem value="completed">{t("dashboard.eventsPage.statusCompleted")}</SelectItem>
+                    <SelectItem value="cancelled">{t("dashboard.eventsPage.statusCancelled")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <label className="text-xs sm:text-sm font-medium mb-2 block">Event Type</label>
+                <label className="text-xs sm:text-sm font-medium mb-2 block">{t("dashboard.eventsPage.eventType")}</label>
                 <Select value={typeFilter} onValueChange={setTypeFilter}>
                   <SelectTrigger className="text-sm">
-                    <SelectValue placeholder="All types" />
+                    <SelectValue placeholder={t("dashboard.eventsPage.allTypesPh")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Types</SelectItem>
+                    <SelectItem value="all">{t("dashboard.donorsPage.allTypes")}</SelectItem>
                     <SelectItem value="fundraising">Fundraising</SelectItem>
                     <SelectItem value="distribution">Distribution</SelectItem>
                     <SelectItem value="awareness">Awareness</SelectItem>

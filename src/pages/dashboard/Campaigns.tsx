@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Plus, Search, Filter, Target, Users, Calendar } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 
@@ -68,17 +69,18 @@ const getStatusColor = (status: string) => {
 };
 
 const Campaigns = () => {
+  const { t } = useTranslation();
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Campaigns</h1>
-          <p className="text-muted-foreground">Create and manage fundraising campaigns</p>
+          <h1 className="text-2xl lg:text-3xl font-bold text-foreground">{t("dashboard.campaignsPage.title")}</h1>
+          <p className="text-muted-foreground">{t("dashboard.campaignsPage.subtitle")}</p>
         </div>
         <Button variant="default">
           <Plus className="w-4 h-4 mr-2" />
-          Create Campaign
+          {t("dashboard.campaignsPage.createCampaign")}
         </Button>
       </div>
 
@@ -88,13 +90,13 @@ const Campaigns = () => {
           <Search className="w-4 h-4 text-muted-foreground" />
           <input
             type="text"
-            placeholder="Search campaigns..."
+            placeholder={t("dashboard.campaignsPage.searchPh")}
             className="bg-transparent border-none outline-none text-sm flex-1 placeholder:text-muted-foreground"
           />
         </div>
         <Button variant="outline">
           <Filter className="w-4 h-4 mr-2" />
-          Filters
+          {t("dashboard.campaignsPage.filters")}
         </Button>
       </div>
 

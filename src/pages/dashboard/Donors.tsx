@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Plus, Search, Filter, Mail, Phone, Eye, Edit, Trash2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -42,6 +43,7 @@ const getTypeColor = (type: string) => {
 };
 
 const Donors = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
@@ -87,15 +89,15 @@ const Donors = () => {
     try {
       await donorApi.delete(donorToDelete._id);
       toast({
-        title: "Success",
-        description: "Donor deleted successfully",
+        title: t("dashboard.donorsPage.toastSuccessTitle"),
+        description: t("dashboard.donorsPage.toastDeleted"),
       });
       queryClient.invalidateQueries({ queryKey: ['donors'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to delete donor",
+        title: t("dashboard.donorsPage.toastErrorTitle"),
+        description: error.response?.data?.message || t("dashboard.donorsPage.toastDeleteErr"),
         variant: "destructive",
       });
     } finally {
@@ -108,32 +110,32 @@ const Donors = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div className="min-w-0">
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground truncate">Donors</h1>
-          <p className="text-xs sm:text-sm text-muted-foreground truncate">Manage donor relationships and track contributions</p>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground truncate">{t("dashboard.donorsPage.title")}</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground truncate">{t("dashboard.donorsPage.subtitle")}</p>
         </div>
         <Button variant="default" onClick={() => navigate("/dashboard/donors/new")} size="sm" className="text-xs sm:text-sm">
           <Plus className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
-          <span className="hidden sm:inline">Add Donor</span>
-          <span className="sm:hidden">Add</span>
+          <span className="hidden sm:inline">{t("dashboard.donorsPage.addDonor")}</span>
+          <span className="sm:hidden">{t("dashboard.donorsPage.addShort")}</span>
         </Button>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         <div className="bg-card rounded-lg sm:rounded-xl border border-border p-4 sm:p-6">
-          <p className="text-muted-foreground text-xs sm:text-sm mb-1">Total Donors</p>
+          <p className="text-muted-foreground text-xs sm:text-sm mb-1">{t("dashboard.donorsPage.statsTotalDonors")}</p>
           <p className="text-2xl sm:text-3xl font-bold text-foreground">
             {overview ? overview?.donors?.total : '-' }
           </p>
         </div>
         <div className="bg-card rounded-lg sm:rounded-xl border border-border p-4 sm:p-6">
-          <p className="text-muted-foreground text-xs sm:text-sm mb-1">Active Donors</p>
+          <p className="text-muted-foreground text-xs sm:text-sm mb-1">{t("dashboard.donorsPage.statsActiveDonors")}</p>
           <p className="text-2xl sm:text-3xl font-bold text-success">
             {overview ? overview?.donors?.active?.toLocaleString() : '-' }
           </p>
         </div>
         <div className="bg-card rounded-lg sm:rounded-xl border border-border p-4 sm:p-6">
-          <p className="text-muted-foreground text-xs sm:text-sm mb-1">Total Donated</p>
+          <p className="text-muted-foreground text-xs sm:text-sm mb-1">{t("dashboard.donorsPage.statsTotalDonated")}</p>
           <p className="text-2xl sm:text-3xl font-bold text-primary">
             {overview ? `$${overview?.donations?.totalAmount?.toLocaleString()}` : '-' || 0}
           </p>
@@ -146,7 +148,7 @@ const Donors = () => {
           <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
           <input
             type="text"
-            placeholder="Search donors..."
+            placeholder={t("dashboard.donorsPage.searchPh")}
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
@@ -164,14 +166,14 @@ const Donors = () => {
         >
           <SelectTrigger className="text-sm">
             <Filter className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
-            <SelectValue placeholder="Filter by type" />
+            <SelectValue placeholder={t("dashboard.donorsPage.filterPh")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Types</SelectItem>
-            <SelectItem value="Individual">Individual</SelectItem>
-            <SelectItem value="Corporate">Corporate</SelectItem>
-            <SelectItem value="Foundation">Foundation</SelectItem>
-            <SelectItem value="Organization">Organization</SelectItem>
+            <SelectItem value="all">{t("dashboard.donorsPage.allTypes")}</SelectItem>
+            <SelectItem value="Individual">{t("dashboard.donorsPage.individual")}</SelectItem>
+            <SelectItem value="Corporate">{t("dashboard.donorsPage.corporate")}</SelectItem>
+            <SelectItem value="Foundation">{t("dashboard.donorsPage.foundation")}</SelectItem>
+            <SelectItem value="Organization">{t("dashboard.donorsPage.organization")}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -180,7 +182,7 @@ const Donors = () => {
       {error && (
         <Alert variant="destructive">
           <AlertDescription>
-            Failed to load donors. Please try again.
+            {t("dashboard.donorsPage.loadErr")}
           </AlertDescription>
         </Alert>
       )}
@@ -247,7 +249,7 @@ const Donors = () => {
 
             <div className="flex items-center justify-between pt-3 sm:pt-4 border-t border-border">
               <div>
-                <p className="text-xs text-muted-foreground">Registered</p>
+                <p className="text-xs text-muted-foreground">{t("dashboard.donorsPage.registered")}</p>
                 <p className="text-xs sm:text-sm font-medium text-foreground">
                   {new Date(donor.registeredAt).toLocaleDateString()}
                 </p>
@@ -257,7 +259,7 @@ const Donors = () => {
                   size="sm"
                   variant="ghost"
                   onClick={() => navigate(`/dashboard/donors/${donor._id}`)}
-                  title="View Details"
+                  title={t("dashboard.donorsPage.viewDetails")}
                   className="h-8 w-8 p-0"
                 >
                   <Eye className="w-3 sm:w-4 h-3 sm:h-4" />
@@ -266,7 +268,7 @@ const Donors = () => {
                   size="sm"
                   variant="ghost"
                   onClick={() => navigate(`/dashboard/donors/edit/${donor._id}`)}
-                  title="Edit"
+                  title={t("dashboard.donorsPage.editTitle")}
                   className="h-8 w-8 p-0"
                 >
                   <Edit className="w-3 sm:w-4 h-3 sm:h-4" />
@@ -275,7 +277,7 @@ const Donors = () => {
                   size="sm"
                   variant="ghost"
                   onClick={() => handleDeleteClick(donor)}
-                  title="Delete"
+                  title={t("dashboard.donorsPage.deleteAction")}
                   className="text-destructive hover:text-destructive h-8 w-8 p-0"
                 >
                   <Trash2 className="w-3 sm:w-4 h-3 sm:h-4" />
@@ -286,7 +288,7 @@ const Donors = () => {
         ))
         ) : (
           <div className="col-span-2 text-center py-12">
-            <p className="text-muted-foreground">No donors found</p>
+            <p className="text-muted-foreground">{t("dashboard.donorsPage.empty")}</p>
           </div>
         )}
       </div>
@@ -295,7 +297,11 @@ const Donors = () => {
       {donorsData && donorsData.pagination && donorsData.pagination.totalPages > 1 && (
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
           <p className="text-xs sm:text-sm text-muted-foreground text-center sm:text-left">
-            Page {page} of {donorsData.pagination.totalPages} ({donorsData.pagination.total} total)
+            {t("dashboard.donorsPage.pageInfo", {
+              page,
+              totalPages: donorsData.pagination.totalPages,
+              total: donorsData.pagination.total,
+            })}
           </p>
           <div className="flex gap-2 justify-center">
             <Button
@@ -304,7 +310,7 @@ const Donors = () => {
               onClick={() => setPage(page - 1)}
               disabled={page === 1}
             >
-              Previous
+              {t("dashboard.donorsPage.previous")}
             </Button>
             <div className="flex items-center gap-1">
               {Array.from({ length: Math.min(5, donorsData.pagination.totalPages) }, (_, i) => {
@@ -336,7 +342,7 @@ const Donors = () => {
               onClick={() => setPage(page + 1)}
               disabled={page === donorsData.pagination.totalPages}
             >
-              Next
+              {t("dashboard.donorsPage.next")}
             </Button>
           </div>
         </div>
@@ -346,20 +352,20 @@ const Donors = () => {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogTitle>{t("dashboard.donorsPage.deleteConfirmTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete the donor "{donorToDelete?.name}". This action cannot be undone.
+              {t("dashboard.donorsPage.deleteConfirmDesc", { name: donorToDelete?.name ?? "" })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setDonorToDelete(null)}>
-              Cancel
+              {t("common.cancel")}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteConfirm}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Delete
+              {t("common.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,6 +38,7 @@ function GoogleIcon({ className }: { className?: string }) {
 
 
 const Signup = () => {
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -58,13 +60,13 @@ const Signup = () => {
 
     // Validate passwords match
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
+      setError(t("auth.passwordsNoMatch"));
       return;
     }
 
     // Validate password length
     if (password.length < 6) {
-      setError("Password must be at least 6 characters long");
+      setError(t("auth.passwordMin"));
       return;
     }
 
@@ -74,7 +76,7 @@ const Signup = () => {
       await register({ email, password, fullName });
       navigate("/dashboard");
     } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to register. Please try again.");
+      setError(err.response?.data?.message || t("auth.registerFailed"));
     } finally {
       setIsLoading(false);
     }
@@ -84,9 +86,9 @@ const Signup = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent/5 p-4 pr-16 pl-16">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 pt-16">
-          <CardTitle className="text-2xl font-bold text-center">Sign In With Google</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center">{t("auth.googleTitle")}</CardTitle>
           <CardDescription className="text-center">
-            Sign in to get started with the payment process
+            {t("auth.googleSubtitle")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4 pb-16">
@@ -99,7 +101,7 @@ const Signup = () => {
             disabled={isLoading}
           >
             <GoogleIcon className="h-5 w-5 shrink-0" />
-            Continue with Google
+            {t("auth.continueGoogle")}
           </Button>
           {/* <div className="flex items-center gap-3">
             <Separator className="flex-1" />

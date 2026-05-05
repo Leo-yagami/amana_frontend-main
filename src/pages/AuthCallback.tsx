@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Loader2 } from "lucide-react";
 import { authApi } from "@/services/api.service";
 
@@ -39,7 +40,7 @@ const AuthCallback = () => {
     <div className="min-h-screen flex items-center justify-center">
       <div className="flex items-center gap-2 text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin" />
-        Signing you in...
+        {t("authCallback.signingIn")}
       </div>
     </div>
   );

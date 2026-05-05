@@ -1,4 +1,5 @@
 import { Bell, Search, Menu } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
@@ -9,6 +10,7 @@ interface DashboardHeaderProps {
 }
 
 const DashboardHeader = ({ onMenuClick }: DashboardHeaderProps) => {
+  const { t } = useTranslation();
   return (
     <header className="h-14 sm:h-16 lg:h-20 bg-card border-b border-border flex items-center justify-between px-3 sm:px-4 lg:px-8">
       {/* Left side */}
@@ -27,7 +29,7 @@ const DashboardHeader = ({ onMenuClick }: DashboardHeaderProps) => {
           <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
           <input
             type="text"
-            placeholder="Search..."
+            placeholder={t("dashboard.header.searchPlaceholder")}
             className="bg-transparent border-none outline-none text-sm flex-1 placeholder:text-muted-foreground"
           />
         </div>
@@ -52,8 +54,8 @@ const DashboardHeader = ({ onMenuClick }: DashboardHeaderProps) => {
         {/* User Menu */}
         <div className="flex items-center gap-2 sm:gap-3">
           <div className="hidden lg:block text-right">
-            <p className="text-xs sm:text-sm font-medium text-foreground">Admin User</p>
-            <p className="text-xs text-muted-foreground">Administrator</p>
+            <p className="text-xs sm:text-sm font-medium text-foreground">{t("dashboard.header.adminUser")}</p>
+            <p className="text-xs text-muted-foreground">{t("dashboard.header.administrator")}</p>
           </div>
           <Avatar className="h-9 sm:h-10 w-9 sm:w-10 border-2 border-primary/20">
             <AvatarImage src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop&q=80" />

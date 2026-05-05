@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Moon, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -9,6 +10,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 export function ThemeToggle() {
+  const { t } = useTranslation();
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system');
   const [mounted, setMounted] = useState(false);
 
@@ -57,7 +59,7 @@ export function ThemeToggle() {
         variant="outline"
         size="icon"
         disabled
-        aria-label="Toggle theme"
+        aria-label={t('common.theme')}
       >
         <Sun className="h-4 w-4" />
       </Button>
@@ -69,13 +71,14 @@ export function ThemeToggle() {
       <DropdownMenuTrigger asChild>
         <Button
           variant="outline"
+          className=""
           size="icon"
-          aria-label="Toggle theme"
+          aria-label={t('common.theme')}
         >
           {theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches) ? (
-            <Moon className="h-4 w-4" />
+            <Moon className="h-4 w-4 m-4" />
           ) : (
-            <Sun className="h-4 w-4" />
+            <Sun className="h-4 w-4 m-4" />
           )}
         </Button>
       </DropdownMenuTrigger>
@@ -85,21 +88,21 @@ export function ThemeToggle() {
           className={theme === 'light' ? 'bg-primary/20' : ''}
         >
           <Sun className="mr-2 h-4 w-4" />
-          <span>Light</span>
+          <span>{t('common.light')}</span>
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => handleThemeChange('dark')}
           className={theme === 'dark' ? 'bg-primary/20' : ''}
         >
           <Moon className="mr-2 h-4 w-4" />
-          <span>Dark</span>
+          <span>{t('common.dark')}</span>
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => handleThemeChange('system')}
           className={theme === 'system' ? 'bg-primary/20' : ''}
         >
           <span className="mr-2">💻</span>
-          <span>System</span>
+          <span>{t('common.system')}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
