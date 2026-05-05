@@ -325,13 +325,13 @@ export const authApi = {
     api.post('/auth/logout'),
   
   getCurrentUser: () =>
-    api.get<User>('/auth/me'),
+    api.get<User>('auth/me'),
   
   // REMOVED: refreshToken — server handles token refresh via cookie rotation
   
   // Google OAuth: full-page redirect (server sets HttpOnly cookie on callback)
   loginWithGoogle: () => {
-    const apiOrigin = "https://amana-bckend-api.vercel.app" || import.meta.env.VITE_API_URL;
+    const apiOrigin = import.meta.env.VITE_API_URL;
     window.location.href = `${apiOrigin}/api/auth/google`;
   },
   
