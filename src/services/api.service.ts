@@ -325,7 +325,7 @@ export const authApi = {
     api.post('/auth/logout'),
   
   getCurrentUser: () =>
-    api.get<User>('auth/me'),
+    api.get<User>('/auth/me'),
   
   // REMOVED: refreshToken — server handles token refresh via cookie rotation
   
