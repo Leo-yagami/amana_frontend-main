@@ -76,7 +76,7 @@ const Events = () => {
       if (typeFilter !== "all") params.eventType = typeFilter;
       
       const response = await eventApi.getAll(params);
-      return response;
+      return response.data;
     },
   });
 

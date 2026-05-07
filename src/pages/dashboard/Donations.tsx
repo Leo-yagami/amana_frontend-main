@@ -628,6 +628,9 @@ const Donations = () => {
       console.log("CHART DATA", response)
       return response;
     },
+    staleTime: 5 * 60 * 1000,  // ✅ ADD
+    gcTime: 30 * 60 * 1000,    // ✅ ADD
+    refetchOnWindowFocus: false, // ✅ ADD
   });
 
   const { data: overview } = useQuery({
@@ -637,6 +640,9 @@ const Donations = () => {
       console.log(response)
       return response.data;
     },
+    staleTime: 5 * 60 * 1000,  // ✅ ADD
+    gcTime: 30 * 60 * 1000,    // ✅ ADD
+    refetchOnWindowFocus: false, // ✅ ADD
   });
 
   const handleDeleteClick = (donation: any) => {
@@ -978,10 +984,11 @@ const trendLoading = trendQueries.some((q) => q.isLoading);
       {/* ── Donation Trend Chart ────────────────────────────────────────────── */}
       <Card className="min-w-0 overflow-hidden [&_canvas]:max-w-full">
         {/* <CardHeader className="flex flex-col min-[500px]:flex-row min-[500px]:items-center min-[500px]:justify-between gap-2 min-[500px]:gap-4 pb-2 sm:pb-4 pt-3 px-3 sm:pt-4 sm:px-4"> */}
-        <CardHeader className="grid grid-cols-1 min-[500px]:grid-cols-2 min-[500px]:items-center min-[500px]:justify-items-between gap-2 min-[500px]:gap-4 pb-2 sm:pb-4 pt-3 px-3 sm:pt-4 sm:px-4">
+        {/* <CardHeader className="grid grid-cols-1 min-[500px]:grid-cols-2 min-[500px]:items-center min-[500px]:justify-items-between gap-2 min-[500px]:gap-4 pb-2 sm:pb-4 pt-3 px-3 sm:pt-4 sm:px-4"> */}
+        <CardHeader className=" flex flex-col min-[500px]:flex-row min-[500px]:items-center min-[500px]:justify-between gap-2 min-[500px]:gap-4 pb-2 sm:pb-4 pt-3 px-3 sm:pt-4 sm:px-4">
         
           <div className="min-w-0">
-            <CardTitle className="text-base sm:text-lg lg:text-xl">{t("dashboard.donationsPage.trendTitle")}</CardTitle>
+            <CardTitle className="text-base sm:text-lg lg:text-2xl">{t("dashboard.donationsPage.trendTitle")}</CardTitle>
             <CardDescription className="text-[11px] sm:text-sm">
               {t("dashboard.donationsPage.trendDesc")}
             </CardDescription>
