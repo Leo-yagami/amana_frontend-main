@@ -104,7 +104,7 @@ api.interceptors.response.use(
       window.dispatchEvent(new CustomEvent('auth:unauthorized'));
 
       // Redirect to login if not already there
-      const publicPaths = ['/', '/login', '/register'];
+      const publicPaths = ['/', '/login', '/register', '/auth/callback'];
       if (!publicPaths.includes(window.location.pathname)) {
         window.location.href = '/login';
       }
