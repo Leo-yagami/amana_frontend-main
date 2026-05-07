@@ -66,9 +66,6 @@ const Donors = () => {
       // console.log("RESPONNSEEEEEEEEE",response)
       return response;
     },
-      staleTime: 5 * 60 * 1000,   // ✅ ADD
-      gcTime: 30 * 60 * 1000,     // ✅ ADD
-      refetchOnWindowFocus: false, // ✅ ADD
   });
 
   const { data: overview } = useQuery({
@@ -78,9 +75,6 @@ const Donors = () => {
       console.log(response.data)
       return response.data;
     },
-    staleTime: 5 * 60 * 1000,   // ✅ ADD
-    gcTime: 30 * 60 * 1000,     // ✅ ADD
-    refetchOnWindowFocus: false, // ✅ ADD
   });
 
   const handleDeleteClick = (donor: Donor) => {

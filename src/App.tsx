@@ -40,15 +40,8 @@ import Reports from "./pages/dashboard/Reports";
 import Reports2 from "./pages/dashboard/Reports2_0";
 import Settings from "./pages/dashboard/Settings";
 import ReportsAnalytics from "./pages/dashboard/Reports2_0";
-import { useEffect } from "react";
 
-const App = () => {
-  useEffect(() => {
-  fetch('/api').catch(() => {}); // wake up render
-  }, [])
-
-  return (
-  // In your app's entry point (main.jsx or App.jsx)
+const App = () => (
   <AuthProvider>
     <TooltipProvider>
       <Toaster />
@@ -121,7 +114,6 @@ const App = () => {
       </BrowserRouter>
     </TooltipProvider>
   </AuthProvider>
-  // In your app's entry point (main.jsx or App.jsx)
 );
-}
+
 export default App;

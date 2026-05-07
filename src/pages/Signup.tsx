@@ -51,7 +51,6 @@ const Signup = () => {
     /** Redirect to your Express Google OAuth entry (change path if yours differs). */
     const handleGoogleSignup = () => {
       const apiOrigin = import.meta.env.VITE_API_URL || "http://localhost:3000";
-      // const apiOrigin = "http://localhost:3000";
       window.location.assign(`${apiOrigin}/api/auth/google`);
     };
 
