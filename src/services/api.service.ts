@@ -335,9 +335,9 @@ export const authApi = {
     window.location.href = `${apiOrigin}/api/auth/google`;
   },
   
-  // Only used if your backend supports popup/code-exchange flow
+  // Exchange one-time Google OAuth handoff code for an HttpOnly JWT cookie
   exchangeGoogleCode: (code: string) =>
-    api.post<AuthResponse>('/google/callback/exchange', { code }),
+    api.post('/auth/exchange', { code }),
 };
 
 // Family API
