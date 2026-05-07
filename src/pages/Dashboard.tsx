@@ -22,6 +22,27 @@ import type {
   Event,
 } from "@/types/api";
 
+const CACHE_KEY = 'dashboard_data';
+const CACHE_TTL = 5 * 60 * 1000;
+
+function getDashboardCache() {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    const { data, timestamp } = JSON.parse(raw);
+    if (Date.now() - timestamp > CACHE_TTL) {
+      localStorage.removeItem(CACHE_KEY);
+      return null;
+    }
+    return data;
+  } catch { return null; }
+}
+
+function setDashboardCache(data: object) {
+  localStorage.setItem(CACHE_KEY, JSON.stringify({ data, timestamp: Date.now() }));
+}
+
+
 const Dashboard = () => {
   const { t } = useTranslation();
   // State for all dashboard data
@@ -39,6 +60,18 @@ const Dashboard = () => {
   // Fetch all dashboard data on mount
   useEffect(() => {
     const fetchDashboardData = async () => {
+    // ✅ ADD THIS BLOCK at the top
+    const cached = getDashboardCache();
+    if (cached) {
+      setOverview(cached.overview);
+      setEvents(cached.events);
+      setTopDonors(cached.topDonors);
+      setRecentActivities(cached.recentActivities);
+      setLoading(false);
+      return;
+    }
+
+
       try {
         setLoading(true);
         setError(null);
@@ -53,13 +86,20 @@ const Dashboard = () => {
           ]);
 
         setOverview(overviewRes.data);
-        setEvents(eventsRes.data || []);
+        setEvents(eventsRes.data.data || []);
         setTopDonors(donorsRes.data || []);
         setRecentActivities(activitiesRes.data || []);
-        console.log("overview data: ", overviewRes)
-        console.log("event data: ", eventsRes)
-        console.log("donor data: ", donorsRes)
-        console.log("activity data: ", activitiesRes.data)
+
+        setDashboardCache({ 
+          overview: overviewRes.data, 
+          events: eventsRes.data.data || [], 
+          topDonors: donorsRes.data || [], 
+          recentActivities: activitiesRes.data || [] 
+        });
+        // console.log("overview data: ", overviewRes)
+        // console.log("event data: ", eventsRes)
+        // console.log("donor data: ", donorsRes)
+        // console.log("activity data: ", activitiesRes.data)
       } catch (err: any) {
         console.error("Failed to fetch dashboard data:", err);
         setError(err.response?.data?.message || t("dashboard.home.loadError"));

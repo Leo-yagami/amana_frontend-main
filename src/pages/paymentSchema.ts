@@ -4,8 +4,11 @@ import type { TFunction } from "i18next";
 export const createPaymentSchema = (t: TFunction) =>
   z
     .object({
-      selectedAmount: z.coerce.number().min(1),
-      customAmount: z.string().optional(),
+      // selectedAmount: z.coerce.number().min(1),
+      // customAmount: z.string().optional(),
+      selectedAmount: z.coerce.number(),
+      // customAmount: z.number().optional().transform((val)=> (val === 0? undefined: val)),
+      customAmount: z.number().optional().nullable(),
       paymentMethod: z.enum(["card", "telebirr"]),
       telebirrPhone: z.string().optional(),
       cardNumber: z.string().optional(),
@@ -13,8 +16,31 @@ export const createPaymentSchema = (t: TFunction) =>
       cvv: z.string().optional(),
     })
     .superRefine((data, ctx) => {
-      if (data.customAmount && data.customAmount.trim() !== "") {
-        const custom = Number(data.customAmount);
+      // if (data.customAmount && data.customAmount.trim() !== "") {
+      //   const custom = Number(data.customAmount);
+      //   if (Number.isNaN(custom)) {
+      //     ctx.addIssue({
+      //       code: "custom",
+      //       path: ["customAmount"],
+      //       message: t("paymentValidation.customNaN"),
+      //     });
+      //   } else if (custom <= 0) {
+      //     ctx.addIssue({
+      //       code: "custom",
+      //       path: ["customAmount"],
+      //       message: t("paymentValidation.customPositive"),
+      //     });
+      //   } else if (custom > 100000) {
+      //     ctx.addIssue({
+      //       code: "custom",
+      //       path: ["customAmount"],
+      //       message: t("paymentValidation.customLarge"),
+      //     });
+      //   }
+      // }
+      if (data.customAmount !== undefined) {
+        const custom = data.customAmount;
+
         if (Number.isNaN(custom)) {
           ctx.addIssue({
             code: "custom",

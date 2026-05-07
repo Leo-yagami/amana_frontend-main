@@ -272,6 +272,7 @@ import {
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createPaymentSchema } from "./paymentSchema";
+import api from "@/lib/api";
 
 const PRESET_AMOUNTS = [10, 25, 50];
 
@@ -279,8 +280,8 @@ const Payment = () => {
   const { t, i18n } = useTranslation();
   const paymentSchema = useMemo(() => createPaymentSchema(t), [t, i18n.language]);
 
-  const [selectedAmount, setSelectedAmount] = useState(25);
-  const [customAmount, setCustomAmount] = useState("");
+  // const [selectedAmount, setSelectedAmount] = useState(0);
+  // const [customAmount, setCustomAmount] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState("card");
 
   const {
@@ -292,8 +293,8 @@ const Payment = () => {
   } = useForm({
     resolver: zodResolver(paymentSchema),
     defaultValues: {
-      selectedAmount: '',
-      customAmount: "",
+      selectedAmount: 0,
+      customAmount: undefined,
       paymentMethod: "card",
       telebirrPhone: "",
       cardNumber: "",
@@ -302,20 +303,37 @@ const Payment = () => {
     },
   });
 
-  const watchedCustomAmount = watch("customAmount");
+  const selectedAmount = watch("selectedAmount")
+  const customAmount = watch("customAmount");
+  // const watchedCustomAmount = watch("customAmount");
   const watchedPaymentMethod = watch("paymentMethod");
 
-  const displayAmount = useMemo(() => {
-    const custom = Number(watchedCustomAmount);
-    if (!Number.isNaN(custom) && custom > 0) return custom;
-    return selectedAmount;
-  }, [watchedCustomAmount, selectedAmount]);
+  // const displayAmount = useMemo(() => {
+  //   const custom = Number(customAmount);
+  //   if (!Number.isNaN(custom) && custom > 0) return custom;
+  //   return selectedAmount;
+  // }, [customAmount, selectedAmount]);
+
+//   const displayAmount = useMemo(() => {
+//   const custom = Number(customAmount || undefined);
+//   return custom > 0 ? custom : Number(selectedAmount || 0);
+// }, [customAmount, selectedAmount]);
+
+const displayAmount = useMemo(() => {
+  if (customAmount !== undefined && customAmount > 0) return customAmount;
+  return selectedAmount || 0;
+}, [customAmount, selectedAmount]);
+
+const isAmountValid =
+  (customAmount !== null && customAmount > 0) ||
+  selectedAmount > 0;
 
   const processingFee = useMemo(() => +(displayAmount * 0.03).toFixed(2), [displayAmount]);
   const totalAmount = useMemo(() => +(displayAmount + processingFee).toFixed(2), [displayAmount, processingFee]);
 
   const onSubmit = async (data) => {
-    const apiOrigin = import.meta.env.VITE_API_URL || "http://localhost:3000";
+    // const apiOrigin = import.meta.env.VITE_API_URL || "http://localhost:3000";
+    const apiOrigin = "http://localhost:3000";
     
     console.log("Validated form data:", data);
     const response = await fetch(`${apiOrigin}/initialize`, {
@@ -328,8 +346,12 @@ const Payment = () => {
     })
     const result = await response.json();
     console.log('POST Result', result)
-    // console.log(response)
-    window.location.assign(`${apiOrigin}/initialize`);
+    // // console.log(response)
+    // window.location.assign(`${apiOrigin}/initialize`);
+    if(result.message === "ok"){
+      window.location.assign(`${apiOrigin}/initialize`);
+    }
+
   };
 
   return (
@@ -354,18 +376,20 @@ const Payment = () => {
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {PRESET_AMOUNTS.map((amount) => {
-                  const active = !watchedCustomAmount && selectedAmount === amount;
-
+                  // const active = !watchedCustomAmount && (selectedAmount === amount || customAmount === 0);
+                  const active = customAmount === undefined && selectedAmount === amount;
+                  
                   return (
                     <button
-                      key={amount}
-                      type="button"
-                      onClick={() => {
-                        setCustomAmount("");
-                        setSelectedAmount(amount);
+                    key={amount}
+                    type="button"
+                    onClick={() => {
+                        // setCustomAmount(0);
+                        // setSelectedAmount(amount);
+                        
 
-                        setValue("customAmount", "");
-                        setValue("selectedAmount", amount);
+                        setValue("customAmount", undefined);
+                        setValue("selectedAmount", amount, {shouldValidate: true});
                       }}
                       className={`py-6 px-4 rounded-xl border-2 transition-all text-center ${
                         active ? "border-primary bg-primary/10" : "border-transparent bg-card hover:border-primary/40"
@@ -378,29 +402,43 @@ const Payment = () => {
                         {amount === 10
                           ? t("payment.amountSimple")
                           : amount === 25
-                            ? t("payment.amountImpact")
-                            : t("payment.amountGenerous")}
+                          ? t("payment.amountImpact")
+                          : t("payment.amountGenerous")}
                       </div>
                     </button>
                   );
                 })}
 
                 <div>
+                {(() => {
+                const customActive = Number(customAmount) > 0
+                return(
+
                   <input
-                    type="number"
-                    min="1"
-                    step="0.01"
-                    placeholder={t("payment.customPlaceholder")}
-                    value={customAmount}
-                    onChange={(e) => {
-                      setCustomAmount(e.target.value);
-                      setValue("customAmount", e.target.value);
-                    }}
-                    className="w-full py-6 px-4 rounded-xl border-2 border-border bg-card text-center text-xl font-bold"
+                  type="number"
+                  min="1"
+                  step="1"
+                  placeholder={t("payment.customPlaceholder")}
+                  value={customAmount === undefined ? "" : customAmount}
+                  // onChange={(e) => {
+                  //   setCustomAmount(e.target.value);
+                  //   setValue("customAmount", e.target.value);
+                  // }}
+                  onChange={(e) => {
+                    const value = Number(e.target.value);
+                    // setCustomAmount(value);
+                    setValue("selectedAmount", 0)
+                    setValue("customAmount", value === 0 ? undefined : Number(value), {shouldValidate: true});
+                  }}
+                  className={`focus:outline-none focus:ring-0 focus:ring-offset-0 w-full py-6 px-4 rounded-xl border-2 border-border bg-card text-center text-xl font-bold transition-all ${
+                    customActive? "border-primary bg-primary/10 text-primary" : "border-border"
+                  }`}
                   />
-                  {errors.customAmount && (
-                    <p className="text-red-500 text-xs mt-2">{errors.customAmount.message}</p>
-                  )}
+                )
+              })()}
+              {errors.customAmount && (
+                <p className="text-red-500 text-xs mt-2">{String(errors.customAmount.message)}</p>
+              )}
                 </div>
               </div>
             </section>
@@ -548,6 +586,7 @@ const Payment = () => {
 
                   <button
                     type="submit"
+                    disabled={!isAmountValid}
                     className="w-full py-5 bg-primary text-primary-foreground rounded-full font-bold text-lg hover:opacity-90 transition flex items-center justify-center gap-3"
                   >
                     {t("payment.complete")}
