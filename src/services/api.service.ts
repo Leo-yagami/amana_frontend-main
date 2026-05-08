@@ -329,9 +329,9 @@ export const authApi = {
   
   // REMOVED: refreshToken — server handles token refresh via cookie rotation
   
-  // Google OAuth: full-page redirect (server sets HttpOnly cookie on callback)
+  // Google OAuth: full-page redirect (proxied through Vercel in production for cookie compatibility)
   loginWithGoogle: () => {
-    const apiOrigin = import.meta.env.VITE_API_URL;
+    const apiOrigin = import.meta.env.VITE_API_URL || '';
     window.location.href = `${apiOrigin}/api/auth/google`;
   },
   

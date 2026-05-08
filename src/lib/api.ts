@@ -64,7 +64,9 @@
 ////////////////////
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+// When VITE_API_URL is empty, API calls go to the same origin (proxied by Vercel/Vite).
+// This is critical for Safari/ITP cookie compatibility on Apple devices.
+const API_URL = import.meta.env.VITE_API_URL ?? '';
 // const API_URL = 'http://localhost:3000';
 // const API_URL = '/api';
 
