@@ -332,8 +332,8 @@ const isAmountValid =
   const totalAmount = useMemo(() => +(displayAmount + processingFee).toFixed(2), [displayAmount, processingFee]);
 
   const onSubmit = async (data) => {
-    // const apiOrigin = import.meta.env.VITE_API_URL || "http://localhost:3000";
-    const apiOrigin = "http://localhost:3000";
+    const apiOrigin = import.meta.env.VITE_API_URL || "http://localhost:3000";
+    // const apiOrigin = "http://localhost:3000";
     
     console.log("Validated form data:", data);
     const response = await fetch(`${apiOrigin}/initialize`, {
