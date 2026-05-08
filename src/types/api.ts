@@ -138,7 +138,7 @@ export interface Donor {
 
 // Event types
 export interface Event {
-  id: string;
+  _id: string;
   title: string;
   description?: string;
   eventType: 'distribution' | 'fundraising' | 'awareness' | 'food_package' | 'medical_aid' | 'job_opportunity' | 'other';

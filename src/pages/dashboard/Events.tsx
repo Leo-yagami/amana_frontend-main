@@ -76,6 +76,7 @@ const Events = () => {
       if (typeFilter !== "all") params.eventType = typeFilter;
       
       const response = await eventApi.getAll(params);
+      console.log(response.data)
       return response.data;
     },
   });
@@ -84,7 +85,7 @@ const Events = () => {
    const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ["event-stats", id],
     queryFn: async () => {
-      console.log("HELLLLLLO")
+      // console.log("HELLLLLLO")
       const response = await eventApi.getStats(id!);
       console.log("YOU GOT THISSSSSSSSSSSSSS", response.data)
       return response.data;
@@ -243,15 +244,15 @@ const Events = () => {
             </Card>
           ))}
         </div>
-      ) : data?.data && data.data.length > 0 ? (
+      ) : data && data.length > 0 ? (
         <>
           <div className="space-y-4">
-            {data.data.map((event: Event) => {
+            {data.map((event: Event) => {
               const dateInfo = formatEventDate(event.startDate, event.endDate, event.eventDate);
               const progress = calculateProgress(Number(event?.collectedAmount), event?.targetAmount ? Number(event?.targetAmount) : undefined);
               
               return (
-                <Card key={event._id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleViewEvent(event.id)}>
+                <Card key={event._id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleViewEvent(event._id)}>  
                   <CardContent className="p-4 sm:p-6">
                     <div className="flex flex-col lg:flex-row lg:items-center gap-4 sm:gap-6">
                       {/* Date Box */}
