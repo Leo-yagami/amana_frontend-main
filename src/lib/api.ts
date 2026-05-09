@@ -87,10 +87,16 @@ const api = axios.create({
 
 /**
  * Request interceptor
- * REMOVED: No localStorage token — HttpOnly cookie is sent automatically by browser
+ * Adds Authorization header from localStorage token
  */
 api.interceptors.request.use(
-  (config) => config,
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
   (error) => Promise.reject(error)
 );
 
@@ -102,6 +108,8 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
       // Dispatch a custom event so AuthContext can react and clear user state
       window.dispatchEvent(new CustomEvent('auth:unauthorized'));
 

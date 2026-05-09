@@ -133,31 +133,43 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => window.removeEventListener('auth:unauthorized', handleUnauthorized);
   }, []);
 
-  // Check auth status on mount (reads HttpOnly cookie via /me)
+  // Check auth status on mount
   useEffect(() => {
     const checkAuth = async () => {
-      try {
-        const res = await authApi.getCurrentUser();
-        setUser(res.data);
-      } catch {
+      const storedToken = localStorage.getItem('token');
+      const storedUser = localStorage.getItem('user');
+
+      if (storedToken && storedUser) {
+        try {
+          const res = await authApi.getCurrentUser();
+          setUser(res.data);
+        } catch {
+          setUser(null);
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+        }
+      } else {
         setUser(null);
-      } finally {
-        setIsLoading(false);
       }
+      setIsLoading(false);
     };
     checkAuth();
   }, []);
 
   const login = async (credentials: LoginCredentials) => {
-    await authApi.login(credentials); // Server sets HttpOnly cookie
-    const res = await authApi.getCurrentUser();
-    setUser(res.data);
+    const res = await authApi.login(credentials); 
+    const { token, ...userData } = res.data;
+    localStorage.setItem('token', token);
+    localStorage.setItem('user', JSON.stringify(userData));
+    setUser(userData as User);
   };
 
   const register = async (data: RegisterData) => {
-    await authApi.register(data); // Server sets HttpOnly cookie
-    const res = await authApi.getCurrentUser();
-    setUser(res.data);
+    const res = await authApi.register(data); 
+    const { token, ...userData } = res.data;
+    localStorage.setItem('token', token);
+    localStorage.setItem('user', JSON.stringify(userData));
+    setUser(userData as User);
   };
 
   const loginWithGoogle = () => {
@@ -166,10 +178,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = async () => {
     try {
-      await authApi.logout(); // Server clears cookie
+      await authApi.logout(); 
     } catch (err) {
       console.error('Logout failed:', err);
     } finally {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
       setUser(null);
     }
   };

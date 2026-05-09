@@ -19,17 +19,20 @@ const AuthCallback = () => {
           return;
         }
 
-        // Exchange the one-time code for an HttpOnly JWT cookie.
-        // Because this fetch() originates from our frontend domain,
-        // the Set-Cookie in the response is stored in the correct
-        // browser partition (frontend → backend), which means all
-        // subsequent withCredentials requests will include it.
-        await authApi.exchangeGoogleCode(code);
+        const res = await authApi.exchangeGoogleCode(code);
+        const { token, user } = res.data;
 
-        // Cookie is now set — verify it works by hitting /me
-        const meRes = await authApi.getCurrentUser();
-        if (meRes.data) {
-          navigate("/payment", { replace: true });
+        if (token && user) {
+          localStorage.setItem('token', token);
+          localStorage.setItem('user', JSON.stringify(user));
+          
+          // Verify it works by hitting /me
+          const meRes = await authApi.getCurrentUser();
+          if (meRes.data) {
+            window.location.href = "/payment"; // Use full reload to initialize AuthContext
+          } else {
+            navigate("/login?error=google_callback_failed", { replace: true });
+          }
         } else {
           navigate("/login?error=google_callback_failed", { replace: true });
         }
