@@ -332,26 +332,25 @@ const isAmountValid =
   const totalAmount = useMemo(() => +(displayAmount + processingFee).toFixed(2), [displayAmount, processingFee]);
 
   const onSubmit = async (data) => {
-    const apiOrigin = import.meta.env.VITE_API_URL || "http://localhost:3000";
-    // const apiOrigin = "http://localhost:3000";
-    
-    console.log("Validated form data:", data);
-    const response = await fetch(`${apiOrigin}/api/initialize`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json', 
-      },
-      credentials: "include",
-      body: JSON.stringify(data),
-    })
-    const result = await response.json();
-    console.log('POST Result', result)
-    // // console.log(response)
-    // window.location.assign(`${apiOrigin}/initialize`);
-    if(result.message === "ok"){
-      window.location.assign(`${apiOrigin}/api/initialize`);
+    try {
+      console.log("Validated form data:", data);
+      
+      // Use the configured api instance from "@/lib/api" instead of fetch
+      // This ensures the Authorization Bearer token is properly attached
+      const response = await api.post('/initialize', data);
+      const result = response.data;
+      
+      console.log('POST Result', result);
+      
+      // The backend returns the Chapa checkout_url on success
+      if(result.message === "ok" && result.checkout_url){
+        window.location.assign(result.checkout_url);
+      } else {
+        console.error("Initialization failed without a checkout URL:", result);
+      }
+    } catch (error) {
+      console.error("Payment initialization error:", error);
     }
-
   };
 
   return (
