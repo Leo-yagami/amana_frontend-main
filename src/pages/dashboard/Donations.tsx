@@ -607,7 +607,7 @@ const Donations = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
-  const [limit] = useState(12);
+  const [limit] = useState(50);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
