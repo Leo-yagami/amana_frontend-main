@@ -336,23 +336,20 @@ const isAmountValid =
     // const apiOrigin = "http://localhost:3000";
     
     console.log("Validated form data:", data);
-    const token = localStorage.getItem("token");
     const response = await fetch(`${apiOrigin}/api/initialize`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json', 
-        'Authorization': token ? `Bearer ${token}` : ''
       },
       credentials: "include",
       body: JSON.stringify(data),
     })
     const result = await response.json();
     console.log('POST Result', result)
-    
-    if(result.message === "ok" && result.checkout_url){
-      window.location.href = result.checkout_url;
-    } else {
-      console.error("Failed to initialize payment", result);
+    // // console.log(response)
+    // window.location.assign(`${apiOrigin}/initialize`);
+    if(result.message === "ok"){
+      window.location.assign(`${apiOrigin}/api/initialize`);
     }
 
   };
