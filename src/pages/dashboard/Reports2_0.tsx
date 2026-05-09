@@ -655,18 +655,6 @@ const ReportsAnalytics = () => {
         </div>
 
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 items-stretch sm:items-stretch mt-2 sm:mt-0">
-          <Select value={range} onValueChange={(v: RangeType) => setRange(v)}>
-            <SelectTrigger className="w-full sm:w-[170px] text-sm">
-              <SelectValue placeholder={t("dashboard.reports2.selectRange")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="month">{t("dashboard.reports2.rangeMonth")}</SelectItem>
-              <SelectItem value="3m">{t("dashboard.reports2.range3m")}</SelectItem>
-              <SelectItem value="6m">{t("dashboard.reports2.range6m")}</SelectItem>
-              <SelectItem value="1y">{t("dashboard.reports2.range1y")}</SelectItem>
-            </SelectContent>
-          </Select>
-
           <Button variant="default" disabled={isLoading || isFetching} size="default" className="text-xs sm:text-sm mb-4 sm:mb-0 h">
             <Download className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
             <span className="hidden sm:inline">{t("dashboard.reports2.exportFull")}</span>
@@ -756,13 +744,25 @@ const ReportsAnalytics = () => {
 
               {/* Monthly Trends */}
               <Card className="min-w-0 overflow-hidden [&_canvas]:max-w-full">
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-0  items-start  sm:items-center justify-between">
                 <CardHeader className="pb-3 ">
                   <CardTitle className="text-lg sm:text-xl">{t("dashboard.reports2.monthlyRegTitle")}</CardTitle>
                   <CardDescription className="text-xs sm:text-sm">
                     {t("dashboard.reports2.monthlyRegDesc")}
                   </CardDescription>
                 </CardHeader>
-
+                <Select value={range} onValueChange={(v: RangeType) => setRange(v)}>
+                  <SelectTrigger className="w-full sm:w-[170px] text-sm">
+                    <SelectValue placeholder={t("dashboard.reports2.selectRange")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="month">{t("dashboard.reports2.rangeMonth")}</SelectItem>
+                    <SelectItem value="3m">{t("dashboard.reports2.range3m")}</SelectItem>
+                    <SelectItem value="6m">{t("dashboard.reports2.range6m")}</SelectItem>
+                    <SelectItem value="1y">{t("dashboard.reports2.range1y")}</SelectItem>
+                  </SelectContent>
+                </Select>
+                </div>
                 {/* <CardContent className="p-3 sm:p-6">
                   <div ref={ref} className="h-64 sm:h-80 lg:h-[330px] w-full">
                     {isInView ? (
