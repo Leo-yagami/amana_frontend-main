@@ -744,14 +744,14 @@ const ReportsAnalytics = () => {
 
               {/* Monthly Trends */}
               <Card className="min-w-0 overflow-hidden [&_canvas]:max-w-full">
-                <div className="flex flex-col sm:flex-row gap-2 sm:gap-0  items-start  sm:items-center justify-between">
+                <div className="flex flex-col px-4 sm:px-0 sm:pr-6 sm:flex-row gap-2 sm:gap-0  items-start  sm:items-center justify-between">
                 <CardHeader className="pb-3 ">
                   <CardTitle className="text-lg sm:text-xl">{t("dashboard.reports2.monthlyRegTitle")}</CardTitle>
                   <CardDescription className="text-xs sm:text-sm">
                     {t("dashboard.reports2.monthlyRegDesc")}
                   </CardDescription>
                 </CardHeader>
-                <Select value={range} onValueChange={(v: RangeType) => setRange(v)}>
+                <Select value={range} onValueChange={(v: string) => setRange(v as RangeType)}>
                   <SelectTrigger className="w-full sm:w-[170px] text-sm">
                     <SelectValue placeholder={t("dashboard.reports2.selectRange")} />
                   </SelectTrigger>
