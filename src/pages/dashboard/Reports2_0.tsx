@@ -432,9 +432,8 @@
 // export default ReportsAnalytics;
 
 
-import { useMemo, useState, useRef } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-// import { useQuery } from "@tanstack/react-query";
 import { useQueries } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import {
@@ -554,28 +553,45 @@ const SummarySkeleton = () => (
   </div>
 );
 
+// ---- constants ----
+const CACHE_KEY   = "reports_analytics_cache";
+const SEEN_KEY    = "reports_analytics_seen";   // sessionStorage — clears on tab close
+const RANGES: RangeType[] = ["month", "3m", "6m", "1y"];
+
+// ---- helpers ----
+const readCache = (): Partial<Record<RangeType, DashboardAnalytics>> => {
+  try {
+    return JSON.parse(localStorage.getItem(CACHE_KEY) ?? "{}");
+  } catch {
+    return {};
+  }
+};
+
+const writeCache = (data: Partial<Record<RangeType, DashboardAnalytics>>) => {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+  } catch {}
+};
+
 const ReportsAnalytics = () => {
   const { t } = useTranslation();
   const [range, setRange] = useState<RangeType>("6m");
   const [activeTab, setActiveTab] = useState("summary");
-  const { ref, isInView } = useInView({ threshold: 0.001 });
 
-  // const {
-  //   data,
-  //   isLoading,
-  //   error,
-  //   isFetching,
-  // } = useQuery({
-  //   queryKey: ["dashboard", "analytics", range],
-  //   queryFn: async () => {
-  //     const res = await dashboardApi.getAnalytics({ range });
-  //     // console.log(res)
-  //     return res.data as DashboardAnalyticsResponse;
-  //   },
-  // });
+  // First-load gate: skip skeleton if user has visited this session
+  const hasSeenBefore = sessionStorage.getItem(SEEN_KEY) === "1";
 
-  // const analytics = data;
-  // console.log("FINAL ANALYTICS", analytics)
+  // Single ref on the OUTER container, fires as soon as the page header is touched
+  const { ref, isInView } = useInView({
+    threshold: 0,
+    rootMargin: "9999px 0px 0px 0px", // triggers the moment ANY part enters viewport from top
+    once: true,
+  });
+
+  // Show content immediately if visited before OR element is in view
+  const shouldReveal = hasSeenBefore || isInView;
+
+  const cachedData = useMemo(readCache, []);
 
   const RANGES: RangeType[] = ["month", "3m", "6m", "1y"];
 
@@ -587,8 +603,10 @@ const ReportsAnalytics = () => {
         // supports either { analytics: {...} } or raw analytics object
         return (res.data?.analytics ?? res.data) as DashboardAnalytics;
       },
+      // Seed from localStorage so the page renders instantly after refresh
+      initialData: cachedData[r],
       staleTime: 5 * 60 * 1000,
-      gcTime: 30 * 60 * 1000,
+      gcTime:    30 * 60 * 1000,
       refetchOnWindowFocus: false,
     })),
   });
@@ -599,6 +617,20 @@ const ReportsAnalytics = () => {
       return acc;
     }, {} as Record<RangeType, DashboardAnalytics | undefined>);
   }, [analyticsQueries]);
+
+  // Persist to localStorage whenever we get fresh data + mark session as seen
+  useEffect(() => {
+    const fresh = RANGES.reduce((acc, r, idx) => {
+      const d = analyticsQueries[idx].data;
+      if (d) acc[r] = d;
+      return acc;
+    }, {} as Partial<Record<RangeType, DashboardAnalytics>>);
+
+    if (Object.keys(fresh).length > 0) {
+      writeCache({ ...cachedData, ...fresh });
+      sessionStorage.setItem(SEEN_KEY, "1");
+    }
+  }, [analyticsByRange]);
 
   const isLoading = analyticsQueries.some((q) => q.isLoading);
   const isFetching = analyticsQueries.some((q) => q.isFetching);
@@ -642,7 +674,7 @@ const ReportsAnalytics = () => {
     firstError?.response?.data?.message ?? t("dashboard.reports2.loadError");
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div ref={ref} className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center sm:justify-between gap-3 sm:gap-4">
         <div className="min-w-0">
@@ -801,7 +833,7 @@ const ReportsAnalytics = () => {
                     <CardDescription className="text-xs sm:text-sm">{t("dashboard.reports2.urgencyDesc")}</CardDescription>
                   </CardHeader>
                   <CardContent className="p-2 sm:p-6">
-                    <div ref={ref} className="h-52 sm:h-60 overflow-y-auto scrollbar-hide">
+                    <div  className="h-52 sm:h-60 overflow-y-auto scrollbar-hide">
                       {isInView ? (<AnalyticsDonutChart items={safeAnalytics.urgencyLevels} />
                       ) : (<Skeleton className="h-full w-full rounded-xl" />
                     )}
@@ -815,7 +847,7 @@ const ReportsAnalytics = () => {
                     <CardDescription className="text-xs sm:text-sm">{t("dashboard.reports2.sourcesDesc")}</CardDescription>
                   </CardHeader>
                   <CardContent className="p-2 sm:p-6">
-                    <div ref={ref} className="h-52 sm:h-60 overflow-y-auto scrollbar-hide">
+                    <div  className="h-52 sm:h-60 overflow-y-auto scrollbar-hide">
                       {isInView ? (<AnalyticsDonutChart items={safeAnalytics.donationSources} />
                       ) : (<Skeleton className="h-full w-full rounded-xl" />
                       )}
@@ -829,7 +861,7 @@ const ReportsAnalytics = () => {
                     <CardDescription className="text-xs sm:text-sm">{t("dashboard.reports2.eventTypesDesc")}</CardDescription>
                   </CardHeader>
                   <CardContent className="p-2 sm:p-6">
-                    <div ref={ref} className="h-52 sm:h-60 overflow-y-auto scrollbar-hide">
+                    <div  className="h-52 sm:h-60 overflow-y-auto scrollbar-hide">
                       {isInView ? (<AnalyticsDonutChart items={safeAnalytics.eventTypes} />
                       ) : (<Skeleton className="h-full w-full rounded-xl" />
                       )}
