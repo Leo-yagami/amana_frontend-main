@@ -558,7 +558,7 @@ const ReportsAnalytics = () => {
   const { t } = useTranslation();
   const [range, setRange] = useState<RangeType>("6m");
   const [activeTab, setActiveTab] = useState("summary");
-  const { ref, isInView } = useInView({ threshold: 1 });
+  const { ref, isInView } = useInView({ threshold: 0.001 });
 
   // const {
   //   data,
