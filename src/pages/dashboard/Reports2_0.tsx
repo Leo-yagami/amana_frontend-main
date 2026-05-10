@@ -493,6 +493,7 @@ type DashboardAnalyticsResponse = {
   analytics: DashboardAnalytics;
 };
 
+
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -581,20 +582,13 @@ const ReportsAnalytics = () => {
   // First-load gate: skip skeleton if user has visited this session
   const hasSeenBefore = sessionStorage.getItem(SEEN_KEY) === "1";
 
-  // Single ref on the OUTER container, fires as soon as the page header is touched
-  const { ref, isInView } = useInView({
-    threshold: 0,
-    rootMargin: "9999px 0px 0px 0px", // triggers the moment ANY part enters viewport from top
-    once: true,
-  });
-
-  // Show content immediately if visited before OR element is in view
-  const shouldReveal = hasSeenBefore || isInView;
-
+  const { ref, isInView } = useInView({ threshold: 0, rootMargin: "0px", once: true });
+  const shouldReveal = isInView;
+  
+  
   const cachedData = useMemo(readCache, []);
-
-  const RANGES: RangeType[] = ["month", "3m", "6m", "1y"];
-
+  
+  
   const analyticsQueries = useQueries({
     queries: RANGES.map((r) => ({
       queryKey: ["dashboard", "analytics", r],
@@ -610,6 +604,8 @@ const ReportsAnalytics = () => {
       refetchOnWindowFocus: false,
     })),
   });
+  // isLoading gate — still skip skeleton on revisit (good UX)
+const isLoading = !hasSeenBefore && analyticsQueries.every((q) => q.isLoading);
 
   const analyticsByRange = useMemo(() => {
     return RANGES.reduce((acc, r, idx) => {
@@ -632,7 +628,7 @@ const ReportsAnalytics = () => {
     }
   }, [analyticsByRange]);
 
-  const isLoading = analyticsQueries.some((q) => q.isLoading);
+  // const isLoading = analyticsQueries.some((q) => q.isLoading);
   const isFetching = analyticsQueries.some((q) => q.isFetching);
   const firstError = analyticsQueries.find((q) => q.error)?.error as any;
 
@@ -674,11 +670,11 @@ const ReportsAnalytics = () => {
     firstError?.response?.data?.message ?? t("dashboard.reports2.loadError");
 
   return (
-    <div ref={ref} className="space-y-4 sm:space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center sm:justify-between gap-3 sm:gap-4">
         <div className="min-w-0">
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground truncate">
+          <h1 ref={ref} className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground truncate">
             {t("dashboard.reports2.title")}
           </h1>
           <p className="text-xs sm:text-sm text-muted-foreground truncate">
@@ -797,7 +793,7 @@ const ReportsAnalytics = () => {
                 </div>
                 {/* <CardContent className="p-3 sm:p-6">
                   <div ref={ref} className="h-64 sm:h-80 lg:h-[330px] w-full">
-                    {isInView ? (
+                    {shouldReveal ? (
                       <DonationTrendsChart
                       labels={safeAnalytics.monthlyTrends.labels}
                       values={safeAnalytics.monthlyTrends.values}
@@ -811,7 +807,7 @@ const ReportsAnalytics = () => {
                 <CardContent className="p-2 min-[400px]:p-3 sm:p-6 min-w-0 overflow-hidden">
                   <div className="w-full h-[230px] sm:h-[330px] min-w-0 max-w-full overflow-hidden">
                     <div className="h-48 min-[400px]:h-56 sm:h-80 lg:h-[330px] w-full min-w-0 max-w-full overflow-hidden">
-                      {isInView ? (
+                      {shouldReveal ? (
                       <DonationTrendsChart
                       labels={safeAnalytics.monthlyTrends.labels}
                       values={safeAnalytics.monthlyTrends.values}
@@ -834,7 +830,7 @@ const ReportsAnalytics = () => {
                   </CardHeader>
                   <CardContent className="p-2 sm:p-6">
                     <div  className="h-52 sm:h-60 overflow-y-auto scrollbar-hide">
-                      {isInView ? (<AnalyticsDonutChart items={safeAnalytics.urgencyLevels} />
+                      {shouldReveal ? (<AnalyticsDonutChart items={safeAnalytics.urgencyLevels} />
                       ) : (<Skeleton className="h-full w-full rounded-xl" />
                     )}
                     </div>
@@ -848,7 +844,7 @@ const ReportsAnalytics = () => {
                   </CardHeader>
                   <CardContent className="p-2 sm:p-6">
                     <div  className="h-52 sm:h-60 overflow-y-auto scrollbar-hide">
-                      {isInView ? (<AnalyticsDonutChart items={safeAnalytics.donationSources} />
+                      {shouldReveal ? (<AnalyticsDonutChart items={safeAnalytics.donationSources} />
                       ) : (<Skeleton className="h-full w-full rounded-xl" />
                       )}
                     </div>
@@ -862,7 +858,7 @@ const ReportsAnalytics = () => {
                   </CardHeader>
                   <CardContent className="p-2 sm:p-6">
                     <div  className="h-52 sm:h-60 overflow-y-auto scrollbar-hide">
-                      {isInView ? (<AnalyticsDonutChart items={safeAnalytics.eventTypes} />
+                      {shouldReveal ? (<AnalyticsDonutChart items={safeAnalytics.eventTypes} />
                       ) : (<Skeleton className="h-full w-full rounded-xl" />
                       )}
                     </div>
