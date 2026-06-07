@@ -17,6 +17,41 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@Lovable" />
     <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+
+
+    <!-- Early Theme script to prevent flash of light mode -->
+  <script>
+      (function () {
+        try {
+          const theme = localStorage.getItem('theme') || 'system';
+          let isDark = false;
+          if (theme === 'system') {
+            isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          } else {
+            isDark = theme === 'dark';
+          }
+          if (isDark) {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+        } catch (e) {}
+      })();
+    </script>
+
+
+     <!-- Prevent white flash before stylesheets/scripts load -->
+    <style>
+      html {
+        background-color: hsl(40, 33%, 98%); /* Warm cream light mode background */
+      }
+      html.dark {
+        background-color: hsl(200, 20%, 12%); /* Dark mode background */
+      }
+      body {
+        background-color: inherit;
+      }
+    </style>
   </head>
 
   <body>
