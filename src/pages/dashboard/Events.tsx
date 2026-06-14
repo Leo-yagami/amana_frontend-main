@@ -77,21 +77,21 @@ const Events = () => {
       
       const response = await eventApi.getAll(params);
       console.log(response.data)
-      return response.data;
+      return response?.data[0];
     },
   });
 
    // Fetch event stats
-   const { data: stats, isLoading: statsLoading } = useQuery({
-    queryKey: ["event-stats", id],
-    queryFn: async () => {
-      // console.log("HELLLLLLO")
-      const response = await eventApi.getStats(id!);
-      console.log("YOU GOT THISSSSSSSSSSSSSS", response.data)
-      return response.data;
-    },
-    enabled: !!id,
-  });
+  //  const { data: stats, isLoading: statsLoading } = useQuery({
+  //   queryKey: ["event-stats", id],
+  //   queryFn: async () => {
+  //     // console.log("HELLLLLLO")
+  //     const response = await eventApi.getStats(id!);
+  //     console.log("YOU GOT THISSSSSSSSSSSSSS", response.data)
+  //     return response.data;
+  //   },
+  //   enabled: !!id,
+  // });
 
   const handleCreateEvent = () => {
     setSelectedEvent(null);
@@ -244,10 +244,10 @@ const Events = () => {
             </Card>
           ))}
         </div>
-      ) : data && data.length > 0 ? (
+      ) : data && data.data.length > 0 ? (
         <>
           <div className="space-y-4">
-            {data.map((event: Event) => {
+            {data?.data?.map((event: Event) => {
               const dateInfo = formatEventDate(event.startDate, event.endDate, event.eventDate);
               const progress = calculateProgress(Number(event?.collectedAmount), event?.targetAmount ? Number(event?.targetAmount) : undefined);
               

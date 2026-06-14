@@ -24,9 +24,15 @@ const Login = () => {
     setIsLoading(true);
 
     try {
+      (window as any).__isTransitioning = true;
       await login({ email, password });
-      navigate("/dashboard");
+      if (window.__animateRouteTransition) {
+        window.__animateRouteTransition("/dashboard");
+      } else {
+        navigate("/dashboard");
+      }
     } catch (err: any) {
+      (window as any).__isTransitioning = false;
       setError(err.response?.data?.message || t("auth.loginFailed"));
     } finally {
       setIsLoading(false);

@@ -115,6 +115,7 @@ interface AuthContextType {
   login: (credentials: LoginCredentials) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   loginWithGoogle: () => void;
+  setAuthSession: (token: string, user: User) => void;
   logout: () => Promise<void>;
 }
 
@@ -172,6 +173,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(userData as User);
   };
 
+  const setAuthSession = (token: string, userData: User) => {
+    localStorage.setItem('token', token);
+    localStorage.setItem('user', JSON.stringify(userData));
+    setUser(userData);
+  };
+
   const loginWithGoogle = () => {
     authApi.loginWithGoogle(); // Full page redirect
   };
@@ -197,6 +204,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         login,
         register,
         loginWithGoogle,
+        setAuthSession,
         logout,
       }}
     >

@@ -86,10 +86,10 @@ const EventFormModal = ({ open, onClose, event }: EventFormModalProps) => {
   });
 
   const updateMutation = useMutation({
-    mutationFn: (data: any) => eventApi.update(event!.id, data),
+    mutationFn: (data: any) => eventApi.update(event!._id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['events'] });
-      queryClient.invalidateQueries({ queryKey: ['event', event!.id] });
+      queryClient.invalidateQueries({ queryKey: ['event', event!._id] });
       toast.success("Event updated successfully!");
       onClose();
     },

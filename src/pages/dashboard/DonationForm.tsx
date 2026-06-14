@@ -977,7 +977,7 @@ const DonationForm = () => {
 
   const [formData, setFormData] = useState({
     donorId: donorIdFromUrl || "",
-    donorName: "",
+    // donorName: "",
     donationType: "monetary",
     amount: "",
     currency: "ETB",
@@ -996,6 +996,7 @@ const DonationForm = () => {
     queryFn: async () => {
       if (!id) return null;
       const response = await donationApi.getById(id);
+      console.log("DONATION DATA RESPONSE", response)
       return response.data;
     },
     enabled: isEditMode,
@@ -1005,6 +1006,7 @@ const DonationForm = () => {
     queryKey: ["donors", "all"],
     queryFn: async () => {
       const response = await donorApi.getAll({ page: 1, limit: 100 });
+      console.log("DONOR DATA", response)
       return response;
     },
   });
@@ -1014,7 +1016,6 @@ const DonationForm = () => {
     queryFn: async () => {
       if (!donorIdFromUrl) return null;
       const response = await donorApi.getById(donorIdFromUrl);
-      console.log("DONOR DATA", response)
       return response.data;
     },
     enabled: !!donorIdFromUrl && !isEditMode,
@@ -1024,7 +1025,7 @@ const DonationForm = () => {
     queryKey: ["families", "all"],
     queryFn: async () => {
       const response = await familyApi.getAll({ page: 1, limit: 100 });
-      return response.data;
+      return response?.data[0];
     },
   });
 
@@ -1032,7 +1033,8 @@ const DonationForm = () => {
     queryKey: ["events", "all"],
     queryFn: async () => {
       const response = await eventApi.getAll({ page: 1, limit: 100 });
-      return response.data;
+      // console.log("THIS IS ITTTT",response)
+      return response?.data[0];
     },
   });
 
@@ -1046,7 +1048,7 @@ const DonationForm = () => {
     if (donorData) {
       setFormData((prev) => ({
         ...prev,
-        donorId: donorData._id,
+        donorId: donorData.id,
         donorName: donorData.name,
       }));
     }
@@ -1056,7 +1058,7 @@ const DonationForm = () => {
     if (donationData) {
       setFormData({
         donorId: donationData.donorId || "",
-        donorName: donationData.donorName || "",
+        // donorName: donationData. || "",
         donationType: donationData.donationType || "monetary",
         amount: donationData.amount?.toString() || "",
         currency: donationData.currency || "USD",
@@ -1134,7 +1136,7 @@ const DonationForm = () => {
         toast({ title: "Success", description: "Donation updated successfully" });
       } else {
         const response = await donationApi.create(payload);
-        savedDonationId = response.id;
+        savedDonationId = response.data.id;
         toast({ title: "Success", description: "Donation recorded successfully" });
       }
 
@@ -1153,6 +1155,7 @@ const DonationForm = () => {
 
       queryClient.invalidateQueries({ queryKey: ["donations"] });
       queryClient.invalidateQueries({ queryKey: ["donor", donorIdFromUrl] });
+      queryClient.invalidateQueries({ queryKey: ['events'] }); 
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
 
       if (donorIdFromUrl) navigate(`/dashboard/donors/${donorIdFromUrl}`);
@@ -1234,7 +1237,7 @@ const DonationForm = () => {
                         className="w-full justify-between"
                       >
                         {formData.donorId
-                          ? donorsData?.data?.find((donor: any) => donor._id === formData.donorId)?.name
+                          ? donorsData?.data[0]?.data?.find((donor: any) => donor._id === formData.donorId)?.name
                           : "Select donor..."}
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
@@ -1245,7 +1248,7 @@ const DonationForm = () => {
                         <CommandList>
                           <CommandEmpty>No donor found.</CommandEmpty>
                           <CommandGroup>
-                            {donorsData?.data?.map((donor: any) => (
+                            {donorsData?.data[0]?.data?.map((donor: any) => (
                               <CommandItem
                                 key={donor._id}
                                 value={donor.name}
@@ -1514,7 +1517,7 @@ const DonationForm = () => {
                     <PopoverTrigger asChild>
                       <Button variant="outline" role="combobox" aria-expanded={familyOpen} className="w-full justify-between">
                         {formData.familyId
-                          ? familiesData?.find((family: any) => family._id === formData.familyId)?.familyName
+                          ? familiesData?.data?.find((family: any) => family._id === formData.familyId)?.familyName
                           : "Select family..."}
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
@@ -1535,7 +1538,7 @@ const DonationForm = () => {
                               <Check className={cn("mr-2 h-4 w-4", formData.familyId === "" ? "opacity-100" : "opacity-0")} />
                               None
                             </CommandItem>
-                            {familiesData?.map((family: any) => (
+                            {familiesData?.data?.map((family: any) => (
                               <CommandItem
                                 key={family._id}
                                 value={family.familyName}
@@ -1564,7 +1567,7 @@ const DonationForm = () => {
                     <PopoverTrigger asChild>
                       <Button variant="outline" role="combobox" aria-expanded={eventOpen} className="w-full justify-between">
                         {formData.eventId
-                          ? eventsData?.find((event: any) => event._id === formData.eventId)?.title
+                          ? eventsData?.data?.find((event: any) => event._id === formData.eventId)?.title
                           : "Select event..."}
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
@@ -1585,7 +1588,7 @@ const DonationForm = () => {
                               <Check className={cn("mr-2 h-4 w-4", formData.eventId === "" ? "opacity-100" : "opacity-0")} />
                               None
                             </CommandItem>
-                            {eventsData?.map((event: any) => (
+                            {eventsData?.data?.map((event: any) => (
                               <CommandItem
                                 key={event._id}
                                 value={event.title}

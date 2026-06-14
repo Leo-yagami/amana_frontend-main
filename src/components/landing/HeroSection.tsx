@@ -17,29 +17,29 @@ const HeroSection = () => {
   );
 
   return (
-    <section className="relative min-h-screen flex items-center overflow-hidden">
+    <section id="about" className="relative min-h-screen flex items-center overflow-hidden will-change-transform">
       <div className="absolute inset-0 gradient-hero opacity-95" />
 
-      <div className="absolute top-20 left-10 w-72 h-72 bg-primary-foreground/5 rounded-full blur-3xl animate-float" />
+      <div className="absolute top-20 left-10 w-72 h-72 bg-primary-foreground/5 rounded-full blur-2xl will-change-transform" />
       <div
-        className="absolute bottom-20 right-10 w-96 h-96 bg-accent/10 rounded-full blur-3xl animate-float"
+        className="absolute bottom-20 right-10 w-96 h-96 bg-accent/10 rounded-full blur-2xl will-change-transform"
         style={{ animationDelay: "2s" }}
       />
 
       <div
-        className="absolute top-1/4 right-[15%] hidden lg:block animate-float opacity-20"
+        className="absolute top-1/4 right-[15%] hidden lg:block animate-float opacity-20 will-change-transform"
         style={{ animationDelay: "1s" }}
       >
         <Heart className="w-16 h-16 text-primary-foreground" />
       </div>
       <div
-        className="absolute bottom-1/3 left-[10%] hidden lg:block animate-float opacity-20"
+        className="absolute bottom-1/3 left-[10%] hidden lg:block animate-float opacity-20 will-change-transform"
         style={{ animationDelay: "3s" }}
       >
         <Users className="w-20 h-20 text-primary-foreground" />
       </div>
       <div
-        className="absolute top-1/3 left-[20%] hidden lg:block animate-float opacity-15"
+        className="absolute top-1/3 left-[20%] hidden lg:block animate-float opacity-15 will-change-transform"
         style={{ animationDelay: "2s" }}
       >
         <HandHeart className="w-12 h-12 text-primary-foreground" />
@@ -48,7 +48,7 @@ const HeroSection = () => {
       <div className="container mx-auto px-4 pt-20 pb-12 md:pt-24 lg:pt-28 md:pb-16 relative z-10">
         <div className="max-w-4xl mx-auto text-center">
           <div
-            className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-primary-foreground/10 backdrop-blur-sm border border-primary-foreground/20 text-primary-foreground text-xs sm:text-sm font-medium mb-6 sm:mb-8 animate-fade-up opacity-0"
+            className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-primary-foreground/10 backdrop-blur-sm border border-primary-foreground/20 text-primary-foreground text-xs sm:text-sm font-medium mb-6 sm:mb-8 animate-fade-up opacity-0 will-change-transform"
             style={{ animationDelay: "0.1s" }}
           >
             <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
@@ -57,7 +57,7 @@ const HeroSection = () => {
           </div>
 
           <h1
-            className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-extrabold text-primary-foreground leading-tight mb-4 sm:mb-6 animate-fade-up opacity-0 text-balance"
+            className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-extrabold text-primary-foreground leading-tight mb-4 sm:mb-6 animate-fade-up opacity-0 text-balance will-change-transform"
             style={{ animationDelay: "0.2s" }}
           >
             {t("hero.titleLine1")}
@@ -65,14 +65,14 @@ const HeroSection = () => {
           </h1>
 
           <p
-            className="text-sm sm:text-base md:text-lg lg:text-xl text-primary-foreground/80 max-w-2xl mx-auto mb-8 sm:mb-10 animate-fade-up opacity-0 text-balance px-2"
+            className="text-sm sm:text-base md:text-lg lg:text-xl text-primary-foreground/80 max-w-2xl mx-auto mb-8 sm:mb-10 animate-fade-up opacity-0 text-balance px-2 will-change-transform"
             style={{ animationDelay: "0.3s" }}
           >
             {t("hero.subtitle")}
           </p>
 
           <div
-            className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-12 sm:mb-16 animate-fade-up opacity-0 px-2"
+            className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-12 sm:mb-16 animate-fade-up opacity-0 px-2 will-change-transform"
             style={{ animationDelay: "0.4s" }}
           >
             <Button variant="hero" size="xl" className="group w-full sm:w-auto min-h-12">
@@ -87,7 +87,7 @@ const HeroSection = () => {
           </div>
 
           <div
-            className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 lg:gap-8 animate-fade-up opacity-0 px-2"
+            className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 lg:gap-8 animate-fade-up opacity-0 px-2 will-change-transform"
             style={{ animationDelay: "0.5s" }}
           >
             {stats.map((stat, index) => (

@@ -68,7 +68,7 @@ const DonationProfile = () => {
     queryFn: async () => {
       if (!id) throw new Error("No donation ID provided");
       const response = await donationApi.getById(id);
-      console.log("PLEEEEEEEEASE WORK", response)
+      // console.log("PLEEEEEEEEASE WORK", response)
       return response.data;
     },
     enabled: !!id,

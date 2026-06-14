@@ -2,7 +2,7 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './../contexts/AuthContext';
 import { Skeleton } from '@/components/ui/skeleton';
 
-// NEW: Redirects authenticated users away from signup to payment
+// Redirects authenticated users away from signup to dashboard
 export const AuthRedirectRouteDashboard = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, isLoading } = useAuth();
 
@@ -14,9 +14,9 @@ export const AuthRedirectRouteDashboard = ({ children }: { children: React.React
           <Skeleton className="h-12 w-full" />
         </div>
       </div>
-    );;
+    );
   
-  if (isAuthenticated) {
+  if (isAuthenticated && !(window as any).__isTransitioning) {
     return <Navigate to="/dashboard" replace />;
   }
 

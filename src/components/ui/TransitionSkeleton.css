@@ -1,0 +1,107 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   TransitionSkeleton — Theme-integrated transition overlay
+   Uses the project's HSL-based CSS variable system for seamless light/dark
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Master Container ── */
+.tx-master-container {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100dvh; /* Dynamic viewport height for mobile */
+  pointer-events: none;
+  z-index: 9999;
+  overflow: hidden;
+}
+
+/* ── Block Column Layer ── */
+.tx-blocks-layer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  z-index: 1;
+}
+
+.tx-block {
+  flex: 1;
+  height: 100%;
+  /* Use the project's card background — blends perfectly in both themes */
+  background-color: hsl(var(--card));
+  transform: scaleX(0);
+  will-change: transform;
+  /* Subtle separator line between columns for depth */
+  border-right: 1px solid hsl(var(--border) / 0.3);
+}
+
+.tx-block:last-child {
+  border-right: none;
+}
+
+/* ── Logo Layer ── */
+.tx-logo-layer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  z-index: 2;
+}
+
+/* ── Squircle Badge ── */
+.tx-squircle {
+  width: 110px;
+  height: 110px;
+  /* Use the primary color from the project theme */
+  background: hsl(var(--primary));
+  border-radius: 28px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  transform: scale(0.6);
+  /* Subtle shadow for depth */
+  box-shadow:
+    0 20px 60px hsl(var(--primary) / 0.35),
+    0 8px 20px hsl(var(--primary) / 0.2);
+  will-change: transform, opacity;
+}
+
+/* ── SVG Heart ── */
+.tx-svg {
+  width: 55%;
+  height: 55%;
+  overflow: visible;
+}
+
+#txHeartPath {
+  fill: transparent;
+  /* Stroke uses the card foreground — always readable against primary bg */
+  stroke: hsl(var(--primary-foreground));
+  stroke-width: 8px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  will-change: stroke-dashoffset, fill;
+}
+
+/* ── Dark theme refinements ── */
+.dark .tx-block {
+  /* Slightly different border opacity in dark mode for subtlety */
+  border-right-color: hsl(var(--border) / 0.15);
+}
+
+.dark .tx-squircle {
+  box-shadow:
+    0 20px 60px hsl(var(--primary) / 0.25),
+    0 8px 20px hsl(var(--primary) / 0.15);
+}
+
+/* ── Reduced motion support ── */
+@media (prefers-reduced-motion: reduce) {
+  .tx-block,
+  .tx-squircle,
+  #txHeartPath {
+    transition: none !important;
+    animation: none !important;
+  }
+}

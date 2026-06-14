@@ -5,10 +5,18 @@ import { Button } from "@/components/ui/button";
 import { Heart, Menu, X } from "lucide-react";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { useLenis } from "lenis/react";
 
 const Navbar = () => {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
+  const lenis = useLenis();
+
+  const handleNavClick = (href: string) => (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsOpen(false);
+    lenis?.scrollTo(href);
+  };
 
   const navLinks = [
     { labelKey: "navbar.aboutUs", href: "#about" },
@@ -19,7 +27,7 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-lg border-b border-border">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-lg border-b border-border will-change-transform">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16 lg:h-20">
           <Link to="/" className="flex items-center gap-2 group">
@@ -37,6 +45,7 @@ const Navbar = () => {
               <a
                 key={link.labelKey}
                 href={link.href}
+                onClick={handleNavClick(link.href)}
                 className="text-muted-foreground hover:text-primary font-medium transition-colors duration-200"
               >
                 {t(link.labelKey)}
@@ -71,7 +80,7 @@ const Navbar = () => {
                 <a
                   key={link.labelKey}
                   href={link.href}
-                  onClick={() => setIsOpen(false)}
+                  onClick={handleNavClick(link.href)}
                   className="px-4 py-3 text-muted-foreground hover:text-primary hover:bg-muted rounded-lg font-medium transition-all duration-200"
                 >
                   {t(link.labelKey)}

@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import type { Donor } from "@/types/api";
+import { formatDate } from "date-fns";
 
 const getTypeColor = (type: string) => {
   switch (type) {
@@ -47,7 +48,7 @@ const Donors = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
-  const [limit] = useState(12);
+  const [limit] = useState(6);
   const [donorTypeFilter, setDonorTypeFilter] = useState<string>("all");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [donorToDelete, setDonorToDelete] = useState<Donor | null>(null);
@@ -63,8 +64,8 @@ const Donors = () => {
         params.donorType = donorTypeFilter;
       }
       const response = await donorApi.getAll(params);
-      // console.log("RESPONNSEEEEEEEEE",response)
-      return response;
+      console.log("RESPONNSEEEEEEEEE",response)
+      return response?.data[0];
     },
       staleTime: 5 * 60 * 1000,   // ✅ ADD
       gcTime: 30 * 60 * 1000,     // ✅ ADD
@@ -82,6 +83,15 @@ const Donors = () => {
     gcTime: 30 * 60 * 1000,     // ✅ ADD
     refetchOnWindowFocus: false, // ✅ ADD
   });
+
+  //formatting date consistently
+  const formatDate = (date: string) => {
+    return new Date(date).toLocaleDateString("en", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
 
   const handleDeleteClick = (donor: Donor) => {
     setDonorToDelete(donor);
@@ -212,8 +222,8 @@ const Donors = () => {
               </div>
             ))}
           </>
-        ) : donorsData && donorsData.data.length > 0 ? (
-          donorsData.data.map((donor) => (
+        ) : donorsData && donorsData?.data?.length > 0 ? (
+          donorsData?.data?.map((donor) => (
           <div
             key={donor._id}
             className="bg-card rounded-lg sm:rounded-xl border border-border p-4 sm:p-6 hover:shadow-md transition-shadow"
@@ -257,7 +267,7 @@ const Donors = () => {
               <div>
                 <p className="text-xs text-muted-foreground">{t("dashboard.donorsPage.registered")}</p>
                 <p className="text-xs sm:text-sm font-medium text-foreground">
-                  {new Date(donor.registeredAt).toLocaleDateString()}
+                  {formatDate(donor.registeredAt)}
                 </p>
               </div>
               <div className="flex gap-1">
@@ -300,13 +310,13 @@ const Donors = () => {
       </div>
 
       {/* Pagination */}
-      {donorsData && donorsData.pagination && donorsData.pagination.totalPages > 1 && (
+      {donorsData && donorsData?.pagination && donorsData?.pagination?.totalPages > 1 && (
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
           <p className="text-xs sm:text-sm text-muted-foreground text-center sm:text-left">
             {t("dashboard.donorsPage.pageInfo", {
               page,
-              totalPages: donorsData.pagination.totalPages,
-              total: donorsData.pagination.total,
+              totalPages: donorsData?.pagination?.totalPages,
+              total: donorsData?.pagination?.total,
             })}
           </p>
           <div className="flex gap-2 justify-center">
@@ -319,14 +329,14 @@ const Donors = () => {
               {t("dashboard.donorsPage.previous")}
             </Button>
             <div className="flex items-center gap-1">
-              {Array.from({ length: Math.min(5, donorsData.pagination.totalPages) }, (_, i) => {
+              {Array.from({ length: Math.min(5, donorsData?.pagination?.totalPages) }, (_, i) => {
                 let pageNum;
-                if (donorsData.pagination.totalPages <= 5) {
+                if (donorsData?.pagination?.totalPages <= 5) {
                   pageNum = i + 1;
                 } else if (page <= 3) {
                   pageNum = i + 1;
-                } else if (page >= donorsData.pagination.totalPages - 2) {
-                  pageNum = donorsData.pagination.totalPages - 4 + i;
+                } else if (page >= donorsData?.pagination?.totalPages - 2) {
+                  pageNum = donorsData?.pagination?.totalPages - 4 + i;
                 } else {
                   pageNum = page - 2 + i;
                 }
@@ -346,7 +356,7 @@ const Donors = () => {
               variant="outline"
               size="sm"
               onClick={() => setPage(page + 1)}
-              disabled={page === donorsData.pagination.totalPages}
+              disabled={page === donorsData?.pagination?.totalPages}
             >
               {t("dashboard.donorsPage.next")}
             </Button>

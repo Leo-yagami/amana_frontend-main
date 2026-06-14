@@ -1,9 +1,16 @@
 import { Quote } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useMemo } from "react";
+import { useLenis } from "lenis/react";
 
 const StoriesSection = () => {
   const { t } = useTranslation();
+  const lenis = useLenis();
+
+  const handleScrollTo = (href: string) => (e: React.MouseEvent) => {
+    e.preventDefault();
+    lenis?.scrollTo(href);
+  };
 
   const stories = useMemo(
     () => [
@@ -39,7 +46,7 @@ const StoriesSection = () => {
   );
 
   return (
-    <section id="stories" className="py-12 sm:py-16 md:py-20 lg:py-32 bg-background">
+    <section id="stories" className="py-12 sm:py-16 md:py-20 lg:py-32 bg-background will-change-transform">
       <div className="container mx-auto px-4">
         <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-12 md:mb-16">
           <span className="inline-block px-3 py-1 sm:px-4 sm:py-1.5 rounded-full bg-accent/10 text-accent text-xs sm:text-sm font-semibold mb-3 sm:mb-4">
@@ -97,12 +104,14 @@ const StoriesSection = () => {
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
               <a
                 href="#campaigns"
+                onClick={handleScrollTo("#campaigns")}
                 className="inline-flex items-center justify-center h-10 sm:h-12 px-6 sm:px-8 rounded-lg bg-primary text-primary-foreground text-sm sm:text-base font-semibold hover:brightness-110 transition-all"
               >
                 {t("storiesSection.browseCampaigns")}
               </a>
               <a
                 href="#contact"
+                onClick={handleScrollTo("#contact")}
                 className="inline-flex items-center justify-center h-10 sm:h-12 px-6 sm:px-8 rounded-lg border-2 border-primary text-primary text-sm sm:text-base font-semibold hover:bg-primary hover:text-primary-foreground transition-all"
               >
                 {t("storiesSection.partnerWithUs")}

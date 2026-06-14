@@ -50,14 +50,22 @@ const Signup = () => {
 
     /** Redirect to your Express Google OAuth entry (change path if yours differs). */
     const handleGoogleSignup = () => {
-      const apiOrigin = import.meta.env.VITE_API_URL || "http://localhost:3000";
-      // const apiOrigin = "http://localhost:3000";
+      // const apiOrigin = import.meta.env.MODE === "development"? "http://localhost:3000" : import.meta.env.VITE_API_URL;
+      const apiOrigin = "http://localhost:3000";
       window.location.assign(`${apiOrigin}/api/auth/google`);
     };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    //validate name format
+    const nameRegex = /^[a-zA-Z\s'-]{2,50}$/;
+
+    if (!nameRegex.test(fullName.trim())) {
+      setError("Please enter a valid name");
+      return;
+    }
 
     // Validate passwords match
     if (password !== confirmPassword) {
@@ -66,17 +74,33 @@ const Signup = () => {
     }
 
     // Validate password length
-    if (password.length < 6) {
-      setError(t("auth.passwordMin"));
+    // if (password.length < 6) {
+    //   setError(t("auth.passwordMin"));
+    //   return;
+    // }
+
+    //password format validation
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+
+    if (!passwordRegex.test(password)) {
+      setError(
+        "Password must contain uppercase, lowercase, and a number"
+      );
       return;
     }
 
     setIsLoading(true);
 
     try {
+      (window as any).__isTransitioning = true;
       await register({ email, password, fullName });
-      navigate("/dashboard");
+      if (window.__animateRouteTransition) {
+        window.__animateRouteTransition("/dashboard");
+      } else {
+        navigate("/dashboard");
+      }
     } catch (err: any) {
+      (window as any).__isTransitioning = false;
       setError(err.response?.data?.message || t("auth.registerFailed"));
     } finally {
       setIsLoading(false);
@@ -104,16 +128,16 @@ const Signup = () => {
             <GoogleIcon className="h-5 w-5 shrink-0" />
             {t("auth.continueGoogle")}
           </Button>
-          {/* <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3">
             <Separator className="flex-1" />
             <span className="text-xs text-muted-foreground whitespace-nowrap">
               or sign up with email
             </span>
             <Separator className="flex-1" />
-          </div> */}
+          </div> 
 
 
-          {/* <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
               <Alert variant="destructive">
                 <AlertDescription>{error}</AlertDescription>
@@ -192,7 +216,7 @@ const Signup = () => {
                 Sign in
               </Link>
             </div>
-          </form> */}
+          </form>
         </CardContent>
       </Card>
     </div>

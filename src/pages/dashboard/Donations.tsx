@@ -607,7 +607,7 @@ const Donations = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
-  const [limit] = useState(50);
+  const [limit] = useState(25);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -625,7 +625,7 @@ const Donations = () => {
       if (statusFilter !== "all") params.status = statusFilter;
       if (typeFilter !== "all") params.donationType = typeFilter;
       const response = await donationApi.getAll(params);
-      console.log("CHART DATA", response)
+      // console.log("CHART DATA", response)
       return response;
     },
     staleTime: 5 * 60 * 1000,  // ✅ ADD
@@ -637,7 +637,7 @@ const Donations = () => {
     queryKey: ['dashboard', 'overview'],
     queryFn: async () => {
       const response = await dashboardApi.getOverview();
-      console.log(response)
+      // console.log(response)
       return response.data;
     },
     staleTime: 5 * 60 * 1000,  // ✅ ADD
@@ -810,7 +810,7 @@ const trendLoading = trendQueries.some((q) => q.isLoading);
       onClick={() => navigate(`/dashboard/donations/${donation._id}`)}
     >
       {/* Row 1: ref + amount */}
-      <div className="flex items-start justify-between gap-2">
+      <div className="flex items-start justify-between gap-2 pt-1">
         <span className="font-mono text-xs text-muted-foreground leading-tight">
           {donation.donationReference.substring(0, 10)}
         </span>
@@ -891,7 +891,7 @@ const trendLoading = trendQueries.some((q) => q.isLoading);
 
   // ─── Loading skeleton card ────────────────────────────────────────────────
   const SkeletonCard = () => (
-    <div className="bg-card border border-border rounded-lg p-3 min-[400px]:p-4 space-y-3">
+    <div className="bg-card border border-border rounded-lg p-3 min-[400px]:p-4 space-y-3 pt-4">
       <div className="flex justify-between">
         <Skeleton className="h-3 w-24" />
         <Skeleton className="h-3 w-16" />
@@ -1107,8 +1107,8 @@ const trendLoading = trendQueries.some((q) => q.isLoading);
           <Alert variant="destructive">
             <AlertDescription>{t("dashboard.donationsPage.loadErr")}</AlertDescription>
           </Alert>
-        ) : donationsData && donationsData.data.length > 0 ? (
-          donationsData.data.map((donation: any) => (
+        ) : donationsData && donationsData?.data[0]?.data?.length > 0 ? (
+          donationsData?.data[0]?.data?.map((donation: any) => (
             <DonationCard key={donation._id} donation={donation} />
           ))
         ) : (
@@ -1167,8 +1167,8 @@ const trendLoading = trendQueries.some((q) => q.isLoading);
                     </Alert>
                   </TableCell>
                 </TableRow>
-              ) : donationsData && donationsData.data.length > 0 ? (
-                donationsData.data.map((donation: any) => (
+              ) : donationsData && donationsData?.data[0]?.data?.length > 0 ? (
+                donationsData?.data[0]?.data?.map((donation: any) => (
                   <TableRow
                     key={donation._id}
                     className="text-xs sm:text-sm cursor-pointer hover:bg-muted/50"
@@ -1266,13 +1266,13 @@ const trendLoading = trendQueries.some((q) => q.isLoading);
       </Card>
 
       {/* ── Pagination ─────────────────────────────────────────────────────── */}
-      {donationsData && donationsData.pagination && donationsData.pagination.totalPages > 1 && (
+      {donationsData && donationsData?.data[0]?.pagination && donationsData?.data[0]?.pagination?.totalPages > 1 && (
         <div className="flex flex-col min-[500px]:flex-row min-[500px]:items-center min-[500px]:justify-between gap-2 min-[500px]:gap-4">
           <p className="text-[11px] sm:text-sm text-muted-foreground text-center min-[500px]:text-left">
             {t("dashboard.donationsPage.pageInfo", {
               page,
-              totalPages: donationsData.pagination.totalPages,
-              total: donationsData.pagination.total,
+              totalPages: donationsData?.data[0]?.pagination?.totalPages,
+              total: donationsData?.data[0]?.pagination?.total,
             })}
           </p>
           <div className="flex items-center justify-center gap-1">
@@ -1286,14 +1286,14 @@ const trendLoading = trendQueries.some((q) => q.isLoading);
               {t("dashboard.donationsPage.prev")}
             </Button>
             <div className="flex items-center gap-0.5 sm:gap-1">
-              {Array.from({ length: Math.min(5, donationsData.pagination.totalPages) }, (_, i) => {
+              {Array.from({ length: Math.min(5, donationsData?.data[0]?.pagination?.totalPages) }, (_, i) => {
                 let pageNum;
-                if (donationsData.pagination.totalPages <= 5) {
+                if (donationsData?.data[0]?.pagination?.totalPages <= 5) {
                   pageNum = i + 1;
                 } else if (page <= 3) {
                   pageNum = i + 1;
-                } else if (page >= donationsData.pagination.totalPages - 2) {
-                  pageNum = donationsData.pagination.totalPages - 4 + i;
+                } else if (page >= donationsData?.data[0]?.pagination?.totalPages - 2) {
+                  pageNum = donationsData?.data[0]?.pagination?.totalPages - 4 + i;
                 } else {
                   pageNum = page - 2 + i;
                 }
@@ -1314,7 +1314,7 @@ const trendLoading = trendQueries.some((q) => q.isLoading);
               variant="outline"
               size="sm"
               onClick={() => setPage(page + 1)}
-              disabled={page === donationsData.pagination.totalPages}
+              disabled={page === donationsData?.data[0]?.pagination?.totalPages}
               className="text-xs h-7 sm:h-8 px-2 sm:px-3"
             >
               {t("dashboard.donationsPage.next")}
@@ -1332,8 +1332,8 @@ const trendLoading = trendQueries.some((q) => q.isLoading);
               {t("dashboard.donationsPage.deleteDesc")}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="flex-col min-[400px]:flex-row gap-2 min-[400px]:gap-0">
-            <AlertDialogCancel onClick={() => setDonationToDelete(null)}>
+          <AlertDialogFooter className="flex-col min-[400px]:flex-row gap-2 min-[640px]:gap-0 min-[400px]:items-center min-[400px]:justify-center">
+            <AlertDialogCancel onClick={() => setDonationToDelete(null)} className="min-[400px]:my-0">
               {t("common.cancel")}
             </AlertDialogCancel>
             <AlertDialogAction

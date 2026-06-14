@@ -398,7 +398,7 @@ const EventProfile = () => {
       <Tabs defaultValue="donations" className="w-full">
         <TabsList>
           <TabsTrigger value="donations">
-            Donations ({event?._count?.donation || 0})
+            Donations ({event?._count?.donations || 0})
           </TabsTrigger>
           <TabsTrigger value="support">
             Support History ({event._count?.supportHistory || 0})

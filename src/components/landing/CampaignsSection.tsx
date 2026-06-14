@@ -50,7 +50,7 @@ const CampaignsSection = () => {
   );
 
   return (
-    <section id="campaigns" className="py-12 sm:py-16 md:py-20 lg:py-32 bg-background">
+    <section id="campaigns" className="py-12 sm:py-16 md:py-20 lg:py-32 bg-background will-change-transform">
       <div className="container mx-auto px-4">
         <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-12 md:mb-16">
           <span className="inline-block px-3 py-1 sm:px-4 sm:py-1.5 rounded-full bg-primary/10 text-primary text-xs sm:text-sm font-semibold mb-3 sm:mb-4">

@@ -3,10 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Loader2 } from "lucide-react";
 import { authApi } from "@/services/api.service";
+import { useAuth } from "@/contexts/AuthContext";
 
 const AuthCallback = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { setAuthSession } = useAuth();
 
   useEffect(() => {
     const run = async () => {
@@ -23,21 +25,27 @@ const AuthCallback = () => {
         const { token, user } = res.data;
 
         if (token && user) {
-          localStorage.setItem('token', token);
-          localStorage.setItem('user', JSON.stringify(user));
-          
+          (window as any).__isTransitioning = true;
           // Verify it works by hitting /me
           const meRes = await authApi.getCurrentUser();
           if (meRes.data) {
-            window.location.href = "/payment"; // Use full reload to initialize AuthContext
+            setAuthSession(token, user);
+            if ((window as any).__animateRouteTransition) {
+              (window as any).__animateRouteTransition("/payment");
+            } else {
+              navigate("/payment");
+            }
           } else {
+            (window as any).__isTransitioning = false;
             navigate("/login?error=google_callback_failed", { replace: true });
           }
         } else {
+          (window as any).__isTransitioning = false;
           navigate("/login?error=google_callback_failed", { replace: true });
         }
       } catch (err) {
         console.error("Auth callback error:", err);
+        (window as any).__isTransitioning = false;
         navigate("/login?error=google_callback_failed", { replace: true });
       }
     };

@@ -266,6 +266,7 @@ import {
   HelpCircle,
   ShieldCheck,
   HeartHandshake,
+  Loader2,
 } from "lucide-react";
 
 //form validation libraries
@@ -273,6 +274,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createPaymentSchema } from "./paymentSchema";
 import api from "@/lib/api";
+import { Button } from "@/components/ui/button";
+// import { Button } from "react-day-picker";
 
 const PRESET_AMOUNTS = [10, 25, 50];
 
@@ -283,6 +286,7 @@ const Payment = () => {
   // const [selectedAmount, setSelectedAmount] = useState(0);
   // const [customAmount, setCustomAmount] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState("card");
+  const [isLoading, setIsLoading] = useState(false);
 
   const {
     register,
@@ -332,6 +336,7 @@ const isAmountValid =
   const totalAmount = useMemo(() => +(displayAmount + processingFee).toFixed(2), [displayAmount, processingFee]);
 
   const onSubmit = async (data) => {
+    setIsLoading(true);
     try {
       console.log("Validated form data:", data);
       
@@ -340,16 +345,20 @@ const isAmountValid =
       const response = await api.post('/initialize', data);
       const result = response.data;
       
-      console.log('POST Result', result);
+      console.log('POST Result: ', result);
       
       // The backend returns the Chapa checkout_url on success
       if(result.message === "ok" && result.checkout_url){
+        console.log('POST Result: ', result);
         window.location.assign(result.checkout_url);
       } else {
+              console.log('POST Result: ', result);
         console.error("Initialization failed without a checkout URL:", result);
       }
     } catch (error) {
       console.error("Payment initialization error:", error);
+    } finally{
+      setIsLoading(false);
     }
   };
 
@@ -360,8 +369,8 @@ const isAmountValid =
           {/* Main Column */}
           <div className="lg:col-span-8 space-y-10">
             <header>
-              <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4">{t("payment.title")}</h1>
-              <p className="text-muted-foreground text-lg leading-relaxed max-w-2xl">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight mb-4">{t("payment.title")}</h1>
+              <p className="text-muted-foreground text-base sm:text-lg leading-relaxed max-w-2xl">
                 {t("payment.subtitle")}
               </p>
             </header>
@@ -382,6 +391,7 @@ const isAmountValid =
                     <button
                     key={amount}
                     type="button"
+                    disabled={isLoading}
                     onClick={() => {
                         // setCustomAmount(0);
                         // setSelectedAmount(amount);
@@ -415,6 +425,7 @@ const isAmountValid =
 
                   <input
                   type="number"
+                  disabled={isLoading}
                   min="1"
                   step="1"
                   placeholder={t("payment.customPlaceholder")}
@@ -502,9 +513,10 @@ const isAmountValid =
                     <label className="text-sm font-semibold text-muted-foreground">{t("payment.telebirrPhone")}</label>
                     <input
                       type="tel"
+                      disabled={isLoading}
                       placeholder="09XXXXXXXX"
                       {...register("telebirrPhone")}
-                      className="w-full px-5 py-4 rounded-xl border border-border bg-background"
+                      className="w-full px-5 py-4 rounded-xl border border-border bg-background placeholder:text-sm sm:placeholder:text-base"
                     />
                     {errors.telebirrPhone && (
                       <p className="text-red-500 text-xs">{errors.telebirrPhone.message}</p>
@@ -522,9 +534,10 @@ const isAmountValid =
                       <div className="relative">
                         <input
                           type="text"
+                          disabled={isLoading}
                           placeholder={t("payment.cardPlaceholder")}
                           {...register("cardNumber")}
-                          className="w-full px-5 py-4 rounded-xl border border-border bg-background"
+                          className="w-full px-5 py-4 rounded-xl border border-border bg-background placeholder:text-sm sm:placeholder:text-base"
                         />
                         <Lock className="w-4 h-4 absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
                       </div>
@@ -535,9 +548,10 @@ const isAmountValid =
                       <label className="text-sm font-semibold text-muted-foreground">{t("payment.expiry")}</label>
                       <input
                         type="text"
+                        disabled={isLoading}
                         placeholder={t("payment.expiryPlaceholder")}
                         {...register("expiryDate")}
-                        className="w-full px-5 py-4 rounded-xl border border-border bg-background"
+                        className="w-full px-5 py-4 rounded-xl border border-border bg-background placeholder:text-sm sm:placeholder:text-base"
                       />
                       {errors.expiryDate && <p className="text-red-500 text-xs">{errors.expiryDate.message}</p>}
                     </div>
@@ -547,9 +561,10 @@ const isAmountValid =
                       <div className="relative">
                         <input
                           type="password"
+                          disabled={isLoading}
                           placeholder={t("payment.cvvPlaceholder")}
                           {...register("cvv")}
-                          className="w-full px-5 py-4 rounded-xl border border-border bg-background"
+                          className="w-full px-5 py-4 rounded-xl border border-border bg-background placeholder:text-sm sm:placeholder:text-base"
                         />
                         <HelpCircle className="w-4 h-4 absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
                       </div>
@@ -579,26 +594,43 @@ const isAmountValid =
 
                     <div className="pt-4 mt-4 border-t border-border flex justify-between items-end">
                       <span className="text-sm font-medium">{t("payment.total")}</span>
-                      <span className="text-3xl font-extrabold text-primary">${totalAmount.toFixed(2)}</span>
+                      <span className="text-xl sm:text-2xl md:text-3xl font-extrabold text-primary">${totalAmount.toFixed(2)}</span>
                     </div>
                   </div>
 
-                  <button
+                  {/* <button
                     type="submit"
-                    disabled={!isAmountValid}
+                    disabled={!isAmountValid || isLoading}
                     className="w-full py-5 bg-primary text-primary-foreground rounded-full font-bold text-lg hover:opacity-90 transition flex items-center justify-center gap-3"
-                  >
+                    >
                     {t("payment.complete")}
                     <HeartHandshake className="w-5 h-5" />
-                  </button>
-
+                  </button> */}
+                  <Button 
+                    type="submit"
+                    // className="w-full" 
+                    className="w-full px-8 py-8 bg-primary text-primary-foreground rounded-full font-bold text:base sm:text-lg hover:opacity-90 transition flex items-center justify-center gap-3"
+                    disabled={!isAmountValid || isLoading}
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Processing Payment...
+                      </>
+                    ) : (
+                      <>
+                        {t("payment.complete")}
+                        <HeartHandshake className="min-w-5 min-h-5" />
+                      </>
+                    )}
+                  </Button>
                   <p className="mt-6 text-[11px] text-center text-muted-foreground leading-relaxed px-4">
                     {t("payment.legal")}
                   </p>
                 </div>
               </div>
 
-            <div className="mt-6 p-4 border border-border rounded-xl flex items-center gap-4 bg-muted/30">
+            <div className="mt-6 p-4 border border-border rounded-xl flex items-center justify-center lg:justify-start gap-4 bg-muted/30">
               <ShieldCheck className="w-8 h-8 text-primary" />
               <div>
                 <p className="text-xs font-bold uppercase tracking-wider">{t("payment.secureTitle")}</p>

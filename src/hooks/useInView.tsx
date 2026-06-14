@@ -29,12 +29,14 @@ interface UseInViewOptions {
   threshold?: number;
   rootMargin?: string;
   once?: boolean; // stop observing after first trigger
+  delay?: number;
 }
 
 export const useInView = ({
   threshold = 0,
   rootMargin = "0px",
   once = true,
+  delay = 0,
 }: UseInViewOptions = {}) => {
   const ref = useRef<HTMLDivElement | null>(null);
   const [isInView, setIsInView] = useState(false);
@@ -52,6 +54,7 @@ export const useInView = ({
     }
 
     const observer = new IntersectionObserver(
+
       ([entry]) => {
         if (entry.isIntersecting) {
           setIsInView(true);
@@ -64,6 +67,17 @@ export const useInView = ({
     observer.observe(el);
     return () => observer.disconnect();
   }, [threshold, rootMargin, once]);
+
+  const [started, setStarted] = useState(delay === 0);
+
+useEffect(() => {
+  if (delay === 0) {
+    setStarted(true);
+    return;
+  }
+  const timer = setTimeout(() => setStarted(true), delay);
+  return () => clearTimeout(timer);
+}, [delay]);
 
   return { ref, isInView };
 };
