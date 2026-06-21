@@ -79,6 +79,9 @@ const Events = () => {
       console.log(response.data)
       return response?.data[0];
     },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
    // Fetch event stats

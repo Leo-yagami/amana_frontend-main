@@ -1,7 +1,5 @@
-import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  Users,
   HandHeart,
   DollarSign,
   Megaphone,
@@ -14,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useQuery } from "@tanstack/react-query";
 import { dashboardApi, eventApi } from "@/services/api.service";
 import type {
   DashboardOverview,
@@ -22,101 +21,55 @@ import type {
   Event,
 } from "@/types/api";
 
-const CACHE_KEY = 'dashboard_data';
-const CACHE_TTL = 5 * 60 * 1000;
-
-function getDashboardCache() {
-  try {
-    const raw = localStorage.getItem(CACHE_KEY);
-    if (!raw) return null;
-    const { data, timestamp } = JSON.parse(raw);
-    if (Date.now() - timestamp > CACHE_TTL) {
-      localStorage.removeItem(CACHE_KEY);
-      return null;
-    }
-    return data;
-  } catch { return null; }
-}
-
-function setDashboardCache(data: object) {
-  localStorage.setItem(CACHE_KEY, JSON.stringify({ data, timestamp: Date.now() }));
-}
-
+const staleConfig = { staleTime: 5 * 60 * 1000, gcTime: 30 * 60 * 1000, refetchOnWindowFocus: false };
 
 const Dashboard = () => {
   const { t } = useTranslation();
-  // State for all dashboard data
-  const [overview, setOverview] = useState<DashboardOverview | null>(null);
-  const [events, setEvents] = useState<Event[]>([]);
-  const [topDonors, setTopDonors] = useState<TopDonor[]>([]);
-  const [recentActivities, setRecentActivities] = useState<RecentActivity[]>(
-    []
-  );
 
-  // Loading states
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: overview, isLoading: overviewLoading, error: overviewErr } = useQuery({
+    queryKey: ['dashboard', 'overview'],
+    queryFn: async () => {
+      const res = await dashboardApi.getOverview();
+      return res.data;
+    },
+    ...staleConfig,
+  });
 
-  // Fetch all dashboard data on mount
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-    // ✅ ADD THIS BLOCK at the top
-    const cached = getDashboardCache();
-    if (cached) {
-      setOverview(cached.overview);
-      setEvents(cached.events);
-      setTopDonors(cached.topDonors);
-      setRecentActivities(cached.recentActivities);
-      setLoading(false);
-      return;
-    }
+  const { data: events = [], isLoading: eventsLoading } = useQuery({
+    queryKey: ['events', { status: "Active", limit: 3 }],
+    queryFn: async () => {
+      const res = await eventApi.getAll({ status: "Active", limit: 3 });
+      return res?.data[0]?.data || [];
+    },
+    ...staleConfig,
+  });
 
+  const { data: topDonors = [], isLoading: donorsLoading } = useQuery({
+    queryKey: ['dashboard', 'top-donors', { limit: 3 }],
+    queryFn: async () => {
+      const res = await dashboardApi.getTopDonors({ limit: 3 });
+      return res.data || [];
+    },
+    ...staleConfig,
+  });
 
-      try {
-        setLoading(true);
-        setError(null);
+  const { data: recentActivities = [], isLoading: activitiesLoading } = useQuery({
+    queryKey: ['dashboard', 'recent-activities', { limit: 9 }],
+    queryFn: async () => {
+      const res = await dashboardApi.getRecentActivities({ limit: 9 });
+      return res.data || [];
+    },
+    ...staleConfig,
+  });
 
-        // Fetch all data in parallel
-        const [overviewRes, eventsRes, donorsRes, activitiesRes] =
-          await Promise.all([
-            dashboardApi.getOverview(),
-            eventApi.getAll({ status: "Active", limit: 3 }),
-            dashboardApi.getTopDonors({ limit: 3 }),
-            dashboardApi.getRecentActivities({ limit: 9 }),
-          ]);
+  const loading = overviewLoading || eventsLoading || donorsLoading || activitiesLoading;
+  const firstError = overviewErr;
 
-        setOverview(overviewRes.data);
-        setEvents(eventsRes.data.data || []);
-        setTopDonors(donorsRes.data || []);
-        setRecentActivities(activitiesRes.data || []);
-
-        setDashboardCache({ 
-          overview: overviewRes.data, 
-          events: eventsRes.data.data || [], 
-          topDonors: donorsRes.data || [], 
-          recentActivities: activitiesRes.data || [] 
-        });
-        // console.log("overview data: ", overviewRes)
-        // console.log("event data: ", eventsRes)
-        // console.log("donor data: ", donorsRes)
-        // console.log("activity data: ", activitiesRes.data)
-      } catch (err: any) {
-        console.error("Failed to fetch dashboard data:", err);
-        setError(err.response?.data?.message || t("dashboard.home.loadError"));
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchDashboardData();
-  }, []);
-
-  // Show error state
-  if (error) {
+  if (firstError) {
     return (
       <div className="space-y-8">
         <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription>{t("dashboard.home.loadError")}</AlertDescription>
         </Alert>
       </div>
     );

@@ -64,6 +64,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { dashboardApi } from "@/services/api.service";
 
 const Families = () => {
   const { t } = useTranslation();
@@ -96,18 +97,27 @@ const Families = () => {
     refetchOnWindowFocus: false,
   });
 
-  // ✅ Derived stats — no separate state needed
+  // ✅ Overview stats from dashboard endpoint (not page-scoped)
+  const { data: overview } = useQuery({
+    queryKey: ['dashboard', 'overview'],
+    queryFn: async () => {
+      const response = await dashboardApi.getOverview();
+      return response.data;
+    },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+
   const stats = useMemo(
     () => ({
-      total: families?.data?.length,
-      verified: families?.data?.filter((f) => f.registrationStatus === "verified").length,
-      pending: families?.data?.filter((f) => f.registrationStatus === "pending").length,
-      incomplete: families?.data?.filter((f) => f.registrationStatus === "incomplete").length,
-      urgent: families?.data?.filter(
-        (f) => f.urgencyLevel === "high" || f.urgencyLevel === "critical"
-      ).length,
+      total: overview?.families?.total ?? families?.pagination?.total ?? 0,
+      verified: overview?.families?.verified ?? 0,
+      pending: overview?.families?.pending ?? 0,
+      incomplete: overview?.families?.incomplete ?? 0,
+      urgent: overview?.families?.urgent ?? 0,
     }),
-    [families]
+    [overview, families]
   );
 
   const invalidate = () =>

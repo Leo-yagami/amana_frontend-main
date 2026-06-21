@@ -1,8 +1,9 @@
 import { Outlet } from "react-router-dom";
 import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const DashboardLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -31,11 +32,21 @@ const DashboardLayout = () => {
       <div className="flex-1 flex flex-col min-h-screen">
         <DashboardHeader onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
         <main className="flex-1 p-3 sm:p-4 md:p-6 lg:p-8 overflow-auto">
-          <Outlet />
+          <Suspense fallback={<PageSkeleton />}>
+            <Outlet />
+          </Suspense>
         </main>
       </div>
     </div>
   );
 };
+
+const PageSkeleton = () => (
+  <div className="h-full w-full flex items-center justify-center min-h-[60vh]">
+    <div className="flex flex-col items-center gap-2 text-muted-foreground">
+      <div className="w-8 h-8 rounded-full border-4 border-primary/30 border-t-primary animate-spin" />
+    </div>
+  </div>
+);
 
 export default DashboardLayout;

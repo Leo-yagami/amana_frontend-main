@@ -8,8 +8,9 @@ import {AuthRedirectRouteDashboard} from '@/components/AuthRedirectRouteDashboar
 import { ProtectedRoute1 } from "@/components/ProtectedRouteDashboard";
 import { ProtectedRoute2 } from "@/components/ProtectedRoutePayment";
 import { TransitionSkeleton } from "@/components/ui/TransitionSkeleton.jsx";
+import { lazy, useEffect } from "react";
 
-// Pages
+// Pages (eager — landing / auth / 404)
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -18,31 +19,25 @@ import AuthCallback from "./pages/AuthCallback";
 import VerifyDonation from "./pages/VerifyDonation";
 import Payment from "./pages/Payment";
 
-// Dashboard
-import DashboardLayout from "./layouts/DashboardLayout";
-import Dashboard from "./pages/Dashboard";
-// import Beneficiaries from "./pages/dashboard/Beneficiaries";
-// import BeneficiaryProfile from "./pages/dashboard/BeneficiaryProfile";
-// import BeneficiaryForm from "./pages/dashboard/BeneficiaryForm";
-import Families from "./pages/dashboard/Families";
-import FamilyProfile from "./pages/dashboard/FamilyProfile";
-import FamilyForm from "./pages/dashboard/FamilyForm";
-import Donors from "./pages/dashboard/Donors";
-import DonorProfile from "./pages/dashboard/DonorProfile";
-import DonorForm from "./pages/dashboard/DonorForm";
-import Donations from "./pages/dashboard/Donations";
-import DonationProfile from "./pages/dashboard/DonationProfile";
-import DonationForm from "./pages/dashboard/DonationForm";
-import Campaigns from "./pages/dashboard/Campaigns";
-import Events from "./pages/dashboard/Events";
-import EventProfile from "./pages/dashboard/EventProfile";
-import Finances from "./pages/dashboard/Finances";
-import Reports from "./pages/dashboard/Reports";
-import Reports2 from "./pages/dashboard/Reports2_0";
-import Settings from "./pages/dashboard/Settings";
-import ReportsAnalytics from "./pages/dashboard/Reports2_0";
+// Dashboard (layout is eager — small shell; page content is lazy)
 import Layout from "./lenis";
-import { useEffect } from "react";
+import DashboardLayout from "./layouts/DashboardLayout";
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Families = lazy(() => import("./pages/dashboard/Families"));
+const FamilyProfile = lazy(() => import("./pages/dashboard/FamilyProfile"));
+const FamilyForm = lazy(() => import("./pages/dashboard/FamilyForm"));
+const Donors = lazy(() => import("./pages/dashboard/Donors"));
+const DonorProfile = lazy(() => import("./pages/dashboard/DonorProfile"));
+const DonorForm = lazy(() => import("./pages/dashboard/DonorForm"));
+const Donations = lazy(() => import("./pages/dashboard/Donations"));
+const DonationProfile = lazy(() => import("./pages/dashboard/DonationProfile"));
+const DonationForm = lazy(() => import("./pages/dashboard/DonationForm"));
+const Campaigns = lazy(() => import("./pages/dashboard/Campaigns"));
+const Events = lazy(() => import("./pages/dashboard/Events"));
+const EventProfile = lazy(() => import("./pages/dashboard/EventProfile"));
+const Finances = lazy(() => import("./pages/dashboard/Finances"));
+const Settings = lazy(() => import("./pages/dashboard/Settings"));
+const ReportsAnalytics = lazy(() => import("./pages/dashboard/Reports2_0"));
 
 
 const App = () => {

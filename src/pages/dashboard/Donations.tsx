@@ -571,7 +571,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { donationApi, dashboardApi } from "@/services/api.service";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -783,25 +783,13 @@ const Donations = () => {
   };
 };
 
-const TREND_RANGES: Array<"3m" | "6m" | "1y"> = ["3m", "6m", "1y"];
-
-const trendQueries = useQueries({
-queries: TREND_RANGES.map((r) => ({
-  queryKey: ["donations", "trend", r],
-  queryFn: () => fetchTrendData(r),
+const { data: trendData, isLoading: trendLoading } = useQuery({
+  queryKey: ["donations", "trend", trendRange],
+  queryFn: () => fetchTrendData(trendRange),
   staleTime: 10 * 60 * 1000,
   gcTime: 30 * 60 * 1000,
   refetchOnWindowFocus: false,
-})),
 });
-
-const trendDataByRange = TREND_RANGES.reduce((acc, r, idx) => {
-acc[r] = trendQueries[idx].data;
-return acc;
-}, {} as Record<"3m" | "6m" | "1y", { months: string[]; values: number[] } | undefined>);
-
-const trendData = trendDataByRange[trendRange];
-const trendLoading = trendQueries.some((q) => q.isLoading);
 
   // ─── Donation Card (shown below sm breakpoint) ───────────────────────────
   const DonationCard = ({ donation }: { donation: any }) => (
