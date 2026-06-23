@@ -206,6 +206,12 @@ html.lenis, html.lenis body {
   .stagger-5 { animation-delay: 0.5s; }
 }
 
+@keyframes bar-wipe {
+  0%   { transform: scaleX(1); transform-origin: right; }
+  49%  { transform: scaleX(0); transform-origin: right; }
+  50%  { transform: scaleX(0); transform-origin: left; }
+  100% { transform: scaleX(1); transform-origin: left; }
+}
 @keyframes fadeUp {
   from {
     opacity: 0;

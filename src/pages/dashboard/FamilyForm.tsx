@@ -18,11 +18,13 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Users, ArrowLeft, Save } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const FamilyForm = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { toast } = useToast();
   const isEditMode = !!id;
 
@@ -37,7 +39,7 @@ const FamilyForm = () => {
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
-              <h1 className="text-3xl font-bold">Register New Family</h1>
+              <h1 className="text-3xl font-bold">{t("familyForm.registerNew")}</h1>
               <p className="text-muted-foreground">
                 Register family with all members in one comprehensive form
               </p>
@@ -61,7 +63,7 @@ const FamilyForm = () => {
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
-              <h1 className="text-3xl font-bold">Edit Family</h1>
+              <h1 className="text-3xl font-bold">{t("familyForm.editFamily")}</h1>
               <p className="text-muted-foreground">
                 Edit family details and manage all members in one place
               </p>
@@ -197,10 +199,10 @@ const FamilyForm = () => {
           <div>
             <h1 className="text-3xl font-bold flex items-center gap-2">
               <Users className="h-8 w-8" />
-              {isEditMode ? "Edit Family" : "Register New Family"}
+              {isEditMode ? t("familyForm.editFamily") : t("familyForm.registerNew")}
             </h1>
             <p className="text-muted-foreground">
-              {isEditMode ? "Update family information below" : "Complete family registration with all details"}
+              {isEditMode ? t("familyForm.updateDescription") : t("familyForm.registerDescription")}
             </p>
           </div>
         </div>

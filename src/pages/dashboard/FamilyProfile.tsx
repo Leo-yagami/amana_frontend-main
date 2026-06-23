@@ -1283,10 +1283,11 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import RegistrationStatusBadge from "@/components/RegistrationStatusBadge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-
+import { useTranslation } from "react-i18next";
 const FamilyProfile = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { toast } = useToast();
 
   const [family, setFamily] = useState<Family | null>(null);
@@ -1450,13 +1451,13 @@ const FamilyProfile = () => {
             className="text-xs sm:text-sm"
           >
             <Heart className="mr-2 h-4 w-4" />
-            Record Support
+            {t("familyProfile.recordSupport")}
           </Button>
 
           {family.registrationStatus !== "verified" && (
             <Button variant="outline" onClick={handleVerify} className="text-xs sm:text-sm">
               <CheckCircle className="mr-2 h-4 w-4" />
-              Verify Family
+              {t("familyProfile.verifyFamily")}
             </Button>
           )}
 
@@ -1466,7 +1467,7 @@ const FamilyProfile = () => {
             className="text-xs sm:text-sm"
           >
             <Edit className="mr-2 h-4 w-4" />
-            Edit Details
+            {t("familyProfile.editDetails")}
           </Button>
         </div>
       </div>)}
@@ -1503,7 +1504,7 @@ const FamilyProfile = () => {
         <div className="grid grid-cols-2 gap-1 justify-stretch  lg:justify-end">
           <Button className="gap-1 sm:gap-2" variant="outline" onClick={() => setShowRecordSupportModal(true)}>
             <Heart className="mr-1 sm:mr-2 h-4 w-4" />
-            Record Support
+            {t("familyProfile.recordSupport")}
           </Button>
 
           {family.registrationStatus !== "verified" && (
@@ -1512,7 +1513,7 @@ const FamilyProfile = () => {
              className="gap-1 sm:gap-2"
              >
               <CheckCircle className="mr:1 sm:mr-2 h-4 w-4" />
-              Verify Family
+              {t("familyProfile.verifyFamily")}
             </Button>
           )}
 
@@ -1522,7 +1523,7 @@ const FamilyProfile = () => {
             onClick={() => navigate(`/dashboard/families/${family._id}/edit`)}
           >
             <Edit className="mr-1 sm:mr-2 h-4 w-4" />
-            Edit Details
+            {t("familyProfile.editDetails")}
           </Button>
         </div>
 
@@ -1566,10 +1567,10 @@ const FamilyProfile = () => {
         <div className="overflow-x-hidden w-full ">
           {/* <TabsList className="flex sm:w-auto min-w-0"> */}
           <TabsList className="grid grid-cols-2 sm:grid-cols-4  w-full h-auto ">
-            <TabsTrigger value="information">Information</TabsTrigger>
-            <TabsTrigger value="members">Members ({members.length})</TabsTrigger>
-            <TabsTrigger value="support">Support History</TabsTrigger>
-            <TabsTrigger value="documents">Documents</TabsTrigger>
+            <TabsTrigger value="information">{t("familyProfile.information")}</TabsTrigger>
+            <TabsTrigger value="members">{t("familyProfile.members")} ({members.length})</TabsTrigger>
+            <TabsTrigger value="support">{t("familyProfile.supportHistory")}</TabsTrigger>
+            <TabsTrigger value="documents">{t("familyProfile.documents")}</TabsTrigger>
           </TabsList>
         </div>
 
@@ -1580,7 +1581,7 @@ const FamilyProfile = () => {
               <CardHeader>
                 <CardTitle className="flex items-center text-lg">
                   <Users className="mr-2 h-5 w-5" />
-                  Basic Information
+                  {t("familyProfile.basicInfo")}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -1609,7 +1610,7 @@ const FamilyProfile = () => {
               <CardHeader>
                 <CardTitle className="flex items-center text-lg">
                   <Phone className="mr-2 h-5 w-5" />
-                  Contact Information
+                  {t("familyProfile.contactInfo")}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -1636,7 +1637,7 @@ const FamilyProfile = () => {
               <CardHeader>
                 <CardTitle className="flex items-center text-lg">
                   <AlertCircle className="mr-2 h-5 w-5" />
-                  Family Status
+                  {t("familyProfile.familyStatus")}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">

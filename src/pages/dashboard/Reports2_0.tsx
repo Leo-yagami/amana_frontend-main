@@ -451,7 +451,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Download, Users, DollarSign, Calendar } from "lucide-react";
+import { Download, Users, DollarSign, Calendar, TrendingUp, TrendingDown } from "lucide-react";
 import { dashboardApi } from "@/services/api.service";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -500,11 +500,31 @@ const formatCurrency = (amount: number) =>
     currency: "USD",
   }).format(amount);
 
+// const ChangeText = ({ value }: { value: number }) => (
+//   <div className="bg-primary/10 rounded-xl p-2 border border-border shadow-sm hover:shadow-md transition-shadow duration-300">
+//   <span className={value >= 0 ? "text-success" : "text-destructive"}>
+//     {value >= 0 ? "+" : ""}
+//     {value}%
+//   </span>
+//   <span>
+
+//   {value > 0? <TrendingUp className="w-3 h-3" /> : value < 0? <TrendingDown className="w-3 h-3" /> : ""}
+//   </span>
+//   </div>
+// );
+
 const ChangeText = ({ value }: { value: number }) => (
-  <span className={value >= 0 ? "text-success" : "text-destructive"}>
-    {value >= 0 ? "+" : ""}
-    {value}%
-  </span>
+  <div className={`flex items-center gap-1 ${value < 0 ? "bg-destructive/10" : "bg-primary/10"} rounded-full px-2 py-1 border border-border w-fit`}>
+    <span className={`text-xs font-medium ${value >= 0 ? "text-success" : "text-destructive"}`}>
+      {/* {value > 0 ? "+" : ""} */}
+      {value < 0? Math.abs(value) : value}%
+    </span>
+    {value > 0 ? (
+      <TrendingUp className="w-3.5 h-3.5 text-success" />
+    ) : value < 0 ? (
+      <TrendingDown className="w-3.5 h-3.5 text-destructive" />
+    ) : null}
+  </div>
 );
 
 const StatsSkeleton = () => (
@@ -595,6 +615,7 @@ const ReportsAnalytics = () => {
       queryFn: async () => {
         const res = await dashboardApi.getAnalytics({ range: r });
         // supports either { analytics: {...} } or raw analytics object
+        console.log("HIIIIIIIIIIIIIIII",res.data)
         return (res.data?.analytics ?? res.data) as DashboardAnalytics;
       },
       // Seed from localStorage so the page renders instantly after refresh

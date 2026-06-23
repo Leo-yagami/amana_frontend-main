@@ -287,8 +287,8 @@ const Families = () => {
             <>
               <Button variant="outline" size="sm" onClick={handleExport} className="text-xs sm:text-sm">
                 <Download className="mr-1 sm:mr-2 h-3 sm:h-4 w-3 sm:w-4" />
-                <span className="hidden sm:inline">Export Selected</span>
-                <span className="sm:hidden">Export</span>
+                <span className="hidden sm:inline">{t("common.export")}</span>
+                <span className="sm:hidden">{t("common.export")}</span>
               </Button>
               <Button
                 variant="outline"
@@ -297,7 +297,7 @@ const Families = () => {
                 className="text-xs sm:text-sm"
               >
                 <CheckCircle className="mr-1 sm:mr-2 h-3 sm:h-4 w-3 sm:w-4" />
-                <span className="hidden sm:inline">Verified</span>
+                <span className="hidden sm:inline">{t("dashboard.registrationStatus.verified")}</span>
                 <span className="sm:hidden">✓</span>
               </Button>
               <Button
@@ -307,27 +307,27 @@ const Families = () => {
                 className="text-xs sm:text-sm"
               >
                 <AlertCircle className="mr-1 sm:mr-2 h-3 sm:h-4 w-3 sm:w-4" />
-                <span className="hidden sm:inline">Pending</span>
+                <span className="hidden sm:inline">{t("dashboard.registrationStatus.pending")}</span>
                 <span className="sm:hidden">⏳</span>
               </Button>
               <Button variant="outline" size="sm" onClick={() => setSelectedIds([])} className="text-xs sm:text-sm">
-                Clear
+                {t("common.cancel")}
               </Button>
             </>
           ) : (
             <>
               <Button variant="outline" size="sm" onClick={handleExport} className="text-xs sm:text-sm">
                 <Download className="mr-1 sm:mr-2 h-3 sm:h-4 w-3 sm:w-4" />
-                <span className="hidden sm:inline">Export</span>
+                <span className="hidden sm:inline">{t("common.export")}</span>
               </Button>
               <Button variant="outline" size="sm" onClick={() => setShowQuickAddModal(true)} className="text-xs sm:text-sm">
                 <Zap className="mr-1 sm:mr-2 h-3 sm:h-4 w-3 sm:w-4" />
-                <span className="hidden sm:inline">Quick Add</span>
+                <span className="hidden sm:inline">{t("common.add")}</span>
               </Button>
               <Button onClick={() => navigate("/dashboard/families/new")} size="sm" className="text-xs sm:text-sm">
                 <Plus className="mr-1 sm:mr-2 h-3 sm:h-4 w-3 sm:w-4" />
-                <span className="hidden sm:inline">Register</span>
-                <span className="sm:hidden">Add</span>
+                <span className="hidden sm:inline">{t("dashboard.familiesPage.title")}</span>
+                <span className="sm:hidden">{t("common.add")}</span>
               </Button>
             </>
           )}
@@ -435,7 +435,7 @@ const Families = () => {
       <Card>
         <CardHeader className="pb-3 sm:pb-6">
           <CardTitle className="text-lg sm:text-xl">
-            Families  ({families?.data?.length})
+            {t("dashboard.familiesPage.title")} ({families?.data?.length})
           </CardTitle>
         </CardHeader>
 

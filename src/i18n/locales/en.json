@@ -624,5 +624,27 @@
     "confirmDelete": "Are you sure you want to delete this?",
     "operationSuccessful": "Operation completed successfully",
     "operationFailed": "Operation failed. Please try again."
+  },
+  "familyForm": {
+    "registerNew": "Register New Family",
+    "editFamily": "Edit Family",
+    "basicInfo": "Basic Information",
+    "addressInfo": "Address Information",
+    "familyDetails": "Family Details",
+    "additionalNotes": "Additional Notes",
+    "updateDescription": "Update family information below",
+    "registerDescription": "Complete family registration with all details"
+  },
+  "familyProfile": {
+    "recordSupport": "Record Support",
+    "verifyFamily": "Verify Family",
+    "editDetails": "Edit Details",
+    "information": "Information",
+    "members": "Members",
+    "supportHistory": "Support History",
+    "documents": "Documents",
+    "basicInfo": "Basic Information",
+    "contactInfo": "Contact Information",
+    "familyStatus": "Family Status"
   }
 }
