@@ -163,13 +163,16 @@ function useShaderBackground(
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const gl = canvas.getContext("webgl", {
-      alpha: true,
-      premultipliedAlpha: true,
-      antialias: false,
-      powerPreference: "low-power",
-    });
-    if (!gl) return;
+const gl = canvas.getContext("webgl", {
+  alpha: true,
+  premultipliedAlpha: true,
+  antialias: false,
+  powerPreference: "high-performance",
+});
+if (!gl) {
+  const gl2 = canvas.getContext("webgl", { alpha: false, antialias: false });
+  if (!gl2) return;
+}
 
     const compile = (type: number, src: string) => {
       const sh = gl.createShader(type)!;
