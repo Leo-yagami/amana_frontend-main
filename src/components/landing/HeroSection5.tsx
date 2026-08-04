@@ -137,8 +137,9 @@ void main() {
   float fc = smoothstep(0.30, 0.70, f);
 
   // ── Dark mode — exactly the values you confirmed look good. Untouched. ──
-  vec3 colDark = mix(u_c1 * 0.55, u_c1 * 1.05, f) + u_c2 * pow(f, 4.0) * 0.35;
-  float alphaDark = 0.15 * f;
+vec3 colDark = mix(u_c1 * 0.55, u_c1 * 1.05, f) + u_c2 * pow(f, 4.0) * 0.35;
+uniform float u_platform;
+float alphaDark = 0.18 * f + u_platform * 0.04;
 
   // ── Light mode — wider contrast range, separate from dark mode entirely. ──
   vec3 colLight = mix(u_c1 * 2.6, u_c1 * 3.1, fc) + u_c2 * pow(fc, 3.0) * 0.45;
@@ -201,7 +202,7 @@ function useShaderBackground(
     const uC1 = gl.getUniformLocation(prog, "u_c1");
     const uC2 = gl.getUniformLocation(prog, "u_c2");
 
-    const getScale = () => window.screen.width <= 768 ? 0.25 : 0.35;
+    const getScale = () => window.screen.width <= 768 ? 0.35 : 0.35;
 
     const resize = () => {
       if (!canvas) return;
@@ -225,6 +226,13 @@ function useShaderBackground(
       mouseTarget.y = (e.clientY - rect.top) / rect.height;
     };
     window.addEventListener("mousemove", onMouseMove, { passive: true });
+  window.addEventListener("touchmove", (e: TouchEvent) => {
+    const touch = e.touches[0];
+    if (!touch) return;
+    const rect = canvas.getBoundingClientRect();
+    mouseTarget.x = (touch.clientX - rect.left) / rect.width;
+    mouseTarget.y = (touch.clientY - rect.top) / rect.height;
+  }, { passive: true });
 
     // Track state of CSS variables to handle the initial load race condition
     let cachedDark = isDarkMode();
