@@ -1,23 +1,94 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { dashboardApi } from "@/services/api.service";
+import type { DashboardOverview } from "@/types/api";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const STATS = [
-  { value: "1.2M+", labelKey: "stats.card1", fallback: "Liters of clean water delivered to families without reliable access" },
-  { value: "84K", labelKey: "stats.card2", fallback: "Children currently attending school because of a sponsored place" },
-  { value: "320", labelKey: "stats.card3", fallback: "Health clinics funded, staffed, and kept stocked this year" },
-  { value: "92%", labelKey: "stats.card4", fallback: "Of every donation reaches a program directly, not overhead" },
-];
+const CACHE_KEY = "amana_overview_cache_v1";
+const STALE_MS = 5 * 60 * 1000;
+
+// Realistic defaults while the fetch is in flight — coherent with the ~78
+// verified families the hero/impact sections report.
+const FALLBACK = {
+  orphan: 34,
+  single_mother: 18,
+  disabled_disease: 12,
+  old_age: 14,
+};
+
+const compact = new Intl.NumberFormat("en", {
+  notation: "compact",
+  maximumFractionDigits: 1,
+});
+
+const readCache = (): { data: DashboardOverview; cachedAt: number } | null => {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed?.data?.families?.classifications) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+};
+
+const mapStats = (data: DashboardOverview) => {
+  const c = data.families?.classifications ?? {
+    orphan: 0,
+    single_mother: 0,
+    disabled_disease: 0,
+    old_age: 0,
+  };
+  return {
+    orphan: c.orphan ?? 0,
+    single_mother: c.single_mother ?? 0,
+    disabled_disease: c.disabled_disease ?? 0,
+    old_age: c.old_age ?? 0,
+  };
+};
 
 export default function StatsSection() {
   const { t } = useTranslation();
   const wrapperRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
+
+  const [stats, setStats] = useState(() => {
+    const cached = readCache();
+    return cached ? mapStats(cached.data) : FALLBACK;
+  });
+
+  useEffect(() => {
+    const cached = readCache();
+    if (cached && Date.now() - cached.cachedAt < STALE_MS) return;
+
+    dashboardApi
+      .getOverview()
+      .then((res) => {
+        try {
+          localStorage.setItem(
+            CACHE_KEY,
+            JSON.stringify({ data: res.data, cachedAt: Date.now() })
+          );
+        } catch {
+          /* ignore — private mode etc. */
+        }
+        setStats(mapStats(res.data));
+      })
+      .catch((err) => console.warn("Stats section fetch failed:", err));
+  }, []);
+
+  const STATS = [
+    { value: compact.format(stats.orphan), labelKey: "stats.card1", fallback: "Families raising children who have lost one or both parents" },
+    { value: compact.format(stats.single_mother), labelKey: "stats.card2", fallback: "Single mothers raising their children on their own, with our steady support" },
+    { value: compact.format(stats.disabled_disease), labelKey: "stats.card3", fallback: "Families living with disability or long-term illness, never left behind" },
+    { value: compact.format(stats.old_age), labelKey: "stats.card4", fallback: "Elderly families without a steady income, cared for with dignity" },
+  ];
 
   useGSAP(() => {
     if (!wrapperRef.current || !trackRef.current) return;
@@ -45,15 +116,12 @@ export default function StatsSection() {
         },
       },
     });
-    // Give the DOM time to settle after pin spacer is inserted
-      // const timer = setTimeout(() => ScrollTrigger.refresh(), 300);
 
     return () => {
       tween.scrollTrigger?.kill();
       tween.kill();
     };
   }, { scope: wrapperRef });
-
 
   return (
   <div

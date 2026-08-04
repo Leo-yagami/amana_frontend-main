@@ -364,7 +364,7 @@ const Payment = () => {
   const stageOrder: Array<typeof stage> = ["waiting", "confirming", "finalizing"];
 
   return (
-    <main className="min-h-screen bg-background py-16 px-4 sm:px-6 relative overflow-hidden">
+    <main className="min-h-screen bg-background py-16 px-4 sm:px-6 relative">
       {processing && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm px-6"
@@ -441,9 +441,11 @@ const Payment = () => {
       )}
 
       {/* Decorative Background Elements */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-full pointer-events-none opacity-[0.03] z-0">
-        <div className="absolute top-20 left-10 w-96 h-96 bg-primary rounded-full blur-3xl"></div>
-        <div className="absolute bottom-40 right-10 w-[30rem] h-[30rem] bg-primary rounded-full blur-3xl"></div>
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-full opacity-[0.03]">
+          <div className="absolute top-20 left-10 w-96 h-96 bg-primary rounded-full blur-3xl"></div>
+          <div className="absolute bottom-40 right-10 w-[30rem] h-[30rem] bg-primary rounded-full blur-3xl"></div>
+        </div>
       </div>
 
       <div className="max-w-6xl mx-auto relative z-10">
@@ -811,12 +813,12 @@ const Payment = () => {
           </div>
 
           {/* Sidebar - Summary */}
-          <aside className="lg:col-span-5 xl:col-span-4 lg:sticky lg:top-24">
+          <aside className="lg:col-span-5 xl:col-span-4 lg:sticky lg:top-8">
             <div className="bg-card border border-border/60 rounded-3xl overflow-hidden shadow-lg shadow-black/5">
               <div className="bg-muted/30 p-6 sm:p-8 border-b border-border/60">
                 <h3 className="text-lg sm:text-xl font-bold">{t("payment.summaryTitle", "Donation Summary")}</h3>
               </div>
-              
+
               <div className="p-6 sm:p-8">
                 <div className="space-y-5 mb-8">
                   <div className="flex justify-between items-start gap-4">
@@ -843,7 +845,7 @@ const Payment = () => {
                   </div>
                 </div>
 
-                <Button 
+                <Button
                   type="submit"
                   className="w-full px-6 sm:px-8 py-6 sm:py-7 bg-primary text-primary-foreground rounded-2xl font-bold text-base sm:text-lg hover:shadow-lg hover:shadow-primary/20 hover:-translate-y-0.5 transition-all duration-300"
                   disabled={!isAmountValid || isLoading}
@@ -860,7 +862,7 @@ const Payment = () => {
                     </>
                   )}
                 </Button>
-                
+
                 <p className="mt-6 text-xs text-center text-muted-foreground leading-relaxed px-2">
                   {t("payment.legal", "By completing this donation, you agree to our Terms of Service and Privacy Policy.")}
                 </p>
