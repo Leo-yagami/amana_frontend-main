@@ -87,7 +87,7 @@ const DashboardSidebar = () => {
 // }, []);
 
 useEffect(() => {
-  const collapseMedia = window.matchMedia("(max-width: 1066px)");
+  const collapseMedia = window.matchMedia("(max-width: 1086px)");
   const mobileMedia = window.matchMedia("(max-width: 1023px)");
 
   const update = () => {

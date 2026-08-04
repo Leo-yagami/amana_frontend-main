@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +22,9 @@ import {
   Target,
   AlertCircle,
   Heart,
+  Baby,
+  Accessibility,
+  Home,
 } from "lucide-react";
 import { toast } from "sonner";
 import { eventApi, donationApi } from "@/services/api.service";
@@ -38,15 +42,17 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
+const NS = "dashboard.eventProfile";
+
 const getEventTypeLabel = (type: string) => {
   const labels: Record<string, string> = {
-    distribution: "Distribution",
-    fundraising: "Fundraising",
-    awareness: "Awareness",
-    food_package: "Food Package",
-    medical_aid: "Medical Aid",
-    job_opportunity: "Job Opportunity",
-    other: "Other",
+    distribution: `${NS}.type.distribution`,
+    fundraising: `${NS}.type.fundraising`,
+    awareness: `${NS}.type.awareness`,
+    food_package: `${NS}.type.food_package`,
+    medical_aid: `${NS}.type.medical_aid`,
+    job_opportunity: `${NS}.type.job_opportunity`,
+    other: `${NS}.type.other`,
   };
   return labels[type] || type;
 };
@@ -76,13 +82,57 @@ const getStatusColor = (status: string) => {
 };
 
 const getStatusLabel = (status: string) => {
-  return status.charAt(0).toUpperCase() + status.slice(1);
+  const labels: Record<string, string> = {
+    draft: `${NS}.status.draft`,
+    upcoming: `${NS}.status.upcoming`,
+    ongoing: `${NS}.status.ongoing`,
+    completed: `${NS}.status.completed`,
+    cancelled: `${NS}.status.cancelled`,
+  };
+  return labels[status] || status;
+};
+
+const CLASSIFICATION_META: Record<string, { label: string; className: string; Icon: any }> = {
+  orphan: {
+    label: `${NS}.class.orphan`,
+    className: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/70 dark:text-blue-300 dark:border-blue-700",
+    Icon: Baby,
+  },
+  disabled_disease: {
+    label: `${NS}.class.disabled_disease`,
+    className: "bg-pink-100 text-pink-700 border-pink-200 dark:bg-pink-900/70 dark:text-pink-300 dark:border-pink-700",
+    Icon: Heart,
+  },
+  old_age: {
+    label: `${NS}.class.old_age`,
+    className: "bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/70 dark:text-purple-300 dark:border-purple-700",
+    Icon: Accessibility,
+  },
+  single_mother: {
+    label: `${NS}.class.single_mother`,
+    className: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/70 dark:text-amber-300 dark:border-amber-700",
+    Icon: Home,
+  },
+};
+
+const EventClassificationTag = ({ classification }: { classification: string }) => {
+  const { t } = useTranslation();
+  const meta = CLASSIFICATION_META[classification];
+  if (!meta) return null;
+  const { label, className, Icon } = meta;
+  return (
+    <Badge variant="outline" className={`text-xs ${className}`}>
+      <Icon className="h-3 w-3 mr-1" />
+      {t(label)}
+    </Badge>
+  );
 };
 
 const EventProfile = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showRecordSupportModal, setShowRecordSupportModal] = useState(false);
@@ -113,11 +163,11 @@ const EventProfile = () => {
     mutationFn: () => eventApi.delete(id!),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["events"] });
-      toast.success("Event deleted successfully");
+      toast.success(t(`${NS}.deleteSuccess`, "Event deleted successfully"));
       navigate("/dashboard/events");
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || "Failed to delete event");
+      toast.error(error?.response?.data?.message || t(`${NS}.deleteErr`, "Failed to delete event"));
     },
   });
 
@@ -182,13 +232,13 @@ const EventProfile = () => {
       <div className="space-y-6">
         <Button variant="ghost" onClick={() => navigate("/dashboard/events")}>
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Events
+          {t(`${NS}.back`, "Back to Events")}
         </Button>
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center gap-2 text-destructive">
               <AlertCircle className="w-5 h-5" />
-              <p>Failed to load event details</p>
+              <p>{t(`${NS}.loadErr`, "Failed to load event details")}</p>
             </div>
           </CardContent>
         </Card>
@@ -202,24 +252,24 @@ const EventProfile = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col items-start gap-4 sm:flex-row  sm:items-center sm:gap-0 justify-between">
-        <Button variant="ghost" onClick={() => navigate("/dashboard/events")}>
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Events
-        </Button>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={() => setShowRecordSupportModal(true)}>
-            <Heart className="w-4 h-4 mr-2" />
-            Record Support
+          <Button variant="ghost" onClick={() => navigate("/dashboard/events")}>
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            {t(`${NS}.back`, "Back to Events")}
           </Button>
-          <Button variant="outline" onClick={() => setShowEditModal(true)}>
-            <Edit className="w-4 h-4 mr-2" />
-            Edit
-          </Button>
-          <Button variant="destructive" onClick={() => setShowDeleteDialog(true)}>
-            <Trash2 className="w-4 h-4 mr-2" />
-            Delete
-          </Button>
-        </div>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" onClick={() => setShowRecordSupportModal(true)}>
+              <Heart className="w-4 h-4 mr-2" />
+              {t(`${NS}.recordSupport`, "Record Support")}
+            </Button>
+            <Button variant="outline" onClick={() => setShowEditModal(true)}>
+              <Edit className="w-4 h-4 mr-2" />
+              {t(`${NS}.edit`, "Edit")}
+            </Button>
+            <Button variant="destructive" onClick={() => setShowDeleteDialog(true)}>
+              <Trash2 className="w-4 h-4 mr-2" />
+              {t(`${NS}.delete`, "Delete")}
+            </Button>
+          </div>
       </div>
 
       {/* Event Header */}
@@ -231,15 +281,15 @@ const EventProfile = () => {
                 <div>
                   <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground mb-2">{event.title}</h1>
                   <p className="text-sm sm:text-base md:text-lg text-muted-foreground">
-                    Event Code: {event.campaignCode || `ID: ${event._id.slice(0, 8)}`}
+                    {t(`${NS}.eventCode`, "Event Code")}: {event.campaignCode || `ID: ${event._id.slice(0, 8)}`}
                   </p>
                 </div>
                 <div className="flex gap-2">
                   <Badge variant="outline" className={getEventTypeColor(event.eventType)}>
-                    {getEventTypeLabel(event.eventType)}
+                    {t(getEventTypeLabel(event.eventType))}
                   </Badge>
                   <Badge variant="outline" className={getStatusColor(event.status)}>
-                    {getStatusLabel(event.status)}
+                    {t(getStatusLabel(event.status))}
                   </Badge>
                 </div>
               </div>
@@ -251,32 +301,32 @@ const EventProfile = () => {
               <div className="text-base sm:text-lg md:text-xl grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex items-center gap-2 text-sm">
                   <Calendar className="w-4 h-4  text-muted-foreground" />
-                  <span>
-                    <strong>Event Date:</strong> {formatDate(event.eventDate || event.startDate)}
-                  </span>
+                   <span>
+                     <strong>{t(`${NS}.eventDate`, "Event Date")}:</strong> {formatDate(event.eventDate || event.startDate)}
+                   </span>
                 </div>
                 {event.startDate && event.endDate && (
                   <div className="flex items-center gap-2 text-sm">
                     <Clock className="w-4 h-4 text-muted-foreground" />
-                    <span>
-                      <strong>Duration:</strong> {formatDate(event.startDate)} - {formatDate(event.endDate)}
-                    </span>
+                   <span>
+                     <strong>{t(`${NS}.duration`, "Duration")}:</strong> {formatDate(event.startDate)} - {formatDate(event.endDate)}
+                   </span>
                   </div>
                 )}
                 {event.location && (
                   <div className="flex items-center gap-2 text-sm">
                     <MapPin className="w-4 h-4 text-muted-foreground" />
-                    <span>
-                      <strong>Location:</strong> {event.location}
-                    </span>
+                   <span>
+                     <strong>{t(`${NS}.location`, "Location")}:</strong> {event.location}
+                   </span>
                   </div>
                 )}
                 {event.organizedBy && (
                   <div className="flex items-center gap-2 text-sm">
                     <Users className="w-4 h-4 text-muted-foreground" />
-                    <span>
-                      <strong>Organized By:</strong> {event.organizedBy}
-                    </span>
+                   <span>
+                     <strong>{t(`${NS}.organizedBy`, "Organized By")}:</strong> {event.organizedBy}
+                   </span>
                   </div>
                 )}
               </div>
@@ -291,7 +341,7 @@ const EventProfile = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Total Donations</p>
+                <p className="text-sm text-muted-foreground mb-1">{t(`${NS}.stat.totalDonations`, "Total Donations")}</p>
                 <p className="text-2xl font-bold">
                   {stats?.totalDonations || event._count?.donations || 0}
                 </p>
@@ -305,7 +355,7 @@ const EventProfile = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Unique Donors</p>
+                <p className="text-sm text-muted-foreground mb-1">{t(`${NS}.stat.uniqueDonors`, "Unique Donors")}</p>
                 <p className="text-2xl font-bold">{stats?.uniqueDonors || 0}</p>
               </div>
               <Users className="w-8 h-8 text-success opacity-50" />
@@ -317,7 +367,7 @@ const EventProfile = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Families Supported</p>
+                <p className="text-sm text-muted-foreground mb-1">{t(`${NS}.stat.familiesSupported`, "Families Supported")}</p>
                 <p className="text-2xl font-bold">{  stats?.familiesSupported || 0}</p>
               </div>
               <Users className="w-8 h-8 text-info opacity-50" />
@@ -329,7 +379,7 @@ const EventProfile = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Participants</p>
+                <p className="text-sm text-muted-foreground mb-1">{t(`${NS}.stat.participants`, "Participants")}</p>
                 <p className="text-2xl font-bold">{event.participantCount || stats?.familiesSupported + stats?.uniqueDonors || 0}</p>
               </div>
               <Users className="w-8 h-8 text-warning opacity-50" />
@@ -342,10 +392,10 @@ const EventProfile = () => {
       {event.targetAmount && Number(event.targetAmount) > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-xl sm:text-2xl md:text-3xl">
-              <Target className="w-5 h-5" />
-              Fundraising Progress
-            </CardTitle>
+              <CardTitle className="flex items-center gap-2 text-xl sm:text-2xl md:text-3xl">
+                <Target className="w-5 h-5" />
+                {t(`${NS}.fundraisingProgress`, "Fundraising Progress")}
+              </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -355,12 +405,12 @@ const EventProfile = () => {
                     ETB {Number(stats?.totalAmount)}
                   </p>
                   <p className="text-xs sm:text-sm text-muted-foreground">
-                    of ETB {Number(event?.targetAmount).toLocaleString()} goal (received)
+                    {t(`${NS}.goalReceived`, "of ETB {{amount}} goal (received)", { amount: Number(event?.targetAmount).toLocaleString() })}
                   </p>
                 </div>
                 <div className="text-right">
                   <p className="text-lg sm:text-xl md:text-2xl font-bold text-primary">{progress}%</p>
-                  <p className="text-xs sm:text-sm text-muted-foreground">Completed</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">{t(`${NS}.completed`, "Completed")}</p>
                 </div>
               </div>
               <Progress value={progress} className="h-3" />
@@ -368,26 +418,26 @@ const EventProfile = () => {
               {/* Show promised donations if any */}
               {event.donations && event.donations.some((d: any) => d.status === 'promised') && (
                 <div className="pt-2 border-t">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Promised donations:</span>
-                    <span className="font-medium text-blue-600">
-                      ETB {event.donations
-                        .filter((d: any) => d.status === 'promised')
-                        .reduce((sum: number, d: any) => sum + Number(d.amount || 0), 0)
-                        .toLocaleString()}
-                    </span>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    ({event.donations.filter((d: any) => d.status === 'promised').length} promised donation{event.donations.filter((d: any) => d.status === 'promised').length !== 1 ? 's' : ''})
-                  </p>
+                   <div className="flex items-center justify-between text-sm">
+                     <span className="text-muted-foreground">{t(`${NS}.promisedDonations`, "Promised donations")}:</span>
+                     <span className="font-medium text-blue-600">
+                       ETB {event.donations
+                         .filter((d: any) => d.status === 'promised')
+                         .reduce((sum: number, d: any) => sum + Number(d.amount || 0), 0)
+                         .toLocaleString()}
+                     </span>
+                   </div>
+                   <p className="text-xs text-muted-foreground mt-1">
+                     {t(`${NS}.promisedCount`, "{{count}} promised donation", { count: event.donations.filter((d: any) => d.status === 'promised').length })}
+                   </p>
                 </div>
               )}
               
               {progress >= 100 && (
-                <div className="flex items-center gap-2 text-success text-sm">
-                  <TrendingUp className="w-4 h-4" />
-                  <span className="font-medium">Goal achieved! 🎉</span>
-                </div>
+                 <div className="flex items-center gap-2 text-success text-sm">
+                   <TrendingUp className="w-4 h-4" />
+                   <span className="font-medium">{t(`${NS}.goalAchieved`, "Goal achieved! 🎉")}</span>
+                 </div>
               )}
             </div>
           </CardContent>
@@ -398,12 +448,12 @@ const EventProfile = () => {
       <Tabs defaultValue="donations" className="w-full">
         <TabsList>
           <TabsTrigger value="donations">
-            Donations ({event?._count?.donations || 0})
+            {t(`${NS}.tab.donations`, "Donations")} ({event?._count?.donations || 0})
           </TabsTrigger>
           <TabsTrigger value="support">
-            Support History ({event._count?.supportHistory || 0})
+            {t(`${NS}.tab.support`, "Support History")} ({event._count?.supportHistory || 0})
           </TabsTrigger>
-          {event.outcomeSummary && <TabsTrigger value="outcome">Outcome</TabsTrigger>}
+          {event.outcomeSummary && <TabsTrigger value="outcome">{t(`${NS}.tab.outcome`, "Outcome")}</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="donations">
@@ -420,7 +470,7 @@ const EventProfile = () => {
                       <div className="flex-1 space-y-3.5 sm:space-y-0">
                         <div className="flex flex-row items-start gap-2 sm:gap-2 sm:flex-row sm:items-center mb-1">
                           <p className="font-medium">
-                            {donation?.donorName || donation.donor?.email || "Anonymous"}
+                            {donation?.donorName || donation.donor?.email || t(`${NS}.anonymous`, "Anonymous")}
                           </p>
                           <Badge 
                             variant="outline" 
@@ -432,8 +482,11 @@ const EventProfile = () => {
                                 : 'bg-muted text-muted-foreground border-muted'
                             }`}
                           >
-                            {donation?.status}
+                            {t(`${NS}.status.${donation?.status}`, donation?.status)}
                           </Badge>
+                          {donation?.familyClassification && (
+                            <EventClassificationTag classification={donation.familyClassification} />
+                          )}
                         </div>
                         <p className="text-sm text-muted-foreground">
                           {formatDateShort(donation?.receivedAt)}
@@ -453,7 +506,7 @@ const EventProfile = () => {
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
                   <DollarSign className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                  <p>No donations recorded for this event yet</p>
+                  <p>{t(`${NS}.noDonations`, "No donations recorded for this event yet")}</p>
                 </div>
               )}
             </CardContent>
@@ -492,7 +545,7 @@ const EventProfile = () => {
                               <p className="font-medium text-lg">{group.supportType}</p>
                               {group.families.length > 1 && (
                                 <Badge variant="secondary" className="text-xs">
-                                  {group.families.length} families
+                                  {t(`${NS}.familiesCount`, "{{count}} families", { count: group.families.length })}
                                 </Badge>
                               )}
                             </div>
@@ -501,22 +554,22 @@ const EventProfile = () => {
                             )}
                           </div>
                           <div className="text-right">
-                            <p className="text-sm font-medium text-muted-foreground">
-                              {formatDateShort(group.supportDate)}
-                            </p>
-                            {group.amountValue && (
-                              <p className="font-semibold text-base sm:text-lg">
-                                ETB {Number(group.amountValue).toLocaleString()}
-                                {group.families.length > 1 && <span className="text-xs text-muted-foreground"> / family</span>}
-                              </p>
-                            )}
+                             <p className="text-sm font-medium text-muted-foreground">
+                               {formatDateShort(group.supportDate)}
+                             </p>
+                             {group.amountValue && (
+                               <p className="font-semibold text-base sm:text-lg">
+                                 ETB {Number(group.amountValue).toLocaleString()}
+                                 {group.families.length > 1 && <span className="text-xs text-muted-foreground"> {t(`${NS}.perFamily`, "/ family")}</span>}
+                               </p>
+                             )}
                           </div>
                         </div>
 
                         {/* Items Provided */}
                         {group.itemsProvided && group.itemsProvided.length > 0 && (
                           <div className="mb-3">
-                            <p className="text-xs font-medium text-muted-foreground mb-1">Items Provided:</p>
+                             <p className="text-xs font-medium text-muted-foreground mb-1">{t(`${NS}.itemsProvided`, "Items Provided:")}</p>
                             <div className="flex flex-wrap gap-2">
                               {group.itemsProvided.map((item: any, idx: number) => (
                                 <Badge key={idx} variant="outline" className="text-xs">
@@ -530,18 +583,18 @@ const EventProfile = () => {
                         {/* Delivery Info */}
                         {(group.deliveredBy || group.donorId) && (
                           <div className="mb-3 text-xs text-muted-foreground">
-                            {group.deliveredBy && <span>Delivered by: {group.deliveredBy}</span>}
-                            {group.donorId && group.deliveredBy && <span> • </span>}
-                            {group.donorId && <span>Donor: {group.donorId.name}</span>}
+                             {group.deliveredBy && <span>{t(`${NS}.deliveredBy`, "Delivered by")}: {group.deliveredBy}</span>}
+                             {group.donorId && group.deliveredBy && <span> • </span>}
+                             {group.donorId && <span>{t(`${NS}.donor`, "Donor")}: {group.donorId.name}</span>}
                           </div>
                         )}
 
                         {/* Families List */}
                         {group.families.length > 0 && (
                           <div className="border-t pt-3">
-                            <p className="text-xs font-medium text-muted-foreground mb-2">
-                              Families Supported ({group.families.length}):
-                            </p>
+                             <p className="text-xs font-medium text-muted-foreground mb-2">
+                               {t(`${NS}.familiesSupportedList`, "Families Supported ({{count}}):", { count: group.families.length })}
+                             </p>
                             <div className="flex flex-wrap gap-2">
                               {group.families.map((family: any, idx: number) => (
                                 <div
@@ -560,7 +613,7 @@ const EventProfile = () => {
                         {/* Notes */}
                         {group.notes && (
                           <div className="mt-3 p-2 bg-muted/50 rounded text-xs">
-                            <p className="font-medium mb-1">Notes:</p>
+                             <p className="font-medium mb-1">{t(`${NS}.notes`, "Notes:")}</p>
                             <p className="text-muted-foreground">{group.notes}</p>
                           </div>
                         )}
@@ -571,7 +624,7 @@ const EventProfile = () => {
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
                   <BarChart3 className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                  <p>No support history recorded for this event yet</p>
+                  <p>{t(`${NS}.noSupport`, "No support history recorded for this event yet")}</p>
                 </div>
               )}
             </CardContent>
@@ -582,7 +635,7 @@ const EventProfile = () => {
           <TabsContent value="outcome">
             <Card>
               <CardHeader>
-                <CardTitle>Event Outcome Summary</CardTitle>
+                <CardTitle>{t(`${NS}.outcomeSummary`, "Event Outcome Summary")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground whitespace-pre-wrap">{event.outcomeSummary}</p>
@@ -615,23 +668,23 @@ const EventProfile = () => {
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogTitle>{t(`${NS}.deleteTitle`, "Are you sure?")}</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete the event "{event.title}". This action cannot be undone.
+              {t(`${NS}.deleteDesc`, "This will permanently delete the event \"{{title}}\". This action cannot be undone.", { title: event.title })}
               {event._count && event._count.donations > 0 && (
                 <span className="block mt-2 text-destructive font-medium">
-                  Warning: This event has {event._count.donations} donation(s) associated with it.
+                  {t(`${NS}.deleteWarning`, "Warning: This event has {{count}} donation(s) associated with it.", { count: event._count.donations })}
                 </span>
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t(`${NS}.cancel`, "Cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Delete Event
+              {t(`${NS}.deleteEvent`, "Delete Event")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

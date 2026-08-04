@@ -109,12 +109,37 @@ import { Bar } from "react-chartjs-2";
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip);
 
 export default function DonationTrendsChart({ values, labels }) {
+  const nums = values.map(Number);
+  const maxVal = Math.max(...nums, 1);
+
+  // Calculate a "nice" step size for the y-axis
+  const niceStep = (() => {
+    const targetIntervals = 5; // gives 6 ticks (0 … niceMax)
+    const roughStep = maxVal / targetIntervals;
+    const magnitude = Math.pow(10, Math.floor(Math.log10(roughStep)));
+    const norm = roughStep / magnitude;
+    if (norm <= 1.5) return 1 * magnitude;
+    if (norm <= 3.5) return 2 * magnitude;
+    if (norm <= 7.5) return 5 * magnitude;
+    return 10 * magnitude;
+  })();
+
+  const niceMax = Math.ceil(maxVal / niceStep) * niceStep;
+
+  const formatTick = (v: number) => {
+    if (v === 0) return "0";
+    if (v >= 1000) {
+      const k = v / 1000;
+      return `$${k % 1 === 0 ? k.toFixed(0) : k.toFixed(1)}k`;
+    }
+    return `$${v}`;
+  };
+
   const data = {
     labels,
     datasets: [
       {
-        // data: values,
-        data: values.map((v) => Number(v)),
+        data: nums,
         backgroundColor: [
           "#EAF7F5",
           "#EAF7F5",
@@ -126,10 +151,6 @@ export default function DonationTrendsChart({ values, labels }) {
 
         borderRadius: 12,
         borderSkipped: false,
-        // barThickness: 65,
-        // backgroundColor: values.map((_, i) =>
-        //   i === values.length - 1 ? "#053D35" : "#EAF7F5"
-        // ),
         barThickness: "flex",
         maxBarThickness: 50,
       },
@@ -171,26 +192,12 @@ export default function DonationTrendsChart({ values, labels }) {
 
       y: {
         min: 0,
-        max: 20000,
+        max: niceMax,
         ticks: {
-          stepSize: 5000,
+          stepSize: niceStep,
           color: "#B6C2C2",
           font: { size: 14 },
-          callback: (value) => {
-            if (value === 0) return "0";
-            if (value === 5000) return "$5k";
-            if (value === 10000) return "$10k";
-            if (value === 15000) return "$15k";
-            if (value === 20000) return "$20k";
-            // if (value === 25000) return "$25k";
-            // if (value === 30000) return "$30k";
-            // if (value === 35000) return "$35k";
-            // if (value === 40000) return "$40k";
-            // if (value === 45000) return "$45k";
-            // if (value === 50000) return "$50k";
-            // if (value === 10000) return "$10k";
-            return value;
-          },
+          callback: (value) => formatTick(value),
         },
         grid: {
           color: "#EEF3F3",

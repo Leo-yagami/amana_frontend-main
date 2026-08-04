@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
   HandHeart,
@@ -13,6 +14,7 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useQuery } from "@tanstack/react-query";
+import ExpandingViewAll from "@/components/ExpandingViewAll";
 import { dashboardApi, eventApi } from "@/services/api.service";
 import type {
   DashboardOverview,
@@ -21,7 +23,7 @@ import type {
   Event,
 } from "@/types/api";
 
-const staleConfig = { staleTime: 5 * 60 * 1000, gcTime: 30 * 60 * 1000, refetchOnWindowFocus: false };
+const staleConfig = { staleTime: 5 * 60 * 1000, gcTime: 30 * 60 * 1000, refetchOnWindowFocus: false, refetchOnMount: false };
 
 const Dashboard = () => {
   const { t } = useTranslation();
@@ -62,7 +64,45 @@ const Dashboard = () => {
     ...staleConfig,
   });
 
-  const loading = overviewLoading || eventsLoading || donorsLoading || activitiesLoading;
+  const { data: eventsExp = [], isLoading: eventsExpLoading } = useQuery({
+    queryKey: ['events', { status: "Active", limit: 10 }],
+    queryFn: async () => {
+      const res = await eventApi.getAll({ status: "Active", limit: 10 });
+      return res?.data[0]?.data || [];
+    },
+    ...staleConfig,
+  });
+
+  const { data: topDonorsExp = [], isLoading: donorsExpLoading } = useQuery({
+    queryKey: ['dashboard', 'top-donors', { limit: 10 }],
+    queryFn: async () => {
+      const res = await dashboardApi.getTopDonors({ limit: 10 });
+      return res.data || [];
+    },
+    ...staleConfig,
+  });
+
+  const { data: recentActivitiesExp = [], isLoading: activitiesExpLoading } = useQuery({
+    queryKey: ['dashboard', 'recent-activities', { limit: 30 }],
+    queryFn: async () => {
+      const res = await dashboardApi.getRecentActivities({ limit: 30 });
+      return res.data || [];
+    },
+    ...staleConfig,
+  });
+
+  const sortedActivities = useMemo(() => {
+    return [...recentActivities].sort(
+      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
+  }, [recentActivities]);
+  const sortedActivitiesExp = useMemo(() => {
+    return [...recentActivitiesExp].sort(
+      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
+  }, [recentActivitiesExp]);
+
+  const loading = overviewLoading || eventsLoading || donorsLoading || activitiesLoading || eventsExpLoading || donorsExpLoading || activitiesExpLoading ;
   const firstError = overviewErr;
 
   if (firstError) {
@@ -88,14 +128,14 @@ const Dashboard = () => {
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3">
-          <Button variant="outline">
+          {false && (<Button variant="outline">
             <Calendar className="w-4 h-4 mr-2" />
             {t("dashboard.home.thisMonth")}
-          </Button>
-          <Button variant="default">
+          </Button>)}
+          {false && (<Button variant="default">
             <TrendingUp className="w-4 h-4 mr-2" />
             {t("dashboard.home.generateReport")}
-          </Button>
+          </Button>)}
         </div>
       </div>
 
@@ -155,12 +195,28 @@ const Dashboard = () => {
             <h2 className="text-lg font-semibold text-foreground">
               {t("dashboard.home.recentActivity")}
             </h2>
-            <Button variant="ghost" size="sm">
+            {/* <Button variant="ghost" size="sm">
               {t("dashboard.home.viewAll")}
               <ArrowUpRight className="w-4 h-4 ml-1" />
-            </Button>
+              </Button> */}
+              <ExpandingViewAll title={t("dashboard.home.allActivities")} description={t("dashboard.home.allActivitiesDesc")}>
+                <div className="space-y-2">
+                  {sortedActivitiesExp.map((activity) => (
+                    <div key={activity.id} className="flex items-start gap-4 p-3 rounded-lg hover:bg-muted/50">
+                      <div className="w-2 h-2 rounded-full bg-primary mt-2" />
+                      <div className="flex-1">
+                        <p className="text-foreground text-sm">{activity.description}</p>
+                        <p className="text-muted-foreground text-xs mt-1">
+                          {new Date(activity.timestamp).toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </ExpandingViewAll>
           </div>
-          <div className="space-y-4 max-h-[280px] overflow-y-auto pr-2">
+          {/* old: scroll broke with lenis — added data-lenis-prevent */}
+          <div className="space-y-4 max-h-[280px] overflow-y-auto pr-2" data-lenis-prevent>
             {loading ? (
               <>
                 {[...Array(3)].map((_, i) => (
@@ -173,8 +229,8 @@ const Dashboard = () => {
                   </div>
                 ))}
               </>
-            ) : recentActivities.length > 0 ? (
-              recentActivities.map((activity) => (
+            ) : sortedActivities.length > 0 ? (
+              sortedActivities.map((activity) => (
                 <div
                   key={activity.id}
                   className="flex items-start gap-4 p-3 rounded-lg hover:bg-muted/50 transition-colors"
@@ -204,10 +260,36 @@ const Dashboard = () => {
             <h2 className="text-lg font-semibold text-foreground">
               {t("dashboard.home.upcomingEvents")}
             </h2>
-            <Button variant="ghost" size="sm">
+            {/* <Button variant="ghost" size="sm">
               {t("dashboard.home.viewAll")}
               <ArrowUpRight className="w-4 h-4 ml-1" />
-            </Button>
+            </Button> */}
+ <ExpandingViewAll title={t("dashboard.home.allUpcomingEvents")} description={t("dashboard.home.allUpcomingEventsDesc")}>
+  <div className="space-y-2">
+    {eventsExp.length > 0 ? (
+      eventsExp.map((event) => (
+        <div
+          key={event._id}
+          className="p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+        >
+          <h3 className="font-medium text-foreground mb-1">{event.title}</h3>
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <span>
+              {event.startDate
+                ? new Date(event.startDate).toLocaleDateString()
+                : t("common.tbd")}
+            </span>
+            <span className="capitalize">{event.eventType}</span>
+          </div>
+        </div>
+      ))
+    ) : (
+      <p className="text-muted-foreground text-sm text-center py-4">
+        {t("dashboard.home.noEvents")}
+      </p>
+    )}
+  </div>
+</ExpandingViewAll>
           </div>
           <div className="space-y-4">
             {loading ? (
@@ -251,10 +333,30 @@ const Dashboard = () => {
       <div className="bg-card rounded-xl border border-border p-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-semibold text-foreground">{t("dashboard.home.topDonors")}</h2>
-          <Button variant="ghost" size="sm">
+          {/* <Button variant="ghost" size="sm">
             {t("dashboard.home.viewAll")}
             <ArrowUpRight className="w-4 h-4 ml-1" />
-          </Button>
+          </Button> */}
+ <ExpandingViewAll title={t("dashboard.home.allTopDonors")} description={t("dashboard.home.allTopDonorsDesc")}>
+    <div className="space-y-6">
+      {topDonorsExp.map((donor) => (
+        <div key={donor.id}>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-medium text-foreground">{donor.name}</h3>
+            <span className="text-sm text-muted-foreground">
+              {t("dashboard.home.donationCount", { count: donor.donationCount })}
+            </span>
+          </div>
+          <div className="flex items-center gap-4">
+            <Progress value={100} className="flex-1 h-2" />
+            <span className="text-sm font-semibold text-primary min-w-[100px] text-right">
+              ${donor.totalAmount.toLocaleString()}
+            </span>
+          </div>
+        </div>
+      ))}
+    </div>
+  </ExpandingViewAll>
         </div>
         <div className="space-y-6">
           {loading ? (

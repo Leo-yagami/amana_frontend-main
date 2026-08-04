@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,10 +8,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Trash2, User, Save } from "lucide-react";
+import { Plus, Trash2, User, Save, Baby, Heart, Accessibility, Home } from "lucide-react";
 import { familyApi } from "@/services/api.service";
 import { useNavigate } from "react-router-dom";
 import ImageUpload from "@/components/ImageUpload";
+import DocumentUpload from "@/components/DocumentUpload";
+import type { DocumentItem } from "@/components/DocumentUpload";
 import Beneficiaries from "../Beneficiaries";
 
 interface BeneficiaryFormData {
@@ -29,12 +32,39 @@ interface BeneficiaryFormData {
   photoUrl: string;
   isFamilyHead: boolean;
   notes: string;
+  memberClassification: string;
 }
 
 export default function ComprehensiveFamilyForm() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const phoneRef = useRef<HTMLInputElement>(null);
+
+  const formatPhoneNumber = (value: string): string => {
+    const cleaned = value.replace(/[^\d+]/g, '');
+
+    if (cleaned.startsWith('+')) {
+      if (cleaned.startsWith('+251')) {
+        const digits = cleaned.replace(/\D/g, '');
+        if (digits.length <= 3) return cleaned;
+        const after = digits.slice(3);
+        if (after.length <= 2) return `+251 ${after}`;
+        if (after.length <= 5) return `+251 ${after.slice(0, 2)} ${after.slice(2)}`;
+        return `+251 ${after.slice(0, 2)} ${after.slice(2, 5)} ${after.slice(5, 9)}`;
+      }
+      const digits = cleaned.replace(/\D/g, '');
+      if (digits.length <= 4) return cleaned;
+      if (digits.length <= 7) return `${digits.slice(0, 4)} ${digits.slice(4)}`;
+      return `${digits.slice(0, 4)} ${digits.slice(4, 7)} ${digits.slice(7, 11)}`;
+    }
+
+    const digits = cleaned.replace(/\D/g, '');
+    if (digits.length <= 3) return digits;
+    if (digits.length <= 6) return `${digits.slice(0, 3)} ${digits.slice(3)}`;
+    return `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6, 10)}`;
+  };
 
   // Family data
   const [familyData, setFamilyData] = useState({
@@ -46,6 +76,9 @@ export default function ComprehensiveFamilyForm() {
     urgencyLevel: "medium",
     notes: "",
   });
+
+  // Documents list
+  const [documents, setDocuments] = useState<DocumentItem[]>([]);
 
   // Beneficiaries list
   const [beneficiaries, setBeneficiaries] = useState<BeneficiaryFormData[]>([]);
@@ -67,6 +100,7 @@ export default function ComprehensiveFamilyForm() {
     photoUrl: "",
     isFamilyHead: false,
     notes: "",
+    memberClassification: "",
   });
 
   const CHILD_AGES = Array.from({ length: 13 }, (_, i) => i); // 0..12
@@ -90,9 +124,10 @@ export default function ComprehensiveFamilyForm() {
     setCurrentBeneficiary({
       ...currentBeneficiary,
       ageGroup,
-      beneficiaryType: ageGroup === "adult" ? "adult" : "child", // teen maps to child in existing API
+      beneficiaryType: ageGroup === "adult" ? "adult" : "child",
       isOrphan: ageGroup === "adult" ? false : currentBeneficiary.isOrphan,
       orphanType: ageGroup === "adult" ? "none" : currentBeneficiary.orphanType,
+      memberClassification: ageGroup === "adult" ? "" : (currentBeneficiary.isOrphan ? "orphan" : ""),
     });
   };
 
@@ -107,8 +142,8 @@ export default function ComprehensiveFamilyForm() {
   const addBeneficiary = () => {
     if (!currentBeneficiary.fullName || !currentBeneficiary.ageGroup) {
       toast({
-        title: "Validation Error",
-        description: "Name and age are required for beneficiary",
+        title: t("familyForm.validationNameAndAgeRequired"),
+        description: t("familyForm.validationNameAndAgeRequired"),
         variant: "destructive",
       });
       return;
@@ -117,10 +152,19 @@ export default function ComprehensiveFamilyForm() {
     const beneficiaryToAdd = {
       ...currentBeneficiary,
       tempId: Date.now().toString(),
-      isFamilyHead: false, // Don't set head here, use the dropdown instead
+      isFamilyHead: false,
     };
 
-    const updatedBeneficiaries = [...beneficiaries, beneficiaryToAdd];
+    let updatedBeneficiaries = [...beneficiaries, beneficiaryToAdd];
+
+    const adults = updatedBeneficiaries.filter(b => b.beneficiaryType === "adult");
+    if (adults.length === 1) {
+      updatedBeneficiaries = updatedBeneficiaries.map(b => ({
+        ...b,
+        isFamilyHead: b.beneficiaryType === "adult"
+      }));
+    }
+
     setBeneficiaries(updatedBeneficiaries);
 
     // Auto-calculate and update family income
@@ -146,17 +190,27 @@ export default function ComprehensiveFamilyForm() {
       photoUrl: "",
       isFamilyHead: false,
       notes: "",
+      memberClassification: "",
     });
 
     toast({
-      title: "Success",
-      description: "Beneficiary added to the list",
+      title: t("common.success"),
+      description: t("familyForm.memberAdded"),
     });
   };
 
   // Remove beneficiary
   const removeBeneficiary = (tempId: string) => {
-    const updatedBeneficiaries = beneficiaries.filter(b => b.tempId !== tempId);
+    let updatedBeneficiaries = beneficiaries.filter(b => b.tempId !== tempId);
+
+    const adults = updatedBeneficiaries.filter(b => b.beneficiaryType === "adult");
+    if (adults.length === 1) {
+      updatedBeneficiaries = updatedBeneficiaries.map(b => ({
+        ...b,
+        isFamilyHead: b.beneficiaryType === "adult"
+      }));
+    }
+
     setBeneficiaries(updatedBeneficiaries);
     
     // Recalculate family income
@@ -250,27 +304,27 @@ export default function ComprehensiveFamilyForm() {
     e.preventDefault();
     if (!familyData.familyName.trim()) {
       toast({
-        title: "Validation Error",
-        description: "Family name is required",
+        title: t("familyForm.validationNameRequired"),
+        description: t("familyForm.validationNameRequired"),
         variant: "destructive",
       });
       return;
     }
     if (beneficiaries.length === 0) {
       toast({
-        title: "Validation Error",
-        description: "Add at least one family member.",
+        title: t("familyForm.validationMemberRequired"),
+        description: t("familyForm.validationMemberRequired"),
         variant: "destructive",
       });
       return;
     }
 
-    const phone = familyData.primaryPhone.trim();
+    const phone = familyData.primaryPhone.replace(/\s+/g, '');
     const phoneOk = /^(?:\+251|0)(?:9|7)\d{8}$/.test(phone);
     if (!phoneOk) {
       toast({
-        title: "Validation Error",
-        description: "Phone must be +2519XXXXXXXX / +2517XXXXXXXX / 09XXXXXXXX / 07XXXXXXXX",
+        title: t("familyForm.validationPhoneRequired"),
+        description: t("familyForm.validationPhoneFormat"),
         variant: "destructive",
       });
       return;
@@ -318,6 +372,8 @@ export default function ComprehensiveFamilyForm() {
       
           isOrphan: !isAdult ? m.isOrphan : false,
           orphanType: !isAdult && m.isOrphan ? m.orphanType : "none",
+
+          memberClassification: m.memberClassification || undefined,
         };
       });
       // Prepare family payload
@@ -334,26 +390,23 @@ export default function ComprehensiveFamilyForm() {
         familyHead: beneficiaries.find(b=>b.isFamilyHead).fullName,
         description: familyData.description || undefined,
         urgencyLevel: familyData.urgencyLevel,
-        primaryPhone: familyData.primaryPhone.trim(),
+        primaryPhone: familyData.primaryPhone.replace(/\s+/g, ''),
         familySize,
         notes: familyData.notes || undefined,
-        // Embedded members on the family document:
-        // Keep the key name your backend currently accepts.
-        // beneficiaries: membersPayload,
-        // If your backend uses `members` instead, switch to:
+        documents: documents.length > 0 ? documents : undefined,
         members: membersPayload,
       };
       const response = await familyApi.create(submitData);
       toast({
-        title: "Success",
-        description: `Family "${familyData.familyName}" registered successfully with ${beneficiaries.length} member(s)`,
+        title: t("common.success"),
+        description: t("familyForm.registerSuccess", { name: familyData.familyName, count: beneficiaries.length }),
       });
       // navigate(`/dashboard/families/${response.data.id}`);
       navigate(`/dashboard/families`);
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to register family",
+        title: t("common.error"),
+        description: error.response?.data?.message || t("familyForm.registerError"),
         variant: "destructive",
       });
     } finally {
@@ -366,40 +419,60 @@ export default function ComprehensiveFamilyForm() {
       {/* Family Information */}
       <Card>
         <CardHeader>
-          <CardTitle>Family Information</CardTitle>
+          <CardTitle>{t("familyForm.familyInformation")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
         <div className="space-y-2">
-            <Label htmlFor="familyName">Family Name *</Label>
+            <Label htmlFor="familyName">{t("familyForm.familyName")}</Label>
             <Input
               id="familyName"
               className="text-sm sm:text-base"
               value={familyData.familyName}
               onChange={(e) => setFamilyData({ ...familyData, familyName: e.target.value })}
-              placeholder="e.g., Ahmed Family"
+              placeholder={t("familyForm.familyNamePlaceholder")}
               required
               disabled={loading}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="primaryPhone">Phone Number *</Label>
+            <Label htmlFor="primaryPhone">{t("familyForm.phoneNumber")}</Label>
             <Input
               id="primaryPhone"
+              ref={phoneRef}
               className="text-sm sm:text-base"
               value={familyData.primaryPhone}
-              onChange={(e) => setFamilyData({ ...familyData, primaryPhone: e.target.value })}
-              placeholder="+2519XXXXXXXX / 09XXXXXXXX / 07XXXXXXXX"
+              onChange={(e) => {
+                const input = e.target;
+                const cursorPos = input.selectionStart ?? 0;
+                const rawBefore = (input.value.slice(0, cursorPos).match(/[\d+]/g) || []).length;
+                const formatted = formatPhoneNumber(input.value);
+                setFamilyData({ ...familyData, primaryPhone: formatted });
+                if (formatted !== input.value) {
+                  queueMicrotask(() => {
+                    let newPos = 0;
+                    let digitCount = 0;
+                    for (let i = 0; i < formatted.length; i++) {
+                      if (/[\d+]/.test(formatted[i])) digitCount++;
+                      if (digitCount >= rawBefore) { newPos = i + 1; break; }
+                    }
+                    if (rawBefore === 0) newPos = 0;
+                    if (digitCount < rawBefore) newPos = formatted.length;
+                    input.setSelectionRange(newPos, newPos);
+                  });
+                }
+              }}
+              placeholder={t("familyForm.phonePlaceholder")}
               required
               disabled={loading}
             />
             <p className="text-xs text-muted-foreground">
-              Accepted formats: +2519XXXXXXXX, +2517XXXXXXXX, 09XXXXXXXX, 07XXXXXXXX
+              {t("familyForm.phoneHint")}
             </p>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="urgencyLevel">Urgency Level</Label>
+            <Label htmlFor="urgencyLevel">{t("familyForm.urgencyLevel")}</Label>
             <Select
               value={familyData.urgencyLevel}
               onValueChange={(value) => setFamilyData({ ...familyData, urgencyLevel: value })}
@@ -409,22 +482,22 @@ export default function ComprehensiveFamilyForm() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="low">Low</SelectItem>
-                <SelectItem value="medium">Medium</SelectItem>
-                <SelectItem value="high">High</SelectItem>
-                <SelectItem value="critical">Critical</SelectItem>
+                <SelectItem value="low">{t("common.low")}</SelectItem>
+                <SelectItem value="medium">{t("common.medium")}</SelectItem>
+                <SelectItem value="high">{t("common.high")}</SelectItem>
+                <SelectItem value="critical">{t("common.critical")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="notes">Additional Notes</Label>
+            <Label htmlFor="notes">{t("familyForm.notes")}</Label>
             <Textarea
               id="notes"
               value={familyData.notes}
               className="text-sm sm:text-base"
               onChange={(e) => setFamilyData({ ...familyData, notes: e.target.value })}
-              placeholder="Any additional information about the family..."
+              placeholder={t("familyForm.notesPlaceholder")}
               rows={3}
               disabled={loading}
             />
@@ -432,76 +505,88 @@ export default function ComprehensiveFamilyForm() {
         </CardContent>
       </Card>
 
+      {/* Documents Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle>{t("familyForm.supportingDocuments")}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <DocumentUpload
+            documents={documents}
+            onChange={setDocuments}
+            disabled={loading}
+          />
+        </CardContent>
+      </Card>
+
       {/* Add Beneficiary Section */}
       <Card>
         <CardHeader>
-          <CardTitle>Add Family Member</CardTitle>
+          <CardTitle>{t("familyForm.addFamilyMember")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
   <div className="space-y-2">
-    <Label htmlFor="benFullName">Full Name *</Label>
-    <Input
-      id="benFullName"
-      className="text-sm sm:text-base"
-      value={currentBeneficiary.fullName}
-      onChange={(e) =>
-        setCurrentBeneficiary({ ...currentBeneficiary, fullName: e.target.value })
-      }
-      placeholder="e.g., Ahmed Mohammed"
-      disabled={loading}
+<Label htmlFor="benFullName">{t("familyForm.fullName")}</Label>
+      <Input
+        id="benFullName"
+        className="text-sm sm:text-base"
+        value={currentBeneficiary.fullName}
+        onChange={(e) =>
+          setCurrentBeneficiary({ ...currentBeneficiary, fullName: e.target.value })
+        }
+        placeholder={t("familyForm.fullNamePlaceholder")}
+        disabled={loading}
     />
   </div>
   <div className="space-y-2">
-    <Label htmlFor="benAgeGroup">Age</Label>
-    <Select
-      value={currentBeneficiary.ageGroup}
-      onValueChange={(value) => handleAgeGroupChange(value as "child" | "teen" | "adult")}
-      disabled={loading}
-    >
-      <SelectTrigger id="benAgeGroup">
-        <SelectValue placeholder="Select age group" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="child">Child (0–12)</SelectItem>
-        <SelectItem value="teen">Teen (13–18)</SelectItem>
-        <SelectItem value="adult">Adult (19+)</SelectItem>
-      </SelectContent>
-    </Select>
+<Label htmlFor="benAgeGroup">{t("familyForm.age")}</Label>
+      <Select
+        value={currentBeneficiary.ageGroup}
+        onValueChange={(value) => handleAgeGroupChange(value as "child" | "teen" | "adult")}
+        disabled={loading}
+      >
+        <SelectTrigger id="benAgeGroup">
+          <SelectValue placeholder={t("familyForm.agePlaceholder")} />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="child">{t("familyForm.ageChild")}</SelectItem>
+          <SelectItem value="teen">{t("familyForm.ageTeen")}</SelectItem>
+          <SelectItem value="adult">{t("familyForm.ageAdult")}</SelectItem>
+        </SelectContent>
+      </Select>
   </div>
   
 </div>
 
 <div className="space-y-2">
-  <Label htmlFor="benGender">Gender</Label>
-  <Select
-    value={currentBeneficiary.gender}
-    onValueChange={(value) =>
-      setCurrentBeneficiary({ ...currentBeneficiary, gender: value })
-    }
-    disabled={loading}
-  >
-    <SelectTrigger>
-      <SelectValue placeholder="Select gender" />
-    </SelectTrigger>
-    <SelectContent>
-      <SelectItem value="male">Male</SelectItem>
-      <SelectItem value="female">Female</SelectItem>
-      <SelectItem value="other">Other</SelectItem>
-    </SelectContent>
-  </Select>
+<Label htmlFor="benGender">{t("familyForm.gender")}</Label>
+      <Select
+        value={currentBeneficiary.gender}
+        onValueChange={(value) =>
+          setCurrentBeneficiary({ ...currentBeneficiary, gender: value })
+        }
+        disabled={loading}
+      >
+        <SelectTrigger>
+          <SelectValue placeholder={t("familyForm.genderPlaceholder")} />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="male">{t("common.male")}</SelectItem>
+          <SelectItem value="female">{t("common.female")}</SelectItem>
+          <SelectItem value="other">{t("common.other")}</SelectItem>
+        </SelectContent>
+      </Select>
 </div>
 
 <ImageUpload
-  label="Beneficiary Photo"
+  label={t("familyForm.memberPhoto")}
   value={currentBeneficiary.photoUrl}
   onChange={(url) => setCurrentBeneficiary({ ...currentBeneficiary, photoUrl: url })}
   disabled={loading}
 />
 
-{/* Orphan toggle — keep same behavior, but show for child + teen (< 19) */}
-{currentBeneficiary.ageGroup && currentBeneficiary.ageGroup !== "adult" && (
-  <div className="space-y-4">
+<div className="space-y-4">
     <div className="flex items-center space-x-2">
       <Switch
         id="benOrphan"
@@ -511,34 +596,63 @@ export default function ComprehensiveFamilyForm() {
             ...currentBeneficiary,
             isOrphan: checked,
             orphanType: checked ? currentBeneficiary.orphanType : "none",
+            memberClassification: checked ? "orphan" : "",
           })
         }
         disabled={loading}
       />
-      <Label htmlFor="benOrphan">This child is an orphan</Label>
+      <Label htmlFor="benOrphan">{t("familyForm.orphanToggle")}</Label>
     </div>
 
     {currentBeneficiary.isOrphan && (
       <div className="space-y-2">
-        <Label htmlFor="benOrphanType">Orphan Type</Label>
+        <Label htmlFor="benOrphanType">{t("familyForm.orphanType")}</Label>
         <Select
           value={currentBeneficiary.orphanType}
           onValueChange={(value) =>
-            setCurrentBeneficiary({ ...currentBeneficiary, orphanType: value })
+            setCurrentBeneficiary({ ...currentBeneficiary, orphanType: value, memberClassification: "orphan" })
           }
           disabled={loading}
         >
           <SelectTrigger>
-            <SelectValue placeholder="Select orphan type" />
+            <SelectValue placeholder={t("familyForm.orphanTypePlaceholder")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="mother">Lost Mother</SelectItem>
-            <SelectItem value="father">Lost Father</SelectItem>
-            <SelectItem value="both">Lost Both Parents</SelectItem>
+            <SelectItem value="mother">{t("familyForm.lostMother")}</SelectItem>
+            <SelectItem value="father">{t("familyForm.lostFather")}</SelectItem>
+            <SelectItem value="both">{t("familyForm.lostBoth")}</SelectItem>
           </SelectContent>
         </Select>
       </div>
     )}
+  </div>
+
+{currentBeneficiary.ageGroup && currentBeneficiary.ageGroup === "adult" && (
+  <div className="space-y-2">
+    <Label htmlFor="benClassification">{t("familyForm.classification")}</Label>
+    <Select
+      value={currentBeneficiary.memberClassification}
+      onValueChange={(value) =>
+        setCurrentBeneficiary({ ...currentBeneficiary, memberClassification: value })
+      }
+      disabled={loading}
+    >
+      <SelectTrigger id="benClassification">
+        <SelectValue placeholder={t("familyForm.classificationPlaceholder")} />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="none">{t("familyForm.classificationNone")}</SelectItem>
+        <SelectItem value="disabled_disease">
+          <span className="flex items-center gap-2"><Heart className="h-4 w-4 text-pink-500" /> {t("familyForm.classificationDisabled")}</span>
+        </SelectItem>
+        <SelectItem value="old_age">
+          <span className="flex items-center gap-2"><Accessibility className="h-4 w-4 text-purple-500" /> {t("familyForm.classificationOldAge")}</span>
+        </SelectItem>
+        <SelectItem value="single_mother">
+          <span className="flex items-center gap-2"><Home className="h-4 w-4 text-amber-500" /> {t("familyForm.classificationSingleMother")}</span>
+        </SelectItem>
+      </SelectContent>
+    </Select>
   </div>
 )}
 
@@ -549,7 +663,7 @@ export default function ComprehensiveFamilyForm() {
             className="w-full"
           >
             <Plus className="h-4 w-4 mr-2" />
-            Add to Family
+            {t("familyForm.addToFamily")}
           </Button>
         </CardContent>
       </Card>
@@ -558,11 +672,11 @@ export default function ComprehensiveFamilyForm() {
       {beneficiaries.filter(b => b.beneficiaryType === "adult").length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Head of Family</CardTitle>
+            <CardTitle>{t("familyForm.headOfFamily")}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <Label htmlFor="selectHead">Select Head of Family</Label>
+              <Label htmlFor="selectHead">{t("familyForm.selectHead")}</Label>
               <Select
                 value={beneficiaries.find(b => b.isFamilyHead)?.tempId || "none"}
                 onValueChange={(tempId) => {
@@ -574,21 +688,21 @@ export default function ComprehensiveFamilyForm() {
                 disabled={loading}
               >
                 <SelectTrigger id="selectHead">
-                  <SelectValue placeholder="Select an adult as head of family" />
+                  <SelectValue placeholder={t("familyForm.selectHeadPlaceholder")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">No Head Selected</SelectItem>
+                  <SelectItem value="none">{t("familyForm.noHeadSelected")}</SelectItem>
                   {beneficiaries
                     .filter(b => b.beneficiaryType === "adult")
                     .map((ben) => (
                       <SelectItem key={ben.tempId} value={ben.tempId}>
-                        {ben.fullName} 
+                        {ben.fullName}
                       </SelectItem>
                     ))}
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">
-                The head of family should be an adult member. This is required to complete registration.
+                {t("familyForm.headHelper")}
               </p>
             </div>
           </CardContent>
@@ -600,10 +714,10 @@ export default function ComprehensiveFamilyForm() {
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle>Family Members ({beneficiaries.length})</CardTitle>
+              <CardTitle>{t("familyForm.familyMembers", { count: beneficiaries.length })}</CardTitle>
               <div className="text-sm text-muted-foreground">
-                {beneficiaries.filter(b => b.beneficiaryType === "adult").length} Adults • 
-                {beneficiaries.filter(b => b.beneficiaryType === "child").length} Children
+                {t("familyForm.adults")}: {beneficiaries.filter(b => b.beneficiaryType === "adult").length} • 
+                {t("familyForm.children")}: {beneficiaries.filter(b => b.beneficiaryType === "child").length}
               </div>
             </div>
           </CardHeader>
@@ -622,9 +736,9 @@ export default function ComprehensiveFamilyForm() {
                       </div>
                     )}
                     <div>
-                      <p className="font-medium">{ben.fullName} {ben.isFamilyHead && "(Head)"}</p>
+                      <p className="font-medium">{ben.fullName} {ben.isFamilyHead && `(${t("familyForm.familyHead")})`}</p>
                       <p className="text-sm text-muted-foreground">
-                        {ben.age} years • {ben.gender} • {ben.beneficiaryType}
+                        {ben.ageGroup ? t(`familyForm.age${ben.ageGroup.charAt(0).toUpperCase() + ben.ageGroup.slice(1)}`) : ""} • {ben.gender ? t(`common.${ben.gender}`) : ""} • {t("common.members")}
                         {ben.relationshipToHead && ` • ${ben.relationshipToHead}`}
                       </p>
                     </div>
@@ -654,17 +768,17 @@ export default function ComprehensiveFamilyForm() {
           onClick={() => navigate("/dashboard/families")}
           disabled={loading}
         >
-          Cancel
+          {t("common.cancel")}
         </Button>
         <Button
         className="w-full sm:w-auto sm:justify-self-end"
         type="submit" disabled={loading || beneficiaries.length === 0}>
           {loading ? (
-            <>Loading...</>
+            <>{t("common.loading")}</>
           ) : (
             <>
               <Save className="h-4 w-4 mr-2" />
-              Register Family ({beneficiaries.length} members)
+              {t("familyForm.registerFamily", { count: beneficiaries.length })}
             </>
           )}
         </Button>

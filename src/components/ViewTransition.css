@@ -1,0 +1,74 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   ViewTransition.css — AROCK-style parallax wipe
+   New page wipes upward; old page recedes and floats away.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── 1. Kill the browser's default cross-fade group animation ── */
+::view-transition-group(root) {
+  animation: none;
+}
+
+/* ── 2. Shared timing on both layers ── */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 1.5s;
+  animation-timing-function: cubic-bezier(0.87, 0, 0.13, 1);
+  animation-fill-mode: both;
+  /*
+    CRITICAL: The browser default is "plus-lighter" which blends overlapping
+    pixels into blinding white during the transition. Reset to normal.
+  */
+  mix-blend-mode: normal;
+}
+
+/* ── 3. Old page — recedes upward and fades (parallax feel) ── */
+::view-transition-old(root) {
+  z-index: 1;
+  animation-name: vt-recede;
+}
+
+/* ── 4. New page — solid bottom-to-top wipe via clip-path ── */
+::view-transition-new(root) {
+  z-index: 2; /* Explicitly on top of the old view */
+  animation-name: vt-wipe-in;
+}
+
+/* ── Keyframes ── */
+
+@keyframes vt-recede {
+  from {
+    transform: translateY(0%);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-35%);
+    opacity: 0.5;
+  }
+}
+
+@keyframes vt-wipe-in {
+  from {
+    /*
+      Collapsed to the very bottom baseline — zero visible content.
+      All four polygon vertices sit at the bottom edge.
+    */
+    clip-path: polygon(0% 100%, 100% 100%, 100% 100%, 0% 100%);
+  }
+  to {
+    /*
+      Fully expanded — covers the entire screen.
+      Bottom two vertices stay anchored at 100% (prevents WebKit diagonal skew).
+      Only the top two vertices animate upward to 0%.
+    */
+    clip-path: polygon(0% 100%, 100% 100%, 100% 0%, 0% 0%);
+  }
+}
+
+/* ── 5. Reduced motion — instant swap, no animation ── */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

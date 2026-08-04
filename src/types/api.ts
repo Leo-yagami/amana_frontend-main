@@ -23,7 +23,10 @@ export interface User {
   email: string;
   fullName: string;
   role: string;
+  authType?: string;
+  phoneNumber?: string;
   createdAt: string;
+  avatar?: string;
 }
 
 export interface LoginCredentials {
@@ -44,11 +47,20 @@ export interface AuthResponse {
 }
 
 // Family types
+export interface FamilyDocument {
+  title: string;
+  url: string;
+  uploadedAt?: string;
+}
+
 export interface Family {
-  id: string;
+  _id: string;
+  id?: string;
   familyCode: string;
   familyName: string;
   headBeneficiaryId?: string;
+  familyHead?: string;
+  primaryPhone?: string;
   address?: string;
   exactLocation?: string;
   region?: string;
@@ -64,6 +76,8 @@ export interface Family {
   isActive: boolean;
   isVerified: boolean;
   registrationStatus?: "incomplete" | "pending" | "verified" | "rejected";
+  // Classification(s) when verified: orphan, disabled_disease, old_age, single_mother
+  familyClassification?: ("orphan" | "disabled_disease" | "old_age" | "single_mother")[];
   verifiedBy?: string;
   verifiedAt?: string;
   registeredBy?: string;
@@ -78,6 +92,8 @@ export interface Family {
     age?: number;
   };
   beneficiaries?: Beneficiary[];
+  members?: any[];
+  documents?: FamilyDocument[];
 }
 
 // Beneficiary types
@@ -100,6 +116,7 @@ export interface Beneficiary {
   relationshipToHead?: string;
   category?: string;
   verificationStatus: string;
+  memberClassification?: "orphan" | "disabled_disease" | "old_age" | "single_mother";
   notes?: string;
   createdAt: string;
   family?: {
@@ -115,6 +132,16 @@ export interface Donor {
   donorCode: string;
   name: string;
   donorType: string;
+  establishmentDate?: string | null;
+  primaryAid?:
+    | "emergency_relief"
+    | "child_welfare"
+    | "medical_aid"
+    | "food_distribution"
+    | "education_fund"
+    | "wash_programs"
+    | "other"
+    | null;
   email?: string;
   phone?: string;
   avatar?: string;
@@ -181,12 +208,20 @@ export interface Donation {
   donationType: string; // monetary | in_kind
   amount?: number;
   currency: string;
+  originalAmount?: number;
+  originalCurrency?: string;
   paymentMethod?: string;
   donationReference?: string;
   receivedAt?: string;
 
   // Receipt upload (staff)
   receiptUrl?: string;
+  // Source of the receipt: "chapa" (auto-generated for online donations) | "manual" (staff upload)
+  receiptType?: "chapa" | "manual" | string;
+  // Origin of the donation: "chapa" (online) | "manual" (staff entry)
+  source?: "chapa" | "manual" | string;
+  // Chapa transaction reference (tx-...), used to render the internal receipt
+  tx_ref?: string;
 
   // Verification (money only)
   verificationToken?: string;
@@ -208,6 +243,26 @@ export interface Donation {
   event?: Event;
   family?: Family;
   beneficiary?: Beneficiary;
+}
+
+// Internal (self-hosted) receipt for a Chapa donation, built from stored data.
+export interface DonationReceipt {
+  donationId: string;
+  reference: string;
+  txRef: string;
+  source: string;
+  status: string;
+  donorName: string;
+  donorEmail?: string;
+  amount: number;
+  currency: string;
+  originalAmount?: number | null;
+  originalCurrency?: string | null;
+  paymentMethod?: string;
+  familyClassification?: string | null;
+  eventName?: string | null;
+  date: string;
+  hostedReceiptUrl?: string | null;
 }
 
 // Recurring Donation types
@@ -266,7 +321,16 @@ export interface DashboardOverview {
   families: {
     total: number;
     verified: number;
+    pending: number;
+    incomplete: number;
+    rejected: number;
     urgent: number;
+    classifications?: {
+      orphan: number;
+      disabled_disease: number;
+      old_age: number;
+      single_mother: number;
+    };
   };
   beneficiaries: {
     total: number;
@@ -343,6 +407,18 @@ export interface EventFilters extends PaginationParams {
   search?: string;
 }
 
+export interface Notification {
+  _id: string;
+  type: "promised" | "donation" | "announcement" | "approved" | "release" | "received";
+  title: string;
+  body: string;
+  read: boolean;
+  donationId?: string;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface DonationFilters extends PaginationParams {
   donorId?: string;
   eventId?: string;
@@ -351,4 +427,49 @@ export interface DonationFilters extends PaginationParams {
   donationType?: string;
   startDate?: string;
   endDate?: string;
+}
+
+// Hero stats — drives the "AMANA / OS" panel + ticker on the landing hero.
+// All non-ETB donations are converted to ETB on the backend, so the frontend
+// only ever handles a single currency for totals.
+export interface HeroStatsCounters {
+  familiesSupported: number;
+  eventsThisYear: number;
+  raisedEtb: number;
+}
+
+export interface HeroStatsProgress {
+  raised: number;
+  goal: number;
+  percent: number;
+}
+
+export interface HeroTickerDonation {
+  donorName: string;
+  amount: number;
+  currency: string;
+  etbEquivalent: number;
+  receivedAt: string;
+}
+
+export interface HeroTickerSupport {
+  supportType: string;
+  familyCode: string | null;
+  supportDate: string;
+}
+
+export interface HeroTickerAggregates {
+  raisedThisMonth: number;
+  urgentFamilies: number;
+  totalDonors?: number;
+}
+
+export interface HeroStats {
+  counters: HeroStatsCounters;
+  progress: HeroStatsProgress;
+  ticker: {
+    donations: HeroTickerDonation[];
+    support: HeroTickerSupport[];
+    aggregates: HeroTickerAggregates;
+  };
 }

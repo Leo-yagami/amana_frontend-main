@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "Amana Charity — High-End Landing Page (2 Variations)",
+  "entry": "amana-charity-landing.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "createdAt": "2026-06-25T08:09:32.593Z",
+  "updatedAt": "2026-06-25T08:09:32.637Z",
+  "metadata": {
+    "identifier": "amana-charity-landing",
+    "artifactType": "text/html",
+    "inferred": false
+  }
+}

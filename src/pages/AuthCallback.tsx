@@ -26,14 +26,16 @@ const AuthCallback = () => {
 
         if (token && user) {
           (window as any).__isTransitioning = true;
+          const redirectTo = localStorage.getItem('redirectTo') || '/dashboard';
+          localStorage.removeItem('redirectTo');
           // Verify it works by hitting /me
           const meRes = await authApi.getCurrentUser();
           if (meRes.data) {
             setAuthSession(token, user);
             if ((window as any).__animateRouteTransition) {
-              (window as any).__animateRouteTransition("/payment");
+              (window as any).__animateRouteTransition(redirectTo);
             } else {
-              navigate("/payment");
+              navigate(redirectTo, { replace: true });
             }
           } else {
             (window as any).__isTransitioning = false;

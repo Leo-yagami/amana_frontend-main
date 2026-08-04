@@ -9,15 +9,25 @@ import { ProtectedRoute1 } from "@/components/ProtectedRouteDashboard";
 import { ProtectedRoute2 } from "@/components/ProtectedRoutePayment";
 import { TransitionSkeleton } from "@/components/ui/TransitionSkeleton.jsx";
 import { lazy, useEffect } from "react";
+import ScrollToTop from "@/components/ScrollToTop"
+import SiteLayout from "@/components/landing/SiteLayout";
+import { ViewTransitionProvider } from "@/components/ViewTransition";
 
 // Pages (eager — landing / auth / 404)
-import Index from "./pages/Index";
+import Index from "./pages/Index1";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
 import AuthCallback from "./pages/AuthCallback";
 import VerifyDonation from "./pages/VerifyDonation";
 import Payment from "./pages/Payment";
+import DonationSuccess from "./pages/DonationSuccess";
+import DonationFailed from "./pages/DonationFailure";
+import Receipt from "./pages/Receipt";
+import Events1 from "@/pages/Events";
+import About from "@/pages/About";
+import Contact from "@/pages/Contact";
+
 
 // Dashboard (layout is eager — small shell; page content is lazy)
 import Layout from "./lenis";
@@ -54,9 +64,19 @@ const App = () => {
         <Sonner />
         <BrowserRouter>
           <TransitionSkeleton>
+            <ScrollToTop />
+            
             <Routes>
+               <Route element={<ViewTransitionProvider><SiteLayout /> </ViewTransitionProvider>}>
+
+                  <Route path="/" element={<Index />} />
+                  <Route path="/events" element={<Events1 />} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/contact" element={<Contact />} />
+              
+               </Route>
+
               {/* Public routes */}
-              <Route path="/" element={<Index />} />
               <Route 
                 path="/login" 
                 element={
@@ -76,6 +96,9 @@ const App = () => {
               <Route path="/auth/callback" element={<AuthCallback />} />
               {/* <Route path="/payment" element={<Payment />} /> */}
               <Route path="/verify-donation/:token" element={<VerifyDonation />} />
+              <Route path="/donation-success" element={<DonationSuccess />} />
+              <Route path="/donation-failure" element={<DonationFailed />} />
+              <Route path="/receipt/:txRef" element={<Receipt />} />
               <Route 
                 path="/payment" 
                 element={

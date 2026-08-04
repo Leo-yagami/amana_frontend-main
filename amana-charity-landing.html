@@ -1,0 +1,59 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Amana Charity — Design Variations</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Plus Jakarta Sans', sans-serif; background: #0f0f0f; color: #e8e8e8; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 48px 24px; }
+  h1 { font-family: 'Playfair Display', serif; font-size: clamp(2rem, 4vw, 3.5rem); font-weight: 700; margin-bottom: 8px; }
+  .subtitle { color: #888; font-size: 1rem; margin-bottom: 48px; text-align: center; max-width: 600px; line-height: 1.6; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; max-width: 1200px; width: 100%; }
+  .card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; overflow: hidden; transition: transform 0.3s, border-color 0.3s; }
+  .card:hover { transform: translateY(-4px); border-color: #444; }
+  .card-preview { width: 100%; aspect-ratio: 16/10; border-bottom: 1px solid #2a2a2a; }
+  .card-preview iframe { width: 100%; height: 100%; border: none; }
+  .card-body { padding: 24px; }
+  .card-tag { display: inline-block; padding: 4px 12px; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; border-radius: 4px; margin-bottom: 12px; }
+  .tag-dark { background: #2a1a3a; color: #c084fc; }
+  .tag-light { background: #1a2a1a; color: #4ade80; }
+  .card-title { font-family: 'Playfair Display', serif; font-size: 1.3rem; font-weight: 700; margin-bottom: 8px; }
+  .card-desc { font-size: 0.9rem; color: #888; line-height: 1.6; margin-bottom: 16px; }
+  .card-link { display: inline-flex; align-items: center; gap: 8px; color: #c084fc; font-weight: 600; font-size: 0.9rem; text-decoration: none; transition: color 0.2s; }
+  .card-link:hover { color: #a855f7; }
+  .card-link svg { width: 16px; height: 16px; }
+  @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+  <h1>Amana Charity — Landing Page</h1>
+  <p class="subtitle">Two high-fidelity variations ready for review. Both use the exact design tokens from the amana codebase with GSAP + Lenis smooth scroll.</p>
+  <div class="grid">
+    <div class="card">
+      <div class="card-preview">
+        <iframe src="amana-landing-v1.html" loading="lazy"></iframe>
+      </div>
+      <div class="card-body">
+        <span class="card-tag tag-dark">Dark Default</span>
+        <h2 class="card-title">Variation 1 — Editorial Brutalism</h2>
+        <p class="card-desc">Dark mode default. Full-screen hero, massive serif headline, pinned horizontal stats gallery, asymmetric campaign grid. Premium, editorial feel.</p>
+        <a href="amana-landing-v1.html" target="_blank" class="card-link">Open Full Page <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-preview">
+        <iframe src="amana-landing-v2.html" loading="lazy"></iframe>
+      </div>
+      <div class="card-body">
+        <span class="card-tag tag-light">Light Default</span>
+        <h2 class="card-title">Variation 2 — Warm Editorial</h2>
+        <p class="card-desc">Warm cream default. Split-screen hero, scrolling stat ticker, overlapping editorial layouts, asymmetric grids. Magazine feel.</p>
+        <a href="amana-landing-v2.html" target="_blank" class="card-link">Open Full Page <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

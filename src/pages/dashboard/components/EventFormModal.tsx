@@ -1,4 +1,7 @@
+// --- ORIGINAL (preserved below) ---
+
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -14,6 +17,7 @@ import { toast } from "sonner";
 import { eventApi } from "@/services/api.service";
 import { Event } from "@/types/api";
 import { cn } from "@/lib/utils";
+import ImageUpload from "@/components/ImageUpload";
 
 interface EventFormModalProps {
   open: boolean;
@@ -21,7 +25,10 @@ interface EventFormModalProps {
   event?: Event | null;
 }
 
+const NS = "dashboard.eventForm";
+
 const EventFormModal = ({ open, onClose, event }: EventFormModalProps) => {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const isEditMode = !!event;
 
@@ -36,6 +43,7 @@ const EventFormModal = ({ open, onClose, event }: EventFormModalProps) => {
     targetAmount: "",
     status: "draft" as const,
     organizedBy: "",
+    imageUrls: "",
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -54,6 +62,7 @@ const EventFormModal = ({ open, onClose, event }: EventFormModalProps) => {
         targetAmount: event.targetAmount ? String(event.targetAmount) : "",
         status: event.status || "draft",
         organizedBy: event.organizedBy || "",
+        imageUrls: event.imageUrls || "",
       });
     } else {
       // Reset form for create mode
@@ -68,6 +77,7 @@ const EventFormModal = ({ open, onClose, event }: EventFormModalProps) => {
         targetAmount: "",
         status: "draft",
         organizedBy: "",
+        imageUrls: "",
       });
     }
     setErrors({});
@@ -77,11 +87,11 @@ const EventFormModal = ({ open, onClose, event }: EventFormModalProps) => {
     mutationFn: (data: any) => eventApi.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['events'] });
-      toast.success("Event created successfully!");
+      toast.success(t(`${NS}.createSuccess`, "Event created successfully!"));
       onClose();
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || "Failed to create event");
+      toast.error(error?.response?.data?.message || t(`${NS}.createErr`, "Failed to create event"));
     },
   });
 
@@ -90,11 +100,11 @@ const EventFormModal = ({ open, onClose, event }: EventFormModalProps) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['events'] });
       queryClient.invalidateQueries({ queryKey: ['event', event!._id] });
-      toast.success("Event updated successfully!");
+      toast.success(t(`${NS}.updateSuccess`, "Event updated successfully!"));
       onClose();
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || "Failed to update event");
+      toast.error(error?.response?.data?.message || t(`${NS}.updateErr`, "Failed to update event"));
     },
   });
 
@@ -102,19 +112,19 @@ const EventFormModal = ({ open, onClose, event }: EventFormModalProps) => {
     const newErrors: Record<string, string> = {};
 
     if (!formData.title.trim()) {
-      newErrors.title = "Event title is required";
+      newErrors.title = t(`${NS}.err.titleRequired`, "Event title is required");
     }
 
     if (formData.startDate && formData.endDate && formData.startDate > formData.endDate) {
-      newErrors.endDate = "End date must be after start date";
+      newErrors.endDate = t(`${NS}.err.endDate`, "End date must be after start date");
     }
 
     if (formData.targetAmount && isNaN(Number(formData.targetAmount))) {
-      newErrors.targetAmount = "Target amount must be a valid number";
+      newErrors.targetAmount = t(`${NS}.err.amountValid`, "Target amount must be a valid number");
     }
 
     if (formData.targetAmount && Number(formData.targetAmount) < 0) {
-      newErrors.targetAmount = "Target amount cannot be negative";
+      newErrors.targetAmount = t(`${NS}.err.amountNegative`, "Target amount cannot be negative");
     }
 
     setErrors(newErrors);
@@ -125,7 +135,7 @@ const EventFormModal = ({ open, onClose, event }: EventFormModalProps) => {
     e.preventDefault();
 
     if (!validateForm()) {
-      toast.error("Please fix the errors in the form");
+      toast.error(t(`${NS}.err.fixErrors`, "Please fix the errors in the form"));
       return;
     }
 
@@ -140,6 +150,7 @@ const EventFormModal = ({ open, onClose, event }: EventFormModalProps) => {
       targetAmount: formData.targetAmount ? Number(formData.targetAmount) : undefined,
       status: formData.status,
       organizedBy: formData.organizedBy || undefined,
+      imageUrls: formData.imageUrls || undefined,
     };
 
     if (isEditMode) {
@@ -153,22 +164,23 @@ const EventFormModal = ({ open, onClose, event }: EventFormModalProps) => {
 
   return (
     <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      {/* old: scroll broke with lenis — added data-lenis-prevent */}
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" data-lenis-prevent>
         <DialogHeader>
-          <DialogTitle>{isEditMode ? "Edit Event" : "Create New Event"}</DialogTitle>
+          <DialogTitle>{isEditMode ? t(`${NS}.editTitle`, "Edit Event") : t(`${NS}.createTitle`, "Create New Event")}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Title */}
           <div>
             <Label htmlFor="title">
-              Event Title <span className="text-destructive">*</span>
+              {t(`${NS}.eventTitle`, "Event Title")} <span className="text-destructive">*</span>
             </Label>
             <Input
               id="title"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              placeholder="e.g., Annual Fundraising Gala"
+              placeholder={t(`${NS}.eventTitlePh`, "e.g., Annual Fundraising Gala")}
               className={errors.title ? "border-destructive " : "text-sm sm:text-base"}
             />
             {errors.title && <p className="text-sm text-destructive mt-1">{errors.title}</p>}
@@ -176,13 +188,13 @@ const EventFormModal = ({ open, onClose, event }: EventFormModalProps) => {
 
           {/* Description */}
           <div>
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description">{t(`${NS}.description`, "Description")}</Label>
             <Textarea
               id="description"
               className="text-sm sm:text-base"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder="Describe the event purpose and activities..."
+              placeholder={t(`${NS}.descriptionPh`, "Describe the event purpose and activities...")}
               rows={4}
             />
           </div>
@@ -190,7 +202,7 @@ const EventFormModal = ({ open, onClose, event }: EventFormModalProps) => {
           {/* Event Type and Status */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="eventType">Event Type</Label>
+              <Label htmlFor="eventType">{t(`${NS}.eventType`, "Event Type")}</Label>
               <Select
                 value={formData.eventType}
                 onValueChange={(value: any) => setFormData({ ...formData, eventType: value })}
@@ -199,19 +211,19 @@ const EventFormModal = ({ open, onClose, event }: EventFormModalProps) => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="fundraising">Fundraising</SelectItem>
-                  <SelectItem value="distribution">Distribution</SelectItem>
-                  <SelectItem value="awareness">Awareness</SelectItem>
-                  <SelectItem value="food_package">Food Package</SelectItem>
-                  <SelectItem value="medical_aid">Medical Aid</SelectItem>
-                  <SelectItem value="job_opportunity">Job Opportunity</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
+                  <SelectItem value="fundraising">{t(`${NS}.type.fundraising`, "Fundraising")}</SelectItem>
+                  <SelectItem value="distribution">{t(`${NS}.type.distribution`, "Distribution")}</SelectItem>
+                  <SelectItem value="awareness">{t(`${NS}.type.awareness`, "Awareness")}</SelectItem>
+                  <SelectItem value="food_package">{t(`${NS}.type.food_package`, "Food Package")}</SelectItem>
+                  <SelectItem value="medical_aid">{t(`${NS}.type.medical_aid`, "Medical Aid")}</SelectItem>
+                  <SelectItem value="job_opportunity">{t(`${NS}.type.job_opportunity`, "Job Opportunity")}</SelectItem>
+                  <SelectItem value="other">{t(`${NS}.type.other`, "Other")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div>
-              <Label htmlFor="status">Status</Label>
+              <Label htmlFor="status">{t(`${NS}.status`, "Status")}</Label>
               <Select
                 value={formData.status}
                 onValueChange={(value: any) => setFormData({ ...formData, status: value })}
@@ -220,11 +232,11 @@ const EventFormModal = ({ open, onClose, event }: EventFormModalProps) => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="draft">Draft</SelectItem>
-                  <SelectItem value="upcoming">Upcoming</SelectItem>
-                  <SelectItem value="ongoing">Ongoing</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                  <SelectItem value="draft">{t(`${NS}.statusVal.draft`, "Draft")}</SelectItem>
+                  <SelectItem value="upcoming">{t(`${NS}.statusVal.upcoming`, "Upcoming")}</SelectItem>
+                  <SelectItem value="ongoing">{t(`${NS}.statusVal.ongoing`, "Ongoing")}</SelectItem>
+                  <SelectItem value="completed">{t(`${NS}.statusVal.completed`, "Completed")}</SelectItem>
+                  <SelectItem value="cancelled">{t(`${NS}.statusVal.cancelled`, "Cancelled")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -233,7 +245,7 @@ const EventFormModal = ({ open, onClose, event }: EventFormModalProps) => {
           {/* Dates */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <Label>Event Date</Label>
+              <Label>{t(`${NS}.eventDate`, "Event Date")}</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -244,7 +256,7 @@ const EventFormModal = ({ open, onClose, event }: EventFormModalProps) => {
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formData.eventDate ? format(formData.eventDate, "PPP") : "Pick a date"}
+                    {formData.eventDate ? format(formData.eventDate, "PPP") : t(`${NS}.pickDate`, "Pick a date")}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -259,7 +271,7 @@ const EventFormModal = ({ open, onClose, event }: EventFormModalProps) => {
             </div>
 
             <div>
-              <Label>Start Date</Label>
+              <Label>{t(`${NS}.startDate`, "Start Date")}</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -270,7 +282,7 @@ const EventFormModal = ({ open, onClose, event }: EventFormModalProps) => {
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formData.startDate ? format(formData.startDate, "PPP") : "Pick a date"}
+                    {formData.startDate ? format(formData.startDate, "PPP") : t(`${NS}.pickDate`, "Pick a date")}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -285,7 +297,7 @@ const EventFormModal = ({ open, onClose, event }: EventFormModalProps) => {
             </div>
 
             <div>
-              <Label>End Date</Label>
+              <Label>{t(`${NS}.endDate`, "End Date")}</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -296,7 +308,7 @@ const EventFormModal = ({ open, onClose, event }: EventFormModalProps) => {
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formData.endDate ? format(formData.endDate, "PPP") : "Pick a date"}
+                    {formData.endDate ? format(formData.endDate, "PPP") : t(`${NS}.pickDate`, "Pick a date")}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -314,19 +326,19 @@ const EventFormModal = ({ open, onClose, event }: EventFormModalProps) => {
 
           {/* Location */}
           <div>
-            <Label htmlFor="location">Location</Label>
+            <Label htmlFor="location">{t(`${NS}.location`, "Location")}</Label>
             <Input
               id="location"
               className="text-sm sm:text-base"
               value={formData.location}
               onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-              placeholder="e.g., Community Center, Downtown"
+              placeholder={t(`${NS}.locationPh`, "e.g., Community Center, Downtown")}
             />
           </div>
 
           {/* Target Amount */}
           <div>
-            <Label htmlFor="targetAmount">Target Amount (ETB)</Label>
+            <Label htmlFor="targetAmount">{t(`${NS}.targetAmount`, "Target Amount (ETB)")}</Label>
             <Input
               id="targetAmount"
               type="number"
@@ -338,30 +350,37 @@ const EventFormModal = ({ open, onClose, event }: EventFormModalProps) => {
             />
             {errors.targetAmount && <p className="text-sm text-destructive mt-1">{errors.targetAmount}</p>}
             <p className="text-xs text-muted-foreground mt-1">
-              Event code will be auto-generated (e.g., EVT-202601-0001)
+              {t(`${NS}.codeHint`, "Event code will be auto-generated (e.g., EVT-202601-0001)")}
             </p>
           </div>
 
           {/* Organized By */}
           <div>
-            <Label htmlFor="organizedBy">Organized By</Label>
+            <Label htmlFor="organizedBy">{t(`${NS}.organizedBy`, "Organized By")}</Label>
             <Input
               id="organizedBy"
               className="text-sm sm:text-base"
               value={formData.organizedBy}
               onChange={(e) => setFormData({ ...formData, organizedBy: e.target.value })}
-              placeholder="Organization or person name"
+              placeholder={t(`${NS}.organizedByPh`, "Organization or person name")}
             />
           </div>
+
+          {/* Event Photo */}
+          <ImageUpload
+            label={t(`${NS}.photo`, "Event Photo")}
+            value={formData.imageUrls}
+            onChange={(url) => setFormData({ ...formData, imageUrls: url })}
+          />
 
           {/* Actions */}
           <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
-              Cancel
+              {t(`${NS}.cancel`, "Cancel")}
             </Button>
             <Button type="submit" disabled={isLoading}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isEditMode ? "Update Event" : "Create Event"}
+              {isEditMode ? t(`${NS}.update`, "Update Event") : t(`${NS}.create`, "Create Event")}
             </Button>
           </div>
         </form>

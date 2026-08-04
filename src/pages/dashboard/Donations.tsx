@@ -561,8 +561,9 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Filter, Eye, Edit, Trash2, DollarSign, Calendar, User, ArrowUpDown } from "lucide-react";
+import { Plus, Search, Filter, Eye, Edit, Trash2, DollarSign, Calendar, User, ArrowUpDown, Clock, Download } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import FamilyClassificationBadge from "@/components/FamilyClassificationBadge";
 import {
   Table,
   TableBody,
@@ -600,10 +601,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { exportDonationsPdf } from "@/lib/exportDonationPdf";
 import  DonationTrendsChart  from "@/pages/dashboard/reports/monthlyDonations";
 
 const Donations = () => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
@@ -612,7 +615,10 @@ const Donations = () => {
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [donationToDelete, setDonationToDelete] = useState<any>(null);
-  const [trendRange, setTrendRange] = useState<"3m" | "6m" | "1y">("6m");
+  const [trendRange, setTrendRange] = useState<"month" | "3m" | "6m" | "1y">("6m");
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
+  const [isExporting, setIsExporting] = useState(false);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -624,13 +630,15 @@ const Donations = () => {
       if (searchQuery) params.search = searchQuery;
       if (statusFilter !== "all") params.status = statusFilter;
       if (typeFilter !== "all") params.donationType = typeFilter;
+      if (startDate) params.startDate = startDate;
+      if (endDate) params.endDate = endDate;
       const response = await donationApi.getAll(params);
       // console.log("CHART DATA", response)
       return response;
     },
-    staleTime: 5 * 60 * 1000,  // ✅ ADD
-    gcTime: 30 * 60 * 1000,    // ✅ ADD
-    refetchOnWindowFocus: false, // ✅ ADD
+    staleTime: 30 * 1000,
+    gcTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: true,
   });
 
   const { data: overview } = useQuery({
@@ -645,9 +653,60 @@ const Donations = () => {
     refetchOnWindowFocus: false, // ✅ ADD
   });
 
+  const { data: pledgedDonations } = useQuery({
+    queryKey: ['donations', 'pledged', 'stats'],
+    queryFn: async () => {
+      const response = await donationApi.getAll({ page: 1, limit: 10000, status: 'pledged' });
+      return response?.data[0]?.data || [];
+    },
+    staleTime: 30 * 1000,
+  });
+
+  const promisedMonetaryAmount = pledgedDonations
+    ?.filter((d: any) => d.donationType === 'monetary')
+    ?.reduce((sum: number, d: any) => sum + Number(d.amount || 0), 0) || 0;
+  const promisedCount = pledgedDonations?.length || 0;
+
+  const receivedMonetaryAmount = (overview?.donations?.totalAmount || 0) - promisedMonetaryAmount;
+  const receivedTotalCount = (overview?.donations?.totalCount || 0) - promisedCount;
+
   const handleDeleteClick = (donation: any) => {
     setDonationToDelete(donation);
     setDeleteDialogOpen(true);
+  };
+
+  // Export the currently filtered set (search + status + type + date range) as a PDF.
+  // The module converts the already-filtered list — it does not re-filter.
+  const handleExportPdf = async () => {
+    setIsExporting(true);
+    try {
+      const params: any = { page: 1, limit: 10000 };
+      if (searchQuery) params.search = searchQuery;
+      if (statusFilter !== "all") params.status = statusFilter;
+      if (typeFilter !== "all") params.donationType = typeFilter;
+      if (startDate) params.startDate = startDate;
+      if (endDate) params.endDate = endDate;
+      const response = await donationApi.getAll(params);
+      const all: any[] = response?.data?.[0]?.data || [];
+
+      const filters: string[] = [];
+      if (searchQuery) filters.push(`Search: "${searchQuery}"`);
+      if (statusFilter !== "all") filters.push(`Status: ${statusFilter}`);
+      if (typeFilter !== "all") filters.push(`Type: ${typeFilter}`);
+
+      exportDonationsPdf(all, {
+        dateRange: { start: startDate || undefined, end: endDate || undefined },
+        filters,
+      });
+    } catch (error: any) {
+      toast({
+        title: t("dashboard.donationsPage.exportErrTitle"),
+        description: error?.response?.data?.message || t("dashboard.donationsPage.exportErrDesc"),
+        variant: "destructive",
+      });
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const handleDeleteConfirm = async () => {
@@ -663,8 +722,8 @@ const Donations = () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to delete donation",
+        title: t("dashboard.donationsPage.toastDeleteErrTitle"),
+        description: error.response?.data?.message || t("dashboard.donationsPage.toastDeleteErrDesc"),
         variant: "destructive",
       });
     } finally {
@@ -724,12 +783,12 @@ const Donations = () => {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'ETB',
     }).format(amount);
   };
 
   const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString(i18n.language || "en", {
+    return new Date(date).toLocaleDateString("en", {
       year: "numeric",
       month: "short",
       day: "numeric",
@@ -764,7 +823,16 @@ const Donations = () => {
   //   "6m": getLastNMonths(6),
   //   "1y": getLastNMonths(12),
   // }[trendRange];
-  const fetchTrendData = async (range: "3m" | "6m" | "1y") => {
+  const fetchTrendData = async (range: "month" | "3m" | "6m" | "1y") => {
+  if (range === "month") {
+    const res = await dashboardApi.getAnalytics({ range: "month" });
+    const data = res.data?.analytics ?? res.data;
+    return {
+      months: data?.monthlyTrends?.labels || [],
+      values: data?.monthlyTrends?.values || [],
+    };
+  }
+
   const n = range === "3m" ? 3 : range === "6m" ? 6 : 12;
 
   const months: string[] = [];
@@ -791,6 +859,18 @@ const { data: trendData, isLoading: trendLoading } = useQuery({
   refetchOnWindowFocus: false,
 });
 
+  // ─── Reference label ─────────────────────────────────────────────────────
+  // For Chapa donations we don't surface the payment reference in the table;
+  // instead we show a truncated donation id with a DON- prefix.
+  const getReferenceLabel = (donation: any) => {
+    const isChapa =
+      donation?.source === "chapa" ||
+      donation?.receiptType === "chapa" ||
+      (typeof donation?.receiptUrl === "string" && donation.receiptUrl.startsWith("http"));
+    if (isChapa) return `DON-${String(donation?._id || "").slice(0, 8)}`;
+    return (donation?.donationReference || "").substring(0, 10);
+  };
+
   // ─── Donation Card (shown below sm breakpoint) ───────────────────────────
   const DonationCard = ({ donation }: { donation: any }) => (
     <div
@@ -800,7 +880,7 @@ const { data: trendData, isLoading: trendLoading } = useQuery({
       {/* Row 1: ref + amount */}
       <div className="flex items-start justify-between gap-2 pt-1">
         <span className="font-mono text-xs text-muted-foreground leading-tight">
-          {donation.donationReference.substring(0, 10)}
+          {getReferenceLabel(donation)}
         </span>
         <span className="font-semibold text-sm text-foreground shrink-0">
           {donation.donationType === "monetary"
@@ -832,17 +912,29 @@ const { data: trendData, isLoading: trendLoading } = useQuery({
         </span>
       </div>
 
-      {/* Row 4: allocated to (if present) */}
-      {(donation.family || donation.event || donation.beneficiary) && (
-        <div className="text-[11px] text-muted-foreground border-t border-border pt-2">
-          {t("dashboard.donationsPage.allocatedTo")}{" "}
-          <span className="text-foreground font-medium">
-            {donation.family?.familyName ||
-              donation.event?.title ||
-              donation.beneficiary?.fullName}
+      {/* Row 4: classification + allocated to */}
+      <div className="text-[11px] text-muted-foreground border-t border-border pt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+        <span className="flex gap-1 items-center justify-start">
+          {t("dashboard.donationsPage.classificationLabel")}{" "}
+          {donation.familyClassification  ? (
+            <FamilyClassificationBadge classification={donation.familyClassification} t={t} short />
+          ) : (
+            <Badge variant="outline" className="bg-muted text-muted-foreground border-border text-[10px] px-1.5 py-0">
+              {t("dashboard.classifications.none")}
+            </Badge>
+          )}
+        </span>
+        {(donation.family || donation.event || donation.beneficiary) && (
+          <span>
+            {t("dashboard.donationsPage.allocatedTo")}{" "}
+            <span className="text-foreground font-medium">
+              {donation.family?.familyName ||
+                donation.event?.title ||
+                donation.beneficiary?.fullName}
+            </span>
           </span>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Row 5: actions */}
       <div
@@ -895,7 +987,7 @@ const { data: trendData, isLoading: trendLoading } = useQuery({
   return (
     <div className="space-y-3 min-[400px]:space-y-4 sm:space-y-6">
       {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex flex-col items-start gap-4 min-[484px]:flex-row min-[484px]:items-center min-[484px]:justify-between min-[484px]:gap-2">
         <div className="min-w-0">
           <h1 className="text-lg min-[400px]:text-xl sm:text-2xl lg:text-3xl font-bold text-foreground truncate">
             {t("dashboard.donationsPage.title")}
@@ -904,22 +996,34 @@ const { data: trendData, isLoading: trendLoading } = useQuery({
             {t("dashboard.donationsPage.subtitleDetail")}
           </p>
         </div>
-        <Button
-          variant="default"
-          onClick={() => navigate("/dashboard/donations/new")}
-          size="sm"
-          className="text-xs sm:text-sm shrink-0"
-        >
-          <Plus className="w-3 ml-1 sm:ml-0 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
-          <span className="hidden min-[400px]:inline">{t("dashboard.donationsPage.record")}</span>
-          {/* <span className="min-[400px]:hidden">+</span> */}
-          <span className="hidden sm:inline"> {t("dashboard.donationsPage.recordDonation")}</span>
-        </Button>
+        <div className="  flex items-center gap-2 shrink-0">
+          <Button
+            variant="default"
+            onClick={() => navigate("/dashboard/donations/new")}
+            size="sm"
+            className="text-xs sm:text-sm"
+          >
+            <Plus className="w-3 ml-1 sm:ml-0 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
+            <span className="hidden min-[400px]:inline">{t("dashboard.donationsPage.record")}</span>
+            {/* <span className="min-[400px]:hidden">+</span> */}
+            <span className="hidden sm:inline"> {t("dashboard.donationsPage.recordDonation")}</span>
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleExportPdf}
+            disabled={isExporting}
+            size="sm"
+            className="text-xs sm:text-sm"
+          >
+            <Download className="w-3 ml-1 sm:ml-0 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
+            {isExporting ? t("dashboard.donationsPage.exporting") : t("dashboard.donationsPage.exportPdf")}
+          </Button>
+        </div>
       </div>
 
       {/* ── Stats Cards ────────────────────────────────────────────────────── */}
       {overview && (
-        <div className="grid grid-cols-1 min-[500px]:grid-cols-3 gap-2 min-[400px]:gap-3 sm:gap-4">
+        <div className="grid grid-cols-1 min-[500px]:grid-cols-2 lg:grid-cols-4 gap-2 min-[400px]:gap-3 sm:gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 pt-3 px-3 sm:pb-2 sm:pt-4 sm:px-4">
               <CardTitle className="text-xs sm:text-sm font-medium">{t("dashboard.donationsPage.totalDonationsCard")}</CardTitle>
@@ -927,11 +1031,11 @@ const { data: trendData, isLoading: trendLoading } = useQuery({
             </CardHeader>
             <CardContent className="px-3 pb-3 sm:px-4 sm:pb-4">
               <div className="text-lg min-[400px]:text-xl sm:text-2xl font-bold">
-                {formatCurrency(overview?.donations?.totalAmount || 0)}
+                {formatCurrency(receivedMonetaryAmount)}
               </div>
               <p className="text-[10px] sm:text-xs text-muted-foreground">
                 {t("dashboard.donationsPage.donationsCountLabel", {
-                  count: overview?.donations?.totalCount || 0,
+                  count: receivedTotalCount,
                 })}
               </p>
             </CardContent>
@@ -948,6 +1052,21 @@ const { data: trendData, isLoading: trendLoading } = useQuery({
               </div>
               <p className="text-[10px] sm:text-xs text-muted-foreground">
                 {t("dashboard.donationsPage.currentMonth")}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 pt-3 px-3 sm:pb-2 sm:pt-4 sm:px-4">
+              <CardTitle className="text-xs sm:text-sm font-medium">{t("dashboard.donationsPage.promisedCard")}</CardTitle>
+              <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent className="px-3 pb-3 sm:px-4 sm:pb-4">
+              <div className="text-lg min-[400px]:text-xl sm:text-2xl font-bold">
+                {formatCurrency(promisedMonetaryAmount)}
+              </div>
+              <p className="text-[10px] sm:text-xs text-muted-foreground">
+                {t("dashboard.donationsPage.promisedCountLabel", { count: promisedCount })}
               </p>
             </CardContent>
           </Card>
@@ -986,6 +1105,7 @@ const { data: trendData, isLoading: trendLoading } = useQuery({
               <SelectValue placeholder={t("dashboard.donationsPage.timeRangePh")} />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="month">{t("dashboard.donationsPage.trendMonth", "This Month")}</SelectItem>
               <SelectItem value="3m">{t("dashboard.donationsPage.trend3m")}</SelectItem>
               <SelectItem value="6m">{t("dashboard.donationsPage.trend6m")}</SelectItem>
               <SelectItem value="1y">{t("dashboard.donationsPage.trend1y")}</SelectItem>
@@ -1083,6 +1203,32 @@ const { data: trendData, isLoading: trendLoading } = useQuery({
             </SelectContent>
           </Select>
         </div>
+        {/* Date range */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+          <Input
+            type="date"
+            value={startDate}
+            onChange={(e) => {
+              setStartDate(e.target.value);
+              setPage(1);
+            }}
+            className="text-xs sm:text-sm h-8 sm:h-9 w-full sm:w-auto sm:flex-1 min-w-0"
+            aria-label={t("dashboard.donationsPage.fromDate")}
+          />
+          <span className="text-xs text-muted-foreground text-center sm:px-1">
+            {t("dashboard.donationsPage.toDateLabel")}
+          </span>
+          <Input
+            type="date"
+            value={endDate}
+            onChange={(e) => {
+              setEndDate(e.target.value);
+              setPage(1);
+            }}
+            className="text-xs sm:text-sm h-8 sm:h-9 w-full sm:w-auto sm:flex-1 min-w-0"
+            aria-label={t("dashboard.donationsPage.toDate")}
+          />
+        </div>
       </div>
 
       {/* ── Donation List ───────────────────────────────────────────────────── */}
@@ -1113,19 +1259,21 @@ const { data: trendData, isLoading: trendLoading } = useQuery({
             <TableHeader>
               <TableRow>
                 {/* Always visible ≥ sm */}
-                <TableHead className="text-xs sm:text-sm w-[120px] sm:w-[140px]">{t("dashboard.donationsPage.colReference")}</TableHead>
+                <TableHead className="hidden min-[798px]:table-cell text-xs sm:text-sm w-[120px] sm:w-[140px]">{t("dashboard.donationsPage.colReference")}</TableHead>
                 {/* Donor: visible ≥ sm */}
                 <TableHead className="text-xs sm:text-sm">{t("dashboard.donationsPage.colDonor")}</TableHead>
                 {/* Type: hidden sm, visible ≥ md */}
                 <TableHead className="text-xs sm:text-sm w-[110px] text-right">{t("dashboard.donationsPage.colAmount")}</TableHead>
+                {/* Classification: visible ≥ md */}
+                <TableHead className="text-xs sm:text-sm hidden md:table-cell w-[140px]">{t("dashboard.donationsPage.colClassification")}</TableHead>
                 {/* Status: always visible ≥ sm */}
-                <TableHead className="text-xs sm:text-sm hidden min-[787px]:table-cell w-[110px]">{t("dashboard.donationsPage.colType")}</TableHead>
+                <TableHead className="text-xs sm:text-sm  w-[110px]">{t("dashboard.donationsPage.colType")}</TableHead>
                 {/* Amount: always visible ≥ sm */}
-                <TableHead className="text-xs sm:text-sm w-[100px]">{t("dashboard.donationsPage.colStatus")}</TableHead>
+                <TableHead className="text-xs hidden min-[906px]:table-cell min-[1086px]:hidden min-[1178px]:table-cell sm:text-sm w-[100px]">{t("dashboard.donationsPage.colStatus")}</TableHead>
                 {/* Date: hidden sm, visible ≥ md */}
-                <TableHead className="text-xs sm:text-sm hidden md:table-cell w-[110px]">{t("dashboard.donationsPage.colDate")}</TableHead>
+                <TableHead className="text-xs sm:text-sm hidden min-[1242px]:table-cell w-[110px]">{t("dashboard.donationsPage.colDate")}</TableHead>
                 {/* Allocated To: hidden until lg */}
-                <TableHead className="text-xs sm:text-sm hidden min-[1166px]:table-cell">{t("dashboard.donationsPage.colAllocatedTo")}</TableHead>
+                <TableHead className="text-xs sm:text-sm hidden min-[1354px]:table-cell">{t("dashboard.donationsPage.colAllocatedTo")}</TableHead>
                 {/* Actions: always visible */}
                 <TableHead className="text-xs sm:text-sm w-[100px] text-right">{t("dashboard.donationsPage.colActions")}</TableHead>
               </TableRow>
@@ -1134,20 +1282,20 @@ const { data: trendData, isLoading: trendLoading } = useQuery({
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <TableRow key={i}>
+                    <TableCell><Skeleton className="hidden min-[798px]:table-cell h-4 w-full" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-full" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-full" /></TableCell>
                     <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-full" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-full" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-full" /></TableCell>
-                    <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-full" /></TableCell>
-                    <TableCell className="hidden 
-                    min-[1166px]:table-cell"><Skeleton className="h-4 w-full" /></TableCell>
+                    <TableCell className=""><Skeleton className="h-4 w-full" /></TableCell>
+                    <TableCell className="hidden min-[906px]:table-cell min-[1086px]:hidden min-[1178px]:table-cell"><Skeleton className="h-4 w-full" /></TableCell>
+                    <TableCell className="hidden min-[1242px]:table-cell"><Skeleton className="h-4 w-full" /></TableCell>
+                    <TableCell className="hidden min-[1354px]:table-cell"><Skeleton className="h-4 w-full" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-full" /></TableCell>
                   </TableRow>
                 ))
               ) : error ? (
                 <TableRow>
-                  <TableCell colSpan={8}>
+                  <TableCell colSpan={9}>
                     <Alert variant="destructive">
                       <AlertDescription>
                         {t("dashboard.donationsPage.loadErr")}
@@ -1162,9 +1310,10 @@ const { data: trendData, isLoading: trendLoading } = useQuery({
                     className="text-xs sm:text-sm cursor-pointer hover:bg-muted/50"
                     onClick={() => navigate(`/dashboard/donations/${donation._id}`)}
                   >
-                    <TableCell className="font-medium font-mono text-xs sm:text-sm p-2 sm:p-4">
-                      {donation.donationReference.substring(0, 10)}
+                    <TableCell className=" hidden min-[798px]:table-cell font-medium font-mono text-xs sm:text-sm p-2 sm:p-4">
+                      {getReferenceLabel(donation)}
                     </TableCell>
+
                     <TableCell className="p-2 sm:p-4">
                       <div className="flex items-center gap-2 truncate">
                         <User className="w-3 sm:w-4 h-3 sm:h-4 text-muted-foreground flex-shrink-0" />
@@ -1173,26 +1322,41 @@ const { data: trendData, isLoading: trendLoading } = useQuery({
                         </span>
                       </div>
                     </TableCell>
-                    <TableCell className="hidden min-[787px]:table-cell p-2 sm:p-4">
-                      <Badge variant="outline" className={`${getTypeColor(donation.donationType)} text-xs`}>
-                        {getTypeLabel(donation.donationType)}
-                      </Badge>
-                    </TableCell>
+
                     <TableCell className="text-right font-semibold text-xs
                      p-2 sm:p-4 xl:text-sm">
                       {donation.donationType === "monetary"
                         ? formatCurrency(Number(donation.amount || 0))
                         : "-"}
                     </TableCell>
-                    <TableCell className="p-2 sm:p-4">
+
+                    <TableCell className="hidden md:table-cell p-2 sm:p-4">
+                      {donation.familyClassification ? (
+                        <FamilyClassificationBadge classification={donation.familyClassification} t={t} short />
+                      ) : (
+                        <Badge variant="outline" className="bg-muted text-muted-foreground border-border text-xs">
+                          {t("dashboard.classifications.none")}
+                        </Badge>
+                      )}
+                    </TableCell>
+
+                    <TableCell className=" p-2 sm:p-4">
+                      <Badge variant="outline" className={`${getTypeColor(donation.donationType)} text-xs`}>
+                        {getTypeLabel(donation.donationType)}
+                      </Badge>
+                    </TableCell>
+
+                    <TableCell className="p-2 hidden min-[906px]:table-cell min-[1086px]:hidden min-[1178px]:table-cell sm:p-4">
                       <Badge variant="outline" className={`${getStatusColor(donation.status)} text-xs`}>
                         {getStatusLabel(donation.status)}
                       </Badge>
                     </TableCell>
-                    <TableCell className="hidden md:table-cell text-xs text-muted-foreground p-2 sm:p-4">
+
+                    <TableCell className="hidden min-[1242px]:table-cell text-xs text-muted-foreground p-2 sm:p-4">
                       {formatDate(donation.receivedAt)}
                     </TableCell>
-                    <TableCell className="hidden min-[1166px]:table-cell p-2 sm:p-4">
+
+                    <TableCell className="p-2 sm:p-4 hidden min-[1354px]:table-cell">
                       <div className="text-xs sm:text-sm truncate">
                         {donation.family && (
                           <span className="text-foreground">{donation.family.familyName}</span>
@@ -1208,6 +1372,7 @@ const { data: trendData, isLoading: trendLoading } = useQuery({
                         )}
                       </div>
                     </TableCell>
+
                     <TableCell className="p-2 sm:p-4">
                       <div className="flex justify-end gap-0.5" onClick={(e) => e.stopPropagation()}>
                         <Button
@@ -1243,7 +1408,7 @@ const { data: trendData, isLoading: trendLoading } = useQuery({
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-12 text-muted-foreground">
+                  <TableCell colSpan={9} className="text-center py-12 text-muted-foreground">
                     {t("dashboard.donationsPage.empty")}
                   </TableCell>
                 </TableRow>

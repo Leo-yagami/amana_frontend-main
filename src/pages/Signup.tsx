@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -39,6 +39,8 @@ function GoogleIcon({ className }: { className?: string }) {
 
 const Signup = () => {
   const { t } = useTranslation();
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get('redirectTo') || '/dashboard';
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -50,8 +52,8 @@ const Signup = () => {
 
     /** Redirect to your Express Google OAuth entry (change path if yours differs). */
     const handleGoogleSignup = () => {
-      // const apiOrigin = import.meta.env.MODE === "development"? "http://localhost:3000" : import.meta.env.VITE_API_URL;
-      const apiOrigin = "http://localhost:3000";
+      localStorage.setItem('redirectTo', redirectTo);
+      const apiOrigin = import.meta.env.VITE_API_URL || '';
       window.location.assign(`${apiOrigin}/api/auth/google`);
     };
 
@@ -95,9 +97,9 @@ const Signup = () => {
       (window as any).__isTransitioning = true;
       await register({ email, password, fullName });
       if (window.__animateRouteTransition) {
-        window.__animateRouteTransition("/dashboard");
+        window.__animateRouteTransition(redirectTo);
       } else {
-        navigate("/dashboard");
+        navigate(redirectTo);
       }
     } catch (err: any) {
       (window as any).__isTransitioning = false;
@@ -212,7 +214,7 @@ const Signup = () => {
 
             <div className="text-center text-sm text-muted-foreground">
               Already have an account?{" "}
-              <Link to="/login" className="text-primary hover:underline font-medium">
+              <Link to={`/login?redirectTo=${encodeURIComponent(redirectTo)}`} className="text-primary hover:underline font-medium">
                 Sign in
               </Link>
             </div>

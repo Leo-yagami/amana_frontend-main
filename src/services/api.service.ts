@@ -356,6 +356,14 @@ export const familyApi = {
   
   delete: (id: string) =>
     api.delete(`/families/${id}`),
+
+  uploadDocument: (file: File) => {
+    const formData = new FormData();
+    formData.append('document', file);
+    return api.post<{ url: string; filename: string }>('/upload/family-document', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
 };
 
 // Beneficiary API
@@ -443,6 +451,12 @@ export const donationApi = {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
   },
+
+  getReceipt: (id: string) =>
+    api.get<{ success: boolean; receipt: DonationReceipt }>(`/donations/${id}/receipt`),
+
+  getReceiptByTxRef: (txRef: string) =>
+    api.get<{ success: boolean; receipt: DonationReceipt }>(`/transactions/${txRef}/receipt`),
   
   delete: (id: string) =>
     api.delete(`/donations/${id}`),
@@ -573,6 +587,21 @@ export const donationVerificationApi = {
     api.get('/donation-verification/pending-verifications', { params }),
 };
 
+// Notifications API
+export const notificationApi = {
+  getAll: () =>
+    api.get<Notification[]>('/notifications'),
+  
+  markRead: (id: string) =>
+    api.patch(`/notifications/${id}/read`),
+  
+  markAllRead: () =>
+    api.post('/notifications/read-all'),
+  
+  checkDuePromised: () =>
+    api.get<Notification[]>('/notifications/due-promised'),
+};
+
 // Reports API
 export const reportsApi = {
   getFinancialReport: (params?: { startDate?: string; endDate?: string }) =>
@@ -589,4 +618,12 @@ export const reportsApi = {
   
   getDashboardStats: () =>
     api.get('/reports/dashboard'),
+};
+
+// Hero stats API — public endpoint powering the landing hero's live
+// AMANA / OS panel. No auth required.
+import type { HeroStats } from '@/types/api';
+
+export const heroApi = {
+  getStats: () => api.get<HeroStats>('/hero-stats'),
 };

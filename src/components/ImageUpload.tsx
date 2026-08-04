@@ -3,13 +3,15 @@ import { Camera, Upload, X, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import axios from "axios";
+import api from "@/lib/api";
 
 interface ImageUploadProps {
   value?: string;
   onChange: (url: string) => void;
   label?: string;
   disabled?: boolean;
+  uploadPath?: string;
+  fieldName?: string;
 }
 
 export default function ImageUpload({
@@ -17,6 +19,8 @@ export default function ImageUpload({
   onChange,
   label = "Photo",
   disabled = false,
+  uploadPath = "/upload/beneficiary-photo",
+  fieldName = "photo",
 }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
@@ -91,21 +95,18 @@ export default function ImageUpload({
 
     try {
       const formData = new FormData();
-      formData.append("photo", file, filename || (file as File).name);
+      formData.append(fieldName, file, filename || (file as File).name);
 
-      const token = localStorage.getItem("token");
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || "http://localhost:3001"}/api/upload/beneficiary-photo`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await api.post(uploadPath, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
-      const imageUrl = `${import.meta.env.VITE_API_URL || "http://localhost:3001"}${response.data.url}`;
+      const baseUrl = import.meta.env.VITE_API_URL || "";
+      const imageUrl = response.data.url.startsWith("http")
+        ? response.data.url
+        : `${baseUrl}${response.data.url}`;
       onChange(imageUrl);
       
       toast({

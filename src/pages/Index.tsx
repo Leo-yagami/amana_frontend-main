@@ -1,23 +1,21 @@
 import Navbar from "@/components/landing/Navbar";
-import HeroSection from "@/components/landing/HeroSection";
-import CampaignsSection from "@/components/landing/CampaignsSection";
-import ImpactSection from "@/components/landing/ImpactSection";
-import StoriesSection from "@/components/landing/StoriesSection";
-import Footer from "@/components/landing/Footer";
+import HeroSection from "@/components/landing/HeroSection1";
+import ImpactSection from "@/components/landing/ImpactSection1";
+import FamiliesSection from "@/components/landing/FamiliesSection";
+import CTABand from "@/components/landing/CTABand1";
+import Footer from "@/components/landing/Footer1";
 
-const Index = () => {
+export default function Index() {
   return (
-    <div className="min-h-screen bg-background">
+    <>
       <Navbar />
       <main>
         <HeroSection />
-        <CampaignsSection />
         <ImpactSection />
-        <StoriesSection />
+        <FamiliesSection />
+        <CTABand />
       </main>
       <Footer />
-    </div>
+    </>
   );
-};
-
-export default Index;
+}

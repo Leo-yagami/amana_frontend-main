@@ -16,13 +16,13 @@ import { useTranslation } from "react-i18next";
 
 const getEventTypeLabel = (type: string) => {
   const labels: Record<string, string> = {
-    distribution: "Distribution",
-    fundraising: "Fundraising",
-    awareness: "Awareness",
-    food_package: "Food Package",
-    medical_aid: "Medical Aid",
-    job_opportunity: "Job Opportunity",
-    other: "Other",
+    distribution: "dashboard.eventProfile.type.distribution",
+    fundraising: "dashboard.eventProfile.type.fundraising",
+    awareness: "dashboard.eventProfile.type.awareness",
+    food_package: "dashboard.eventProfile.type.food_package",
+    medical_aid: "dashboard.eventProfile.type.medical_aid",
+    job_opportunity: "dashboard.eventProfile.type.job_opportunity",
+    other: "dashboard.eventProfile.type.other",
   };
   return labels[type] || type;
 };
@@ -52,7 +52,14 @@ const getStatusColor = (status: string) => {
 };
 
 const getStatusLabel = (status: string) => {
-  return status.charAt(0).toUpperCase() + status.slice(1);
+  const labels: Record<string, string> = {
+    draft: "dashboard.eventProfile.status.draft",
+    upcoming: "dashboard.eventProfile.status.upcoming",
+    ongoing: "dashboard.eventProfile.status.ongoing",
+    completed: "dashboard.eventProfile.status.completed",
+    cancelled: "dashboard.eventProfile.status.cancelled",
+  };
+  return labels[status] || status;
 };
 
 const Events = () => {
@@ -79,9 +86,9 @@ const Events = () => {
       console.log(response.data)
       return response?.data[0];
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30 * 1000,
     gcTime: 30 * 60 * 1000,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,
   });
 
    // Fetch event stats
@@ -214,13 +221,13 @@ const Events = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">{t("dashboard.donorsPage.allTypes")}</SelectItem>
-                    <SelectItem value="fundraising">Fundraising</SelectItem>
-                    <SelectItem value="distribution">Distribution</SelectItem>
-                    <SelectItem value="awareness">Awareness</SelectItem>
-                    <SelectItem value="food_package">Food Package</SelectItem>
-                    <SelectItem value="medical_aid">Medical Aid</SelectItem>
-                    <SelectItem value="job_opportunity">Job Opportunity</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
+                    <SelectItem value="fundraising">{t("dashboard.eventProfile.type.fundraising")}</SelectItem>
+                    <SelectItem value="distribution">{t("dashboard.eventProfile.type.distribution")}</SelectItem>
+                    <SelectItem value="awareness">{t("dashboard.eventProfile.type.awareness")}</SelectItem>
+                    <SelectItem value="food_package">{t("dashboard.eventProfile.type.food_package")}</SelectItem>
+                    <SelectItem value="medical_aid">{t("dashboard.eventProfile.type.medical_aid")}</SelectItem>
+                    <SelectItem value="job_opportunity">{t("dashboard.eventProfile.type.job_opportunity")}</SelectItem>
+                    <SelectItem value="other">{t("dashboard.eventProfile.type.other")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -259,23 +266,37 @@ const Events = () => {
                   <CardContent className="p-4 sm:p-6">
                     <div className="flex flex-col lg:flex-row lg:items-center gap-4 sm:gap-6">
                       {/* Date Box */}
-                      <div className="flex-shrink-0 w-16 sm:w-20 h-16 sm:h-20 rounded-lg sm:rounded-xl bg-primary/10 flex flex-col items-center justify-center" />
+                      <div className="flex-shrink-0 w-16 sm:w-20 h-16 sm:h-20 rounded-lg sm:rounded-xl bg-primary/10 flex flex-col items-center justify-center">
+                        <span className="text-lg sm:text-2xl font-bold text-primary">{dateInfo.day}</span>
+                        <span className="text-xs sm:text-sm text-primary font-medium">{dateInfo.month}</span>
+                      </div>
 
                       {/* Event Details */}
                       <div className="flex-1 min-w-0">
                         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-2">
-                          <div className="min-w-0">
-                            <h3 className="text-base sm:text-lg font-semibold text-foreground truncate">{event.title}</h3>
-                            <p className="text-xs sm:text-sm text-muted-foreground truncate">
-                              Code: {event.campaignCode || event._id.slice(0, 8)}
-                            </p>
+                          <div className="flex items-start gap-3 min-w-0">
+                            <div className="min-w-0">
+                              <h3 className="text-base sm:text-lg font-semibold text-foreground truncate">{event.title}</h3>
+                              <p className="text-xs sm:text-sm text-muted-foreground truncate">
+                                {t("dashboard.eventProfile.eventCode")}: {event.campaignCode || event._id.slice(0, 8)}
+                              </p>
+                            </div>
+                            {event.imageUrls && (
+                              <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-lg overflow-hidden border">
+                                <img
+                                  src={event.imageUrls}
+                                  alt={event.title}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                            )}
                           </div>
                           <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
                             <Badge variant="outline" className={`${getEventTypeColor(event.eventType)} text-xs`}>
-                              {getEventTypeLabel(event.eventType)}
+                              {t(getEventTypeLabel(event.eventType))}
                             </Badge>
                             <Badge variant="outline" className={`${getStatusColor(event.status)} text-xs`}>
-                              {getStatusLabel(event.status)}
+                              {t(getStatusLabel(event.status))}
                             </Badge>
                           </div>
                         </div>
@@ -311,7 +332,7 @@ const Events = () => {
                         {event.targetAmount && Number(event.targetAmount) > 0 && (
                           <div className="mt-2 sm:mt-3">
                             <div className="flex items-center justify-between text-xs sm:text-sm mb-1 gap-2">
-                              <span className="text-muted-foreground flex-shrink-0">Goal</span>
+                              <span className="text-muted-foreground flex-shrink-0">{t("dashboard.eventsPage.goal", "Goal")}</span>
                               <span className="font-medium text-xs sm:text-sm text-right">
                                 ETB {Number(event?.collectedAmount).toLocaleString()} / ETB {Number(event?.targetAmount).toLocaleString()}
                               </span>
@@ -322,9 +343,9 @@ const Events = () => {
                                 style={{ width: `${progress}%` }}
                               />
                             </div>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {progress}% reached
-                            </p>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {t("dashboard.eventsPage.reached", "{{progress}}% reached", { progress })}
+                              </p>
                           </div>
                         )}
                       </div>
@@ -340,8 +361,8 @@ const Events = () => {
                           }}
                           className="text-xs sm:text-sm"
                         >
-                          <span className="hidden sm:inline">View Details</span>
-                          <span className="sm:hidden">View</span>
+                          <span className="hidden sm:inline">{t("dashboard.eventsPage.viewDetails", "View Details")}</span>
+                          <span className="sm:hidden">{t("dashboard.eventsPage.view", "View")}</span>
                         </Button>
                         <Button 
                           variant="default" 
@@ -349,7 +370,7 @@ const Events = () => {
                           onClick={(e) => handleEditEvent(event, e)}
                           className="text-xs sm:text-sm"
                         >
-                          Edit
+                          {t("dashboard.eventProfile.edit", "Edit")}
                         </Button>
                       </div>
                     </div>
@@ -363,7 +384,11 @@ const Events = () => {
           {data.pagination && data.pagination.totalPages > 1 && (
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
               <p className="text-xs sm:text-sm text-muted-foreground text-center sm:text-left">
-                Page {data.pagination.page} of {data.pagination.totalPages} ({data.pagination.total} total)
+                {t("dashboard.eventsPage.pagination", "Page {{page}} of {{totalPages}} ({{total}} total)", {
+                  page: data.pagination.page,
+                  totalPages: data.pagination.totalPages,
+                  total: data.pagination.total,
+                })}
               </p>
               <div className="flex gap-2 justify-center">
                 <Button
@@ -372,7 +397,7 @@ const Events = () => {
                   disabled={page === 1}
                   onClick={() => setPage(page - 1)}
                 >
-                  Previous
+                  {t("dashboard.eventsPage.previous", "Previous")}
                 </Button>
                 <Button
                   variant="outline"
@@ -380,7 +405,7 @@ const Events = () => {
                   disabled={page >= data.pagination.totalPages}
                   onClick={() => setPage(page + 1)}
                 >
-                  Next
+                  {t("dashboard.eventsPage.next", "Next")}
                 </Button>
               </div>
             </div>
@@ -390,16 +415,16 @@ const Events = () => {
         <Card>
           <CardContent className="p-12 text-center">
             <Calendar className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No events found</h3>
+            <h3 className="text-lg font-semibold mb-2">{t("dashboard.eventsPage.emptyTitle", "No events found")}</h3>
             <p className="text-muted-foreground mb-4">
               {search || statusFilter !== "all" || typeFilter !== "all"
-                ? "Try adjusting your filters"
-                : "Get started by creating your first event"}
+                ? t("dashboard.eventsPage.adjustFilters", "Try adjusting your filters")
+                : t("dashboard.eventsPage.createFirst", "Get started by creating your first event")}
             </p>
             {!search && statusFilter === "all" && typeFilter === "all" && (
               <Button onClick={handleCreateEvent}>
                 <Plus className="w-4 h-4 mr-2" />
-                Create Event
+                {t("dashboard.eventsPage.createEvent", "Create Event")}
               </Button>
             )}
           </CardContent>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,8 @@ import { Loader2 } from "lucide-react";
 
 const Login = () => {
   const { t } = useTranslation();
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get('redirectTo') || '/dashboard';
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -27,9 +29,9 @@ const Login = () => {
       (window as any).__isTransitioning = true;
       await login({ email, password });
       if (window.__animateRouteTransition) {
-        window.__animateRouteTransition("/dashboard");
+        window.__animateRouteTransition(redirectTo);
       } else {
-        navigate("/dashboard");
+        navigate(redirectTo);
       }
     } catch (err: any) {
       (window as any).__isTransitioning = false;
@@ -95,7 +97,7 @@ const Login = () => {
 
             <div className="text-center text-sm text-muted-foreground">
               {t("auth.dontHaveAccount")}{" "}
-              <Link to="/signup" className="text-primary hover:underline font-medium">
+              <Link to={`/signup?redirectTo=${encodeURIComponent(redirectTo)}`} className="text-primary hover:underline font-medium">
                 {t("auth.signUpLink")}
               </Link>
             </div>

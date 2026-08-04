@@ -1,0 +1,1572 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Amana Charity — Empowering Communities</title>
+<meta name="description" content="Amana Charity Hub — Empowering communities through charitable initiatives.">
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&display=swap" rel="stylesheet">
+
+<!-- GSAP + ScrollTrigger + Lenis -->
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js"></script>
+
+<style>
+/* ═══════════════════════════════════════════════════════
+   DESIGN TOKENS — extracted from amana codebase (index.css)
+   Exact HSL values from the :root + .dark blocks
+   ═══════════════════════════════════════════════════════ */
+:root {
+  /* Light mode — warm cream */
+  --bg: hsl(40 33% 98%);
+  --bg-alt: hsl(40 25% 95%);
+  --surface: hsl(0 0% 100%);
+  --fg: hsl(200 25% 15%);
+  --fg-soft: hsl(200 25% 25%);
+  --muted: hsl(40 20% 94%);
+  --muted-fg: hsl(200 15% 45%);
+  --border: hsl(40 20% 88%);
+  --primary: hsl(168 65% 38%);
+  --primary-fg: hsl(0 0% 100%);
+  --accent: hsl(32 95% 55%);
+  --accent-fg: hsl(0 0% 100%);
+  --shadow-sm: 0 1px 2px 0 hsl(200 25% 15% / 0.05);
+  --shadow-md: 0 4px 6px -1px hsl(200 25% 15% / 0.08), 0 2px 4px -2px hsl(200 25% 15% / 0.05);
+  --shadow-lg: 0 10px 15px -3px hsl(200 25% 15% / 0.08), 0 4px 6px -4px hsl(200 25% 15% / 0.05);
+
+  --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-display: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  --font-mono: 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, monospace;
+
+  --section-gap: clamp(80px, 10vw, 160px);
+  --container: min(90%, 1400px);
+  --container-tight: min(85%, 900px);
+}
+
+html.dark {
+  --bg: hsl(200 30% 8%);
+  --bg-alt: hsl(200 25% 10%);
+  --surface: hsl(200 25% 12%);
+  --fg: hsl(40 20% 95%);
+  --fg-soft: hsl(40 15% 80%);
+  --muted: hsl(200 20% 18%);
+  --muted-fg: hsl(40 15% 60%);
+  --border: hsl(200 20% 20%);
+  --primary: hsl(168 55% 50%);
+  --primary-fg: hsl(200 30% 8%);
+  --accent: hsl(32 85% 55%);
+  --accent-fg: hsl(200 30% 8%);
+  --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.3);
+  --shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.4), 0 2px 4px -2px hsl(0 0% 0% / 0.3);
+  --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.4), 0 4px 6px -4px hsl(0 0% 0% / 0.3);
+}
+
+/* ═══════════════════════════════════════════════════════
+   RESET + BASE
+   ═══════════════════════════════════════════════════════ */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+html {
+  scroll-behavior: auto; /* Lenis handles this */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "rlig" 1, "calt" 1;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--fg);
+  line-height: 1.6;
+  overflow-x: hidden;
+  transition: background-color 0.5s ease, color 0.5s ease;
+}
+
+a { color: inherit; text-decoration: none; }
+img, video { display: block; max-width: 100%; height: auto; }
+
+/* ═══════════════════════════════════════════════════════
+   UTILITY
+   ═══════════════════════════════════════════════════════ */
+.container { width: var(--container); margin: 0 auto; }
+.container-tight { width: var(--container-tight); margin: 0 auto; }
+
+.kicker {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.heading-xl {
+  font-family: var(--font-display);
+  font-size: clamp(2.8rem, 6vw, 6rem);
+  line-height: 1.05;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.heading-lg {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 4vw, 4rem);
+  line-height: 1.1;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+.heading-md {
+  font-family: var(--font-display);
+  font-size: clamp(1.4rem, 2.5vw, 2.2rem);
+  line-height: 1.2;
+  font-weight: 600;
+}
+
+.body-lg { font-size: clamp(1.05rem, 1.3vw, 1.25rem); line-height: 1.7; color: var(--fg-soft); }
+.body-md { font-size: 1rem; line-height: 1.65; color: var(--muted-fg); }
+.body-sm { font-size: 0.875rem; line-height: 1.6; color: var(--muted-fg); }
+
+.stat-number {
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 6vw, 5.5rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--fg);
+}
+
+.accent-text { color: var(--accent); }
+.primary-text { color: var(--primary); }
+
+/* Reveal animations — initial states */
+.reveal { opacity: 0; transform: translateY(40px); }
+.reveal-left { opacity: 0; transform: translateX(-60px); }
+.reveal-right { opacity: 0; transform: translateX(60px); }
+.reveal-scale { opacity: 0; transform: scale(0.92); }
+
+/* ═══════════════════════════════════════════════════════
+   THEME TOGGLE
+   ═══════════════════════════════════════════════════════ */
+.theme-toggle {
+  position: relative;
+  width: 48px;
+  height: 28px;
+  background: var(--muted);
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.4s, border-color 0.4s;
+  flex-shrink: 0;
+}
+.theme-toggle::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  background: var(--fg);
+  border-radius: 50%;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.4s;
+}
+html.dark .theme-toggle::after {
+  transform: translateX(20px);
+  background: var(--accent);
+}
+
+/* ═══════════════════════════════════════════════════════
+   NAV
+   ═══════════════════════════════════════════════════════ */
+.nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 0 clamp(16px, 4vw, 48px);
+  transition: background 0.4s, backdrop-filter 0.4s, border-color 0.4s, box-shadow 0.4s;
+  border-bottom: 1px solid transparent;
+}
+.nav.scrolled {
+  background: color-mix(in srgb, var(--bg) 85%, transparent);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border-bottom-color: var(--border);
+  box-shadow: var(--shadow-sm);
+}
+.nav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 72px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 1.2rem;
+}
+.nav-logo-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.nav-logo-icon svg { width: 18px; height: 18px; fill: var(--primary-fg); }
+.nav-logo span { color: var(--primary); }
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  list-style: none;
+}
+.nav-links a {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--muted-fg);
+  transition: color 0.25s;
+  position: relative;
+}
+.nav-links a::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0;
+  height: 1.5px;
+  background: var(--primary);
+  transition: width 0.3s ease;
+}
+.nav-links a:hover { color: var(--fg); }
+.nav-links a:hover::after { width: 100%; }
+
+.nav-actions { display: flex; align-items: center; gap: 16px; }
+.nav-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 24px;
+  background: var(--primary);
+  color: var(--primary-fg);
+  font-weight: 600;
+  font-size: 0.9rem;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: filter 0.25s, transform 0.2s;
+}
+.nav-cta:hover { filter: brightness(1.1); transform: translateY(-1px); }
+
+@media (max-width: 900px) {
+  .nav-links { display: none; }
+}
+
+/* ═══════════════════════════════════════════════════════
+   HERO
+   ═══════════════════════════════════════════════════════ */
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: flex-end;
+  padding-bottom: clamp(60px, 8vw, 120px);
+  overflow: hidden;
+}
+.hero-video-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+.hero-video-bg video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.hero-video-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    hsl(200 30% 8% / 0.3) 0%,
+    hsl(200 30% 8% / 0.6) 50%,
+    hsl(200 30% 8% / 0.92) 100%
+  );
+  z-index: 1;
+}
+html:not(.dark) .hero-video-overlay {
+  background: linear-gradient(
+    180deg,
+    hsl(40 33% 98% / 0.2) 0%,
+    hsl(40 33% 98% / 0.5) 50%,
+    hsl(40 33% 98% / 0.9) 100%
+  );
+}
+.hero-content {
+  position: relative;
+  z-index: 2;
+  width: var(--container);
+  margin: 0 auto;
+}
+.hero-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.hero-eyebrow::before {
+  content: '';
+  width: 40px;
+  height: 1px;
+  background: var(--accent);
+}
+.hero-title {
+  font-family: var(--font-display);
+  font-size: clamp(3.2rem, 8vw, 8rem);
+  line-height: 0.95;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  margin-bottom: 32px;
+  max-width: 1000px;
+  text-wrap: balance;
+}
+.hero-title .line { display: block; overflow: hidden; }
+.hero-title .line-inner { display: block; transform: translateY(110%); }
+.hero-title em {
+  font-style: italic;
+  color: var(--accent);
+}
+.hero-subtitle {
+  font-size: clamp(1rem, 1.4vw, 1.3rem);
+  color: var(--fg-soft);
+  max-width: 560px;
+  line-height: 1.7;
+  margin-bottom: 40px;
+}
+.hero-actions {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 36px;
+  background: var(--primary);
+  color: var(--primary-fg);
+  font-weight: 600;
+  font-size: 1rem;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  transition: filter 0.25s, transform 0.2s;
+}
+.btn-primary:hover { filter: brightness(1.12); transform: translateY(-2px); }
+.btn-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 36px;
+  background: transparent;
+  color: var(--fg);
+  font-weight: 600;
+  font-size: 1rem;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  cursor: pointer;
+  transition: border-color 0.25s, background 0.25s, transform 0.2s;
+}
+.btn-outline:hover { border-color: var(--fg); background: color-mix(in srgb, var(--fg) 5%, transparent); transform: translateY(-2px); }
+
+.hero-scroll-indicator {
+  position: absolute;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted-fg);
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+.hero-scroll-line {
+  width: 1px;
+  height: 48px;
+  background: var(--border);
+  position: relative;
+  overflow: hidden;
+}
+.hero-scroll-line::after {
+  content: '';
+  position: absolute;
+  top: -100%;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--primary);
+  animation: scrollPulse 2s ease-in-out infinite;
+}
+@keyframes scrollPulse {
+  0% { top: -100%; }
+  50% { top: 100%; }
+  100% { top: 100%; }
+}
+
+/* ═══════════════════════════════════════════════════════
+   MISSION — Asymmetric editorial
+   ═══════════════════════════════════════════════════════ */
+.mission {
+  padding: var(--section-gap) 0;
+  overflow: hidden;
+}
+.mission-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.618fr 0.5fr;
+  gap: clamp(24px, 4vw, 64px);
+  align-items: start;
+}
+.mission-left {
+  padding-top: clamp(40px, 6vw, 100px);
+}
+.mission-stat {
+  margin-top: 48px;
+}
+.mission-stat-value {
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 5vw, 5rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--primary);
+}
+.mission-stat-label {
+  font-size: 0.9rem;
+  color: var(--muted-fg);
+  margin-top: 8px;
+}
+.mission-center {}
+.mission-center .heading-lg {
+  margin-bottom: 24px;
+}
+.mission-center p {
+  font-size: clamp(1rem, 1.2vw, 1.15rem);
+  line-height: 1.75;
+  color: var(--fg-soft);
+}
+.mission-right {
+  padding-top: clamp(80px, 12vw, 180px);
+}
+.mission-divider {
+  width: 1px;
+  height: 120px;
+  background: var(--border);
+  margin-bottom: 24px;
+}
+.mission-right-text {
+  font-size: 0.8rem;
+  line-height: 1.7;
+  color: var(--muted-fg);
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
+
+@media (max-width: 900px) {
+  .mission-grid { grid-template-columns: 1fr; }
+  .mission-right { display: none; }
+}
+
+/* ═══════════════════════════════════════════════════════
+   HORIZONTAL STATS — Pinned gallery
+   ═══════════════════════════════════════════════════════ */
+.stats-gallery-wrapper {
+  position: relative;
+  overflow: hidden;
+}
+.stats-gallery {
+  display: flex;
+  gap: 0;
+  will-change: transform;
+}
+.stat-card {
+  flex: 0 0 100vw;
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(40px, 6vw, 80px);
+  text-align: center;
+  position: relative;
+}
+.stat-card::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 20%;
+  height: 60%;
+  width: 1px;
+  background: var(--border);
+}
+.stat-card:last-child::after { display: none; }
+.stat-card-number {
+  font-family: var(--font-display);
+  font-size: clamp(4rem, 10vw, 9rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: var(--fg);
+  margin-bottom: 16px;
+}
+.stat-card-label {
+  font-size: clamp(0.95rem, 1.2vw, 1.1rem);
+  color: var(--muted-fg);
+  max-width: 320px;
+}
+.stats-progress {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px 0;
+  color: var(--muted-fg);
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-family: var(--font-mono);
+}
+.stats-progress-bar {
+  width: 120px;
+  height: 2px;
+  background: var(--border);
+  border-radius: 1px;
+  position: relative;
+  overflow: hidden;
+}
+.stats-progress-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: var(--primary);
+  width: 25%;
+  border-radius: 1px;
+  transition: width 0.4s ease;
+}
+
+/* ═══════════════════════════════════════════════════════
+   ABOUT — Overlapping editorial
+   ═══════════════════════════════════════════════════════ */
+.about {
+  padding: var(--section-gap) 0;
+  overflow: hidden;
+}
+.about-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(32px, 5vw, 80px);
+  align-items: center;
+}
+.about-image-wrapper {
+  position: relative;
+}
+.about-image {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  border-radius: 4px;
+}
+.about-image-accent {
+  position: absolute;
+  bottom: -24px;
+  right: -24px;
+  width: 60%;
+  aspect-ratio: 3 / 2;
+  background: var(--primary);
+  opacity: 0.12;
+  border-radius: 4px;
+  z-index: -1;
+}
+.about-content { padding: clamp(16px, 3vw, 48px) 0; }
+.about-content .heading-lg { margin-bottom: 24px; }
+.about-content p {
+  font-size: clamp(1rem, 1.2vw, 1.15rem);
+  line-height: 1.75;
+  color: var(--fg-soft);
+  margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+  .about-grid { grid-template-columns: 1fr; }
+  .about-image-accent { display: none; }
+}
+
+/* ═══════════════════════════════════════════════════════
+   CAMPAIGNS — Asymmetric grid
+   ═══════════════════════════════════════════════════════ */
+.campaigns {
+  padding: var(--section-gap) 0;
+}
+.campaigns-header {
+  margin-bottom: clamp(48px, 6vw, 80px);
+}
+.campaigns-grid {
+  display: grid;
+  grid-template-columns: 1.618fr 1fr;
+  grid-template-rows: auto auto;
+  gap: clamp(16px, 2vw, 32px);
+}
+.campaign-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+.campaign-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+.campaign-card-large {
+  grid-row: 1 / 3;
+}
+.campaign-card-image {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+}
+.campaign-card-large .campaign-card-image {
+  aspect-ratio: auto;
+  height: 100%;
+  min-height: 400px;
+}
+.campaign-card-body {
+  padding: clamp(20px, 2.5vw, 32px);
+}
+.campaign-card-tag {
+  display: inline-block;
+  padding: 4px 12px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+  color: var(--primary);
+  margin-bottom: 12px;
+}
+.campaign-card-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.2rem, 1.8vw, 1.6rem);
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 8px;
+}
+.campaign-card-desc {
+  font-size: 0.9rem;
+  color: var(--muted-fg);
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+.campaign-card-progress {
+  height: 3px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+.campaign-card-progress-fill {
+  height: 100%;
+  background: var(--primary);
+  border-radius: 2px;
+  transition: width 1s ease;
+}
+.campaign-card-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--muted-fg);
+}
+
+@media (max-width: 768px) {
+  .campaigns-grid { grid-template-columns: 1fr; }
+  .campaign-card-large { grid-row: auto; }
+}
+
+/* ═══════════════════════════════════════════════════════
+   VIDEO BREAK
+   ═══════════════════════════════════════════════════════ */
+.video-break {
+  position: relative;
+  height: 70vh;
+  min-height: 480px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.video-break-bg {
+  position: absolute;
+  inset: 0;
+}
+.video-break-bg video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.video-break-overlay {
+  position: absolute;
+  inset: 0;
+  background: hsl(200 30% 8% / 0.7);
+}
+html:not(.dark) .video-break-overlay {
+  background: hsl(40 33% 98% / 0.6);
+}
+.video-break-content {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  max-width: 800px;
+  padding: 0 24px;
+}
+.video-break-content .heading-xl {
+  color: #fff;
+  margin-bottom: 16px;
+}
+html:not(.dark) .video-break-content .heading-xl {
+  color: var(--fg);
+}
+.video-break-content p {
+  color: rgba(255,255,255,0.7);
+  font-size: clamp(1rem, 1.3vw, 1.2rem);
+  line-height: 1.7;
+}
+html:not(.dark) .video-break-content p {
+  color: var(--fg-soft);
+}
+.play-btn {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.4);
+  background: rgba(255,255,255,0.1);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 32px;
+  cursor: pointer;
+  transition: transform 0.3s, border-color 0.3s;
+}
+.play-btn:hover { transform: scale(1.08); border-color: var(--accent); }
+.play-btn svg { width: 28px; height: 28px; fill: #fff; margin-left: 4px; }
+html:not(.dark) .play-btn { border-color: var(--primary); background: color-mix(in srgb, var(--primary) 15%, transparent); }
+html:not(.dark) .play-btn svg { fill: var(--primary); }
+
+/* ═══════════════════════════════════════════════════════
+   IMPACT — Staggered grid
+   ═══════════════════════════════════════════════════════ */
+.impact {
+  padding: var(--section-gap) 0;
+}
+.impact-header {
+  margin-bottom: clamp(48px, 6vw, 80px);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(32px, 4vw, 64px);
+  align-items: end;
+}
+.impact-header .heading-lg { margin-bottom: 0; }
+.impact-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+}
+.impact-cell {
+  background: var(--bg);
+  padding: clamp(28px, 3.5vw, 48px);
+  transition: background 0.4s;
+}
+.impact-cell:hover { background: var(--surface); }
+.impact-cell-number {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 3.5vw, 3.2rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--primary);
+  margin-bottom: 12px;
+}
+.impact-cell-label {
+  font-size: clamp(0.95rem, 1.1vw, 1.05rem);
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.impact-cell-desc {
+  font-size: 0.85rem;
+  color: var(--muted-fg);
+  line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+  .impact-grid { grid-template-columns: 1fr; }
+  .impact-header { grid-template-columns: 1fr; }
+}
+
+/* ═══════════════════════════════════════════════════════
+   TESTIMONIALS
+   ═══════════════════════════════════════════════════════ */
+.testimonials {
+  padding: var(--section-gap) 0;
+  background: var(--bg-alt);
+}
+.testimonials-header {
+  margin-bottom: clamp(48px, 6vw, 80px);
+}
+.testimonials-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(16px, 2vw, 32px);
+}
+.testimonial-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: clamp(28px, 3vw, 44px);
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+.testimonial-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+.testimonial-quote-mark {
+  font-family: var(--font-display);
+  font-size: 4rem;
+  line-height: 1;
+  color: var(--primary);
+  opacity: 0.25;
+  margin-bottom: -16px;
+}
+.testimonial-text {
+  font-size: clamp(0.95rem, 1.1vw, 1.05rem);
+  line-height: 1.75;
+  color: var(--fg-soft);
+  flex: 1;
+  margin-bottom: 24px;
+  font-style: italic;
+}
+.testimonial-author {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-top: 1px solid var(--border);
+  padding-top: 20px;
+}
+.testimonial-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.testimonial-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+.testimonial-role {
+  font-size: 0.8rem;
+  color: var(--muted-fg);
+}
+
+@media (max-width: 768px) {
+  .testimonials-grid { grid-template-columns: 1fr; }
+}
+
+/* ═══════════════════════════════════════════════════════
+   CTA BAND
+   ═══════════════════════════════════════════════════════ */
+.cta-band {
+  padding: var(--section-gap) 0;
+  text-align: center;
+}
+.cta-band .heading-xl {
+  margin-bottom: 20px;
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.cta-band p {
+  font-size: clamp(1rem, 1.3vw, 1.2rem);
+  color: var(--fg-soft);
+  max-width: 600px;
+  margin: 0 auto 40px;
+  line-height: 1.7;
+}
+
+/* ═══════════════════════════════════════════════════════
+   FOOTER
+   ═══════════════════════════════════════════════════════ */
+.footer {
+  background: var(--fg);
+  color: var(--bg);
+  padding: clamp(60px, 8vw, 100px) 0 0;
+}
+.footer-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: clamp(32px, 4vw, 64px);
+  padding-bottom: clamp(48px, 6vw, 80px);
+}
+.footer-brand-desc {
+  font-size: 0.95rem;
+  color: color-mix(in srgb, var(--bg) 60%, var(--fg));
+  line-height: 1.7;
+  margin-top: 16px;
+  max-width: 360px;
+}
+.footer-col h4 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  color: var(--bg);
+}
+.footer-col ul { list-style: none; }
+.footer-col li { margin-bottom: 12px; }
+.footer-col a {
+  font-size: 0.9rem;
+  color: color-mix(in srgb, var(--bg) 55%, var(--fg));
+  transition: color 0.25s;
+}
+.footer-col a:hover { color: var(--bg); }
+.footer-bottom {
+  border-top: 1px solid color-mix(in srgb, var(--bg) 12%, var(--fg));
+  padding: 24px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: color-mix(in srgb, var(--bg) 40%, var(--fg));
+}
+
+@media (max-width: 768px) {
+  .footer-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 480px) {
+  .footer-grid { grid-template-columns: 1fr; }
+}
+
+/* ═══════════════════════════════════════════════════════
+   PLACEHOLDER VIDEO STYLING
+   ═══════════════════════════════════════════════════════ */
+.video-placeholder {
+  position: absolute;
+  inset: 0;
+  background: var(--bg-alt);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.video-placeholder::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 30% 50%, color-mix(in srgb, var(--primary) 8%, transparent) 0%, transparent 60%),
+    radial-gradient(ellipse at 70% 30%, color-mix(in srgb, var(--accent) 5%, transparent) 0%, transparent 50%);
+}
+.video-placeholder-label {
+  position: relative;
+  z-index: 1;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted-fg);
+  padding: 8px 20px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+/* ═══════════════════════════════════════════════════════
+   OVERLAP GRID TRICK
+   ═══════════════════════════════════════════════════════ */
+.overlap-section {
+  position: relative;
+}
+.overlap-section .overlap-image {
+  position: absolute;
+  width: 65%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border-radius: 4px;
+  right: -5%;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 0;
+}
+.overlap-section .overlap-content {
+  position: relative;
+  z-index: 1;
+  width: 55%;
+}
+
+@media (max-width: 768px) {
+  .overlap-section .overlap-image { display: none; }
+  .overlap-section .overlap-content { width: 100%; }
+}
+</style>
+</head>
+
+<body>
+
+<!-- ═══════ NAV ═══════ -->
+<nav class="nav" id="nav">
+  <div class="nav-inner">
+    <a href="#" class="nav-logo">
+      <div class="nav-logo-icon">
+        <svg viewBox="0 0 122 110"><path d="M12 35.5C12 19.5 24.5 7 40 7C49.5 7 57.5 12.5 61 21C64.5 12.5 72.5 7 82 7C97.5 7 110 19.5 110 35.5C110 60 85 82 61 101C37 82 12 60 12 35.5Z"/></svg>
+      </div>
+      Amana<span>Charity</span>
+    </a>
+
+    <ul class="nav-links">
+      <li><a href="#about">About</a></li>
+      <li><a href="#campaigns">Campaigns</a></li>
+      <li><a href="#impact">Impact</a></li>
+      <li><a href="#stories">Stories</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+
+    <div class="nav-actions">
+      <div class="theme-toggle" id="themeToggle" role="button" tabindex="0" aria-label="Toggle theme"></div>
+      <a href="#donate" class="nav-cta">Donate Now</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════ HERO ═══════ -->
+<section class="hero" id="hero">
+  <div class="hero-video-bg">
+    <!-- PLACEHOLDER: Replace <div class="video-placeholder"> with <video autoplay muted loop playsinline><source src="hero.mp4" type="video/mp4"></video> -->
+    <div class="video-placeholder">
+      <span class="video-placeholder-label">Hero Video — Looping Background</span>
+    </div>
+    <div class="hero-video-overlay"></div>
+  </div>
+
+  <div class="hero-content">
+    <div class="hero-eyebrow reveal">Amana Charity Hub</div>
+    <h1 class="hero-title">
+      <span class="line"><span class="line-inner">Empowering</span></span>
+      <span class="line"><span class="line-inner">Communities,</span></span>
+      <span class="line"><span class="line-inner"><em>One Life</em> at a Time</span></span>
+    </h1>
+    <p class="hero-subtitle reveal">Providing clean water, education, and healthcare to communities that need it most. Together, we create lasting change.</p>
+    <div class="hero-actions reveal">
+      <button class="btn-primary">
+        Start Donating
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+      </button>
+      <button class="btn-outline">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Watch Our Story
+      </button>
+    </div>
+  </div>
+
+  <div class="hero-scroll-indicator">
+    <span>Scroll</span>
+    <div class="hero-scroll-line"></div>
+  </div>
+</section>
+
+<!-- ═══════ MISSION ═══════ -->
+<section class="mission" id="about">
+  <div class="container">
+    <div class="mission-grid">
+      <div class="mission-left reveal-left">
+        <div class="kicker">Our Mission</div>
+        <div class="mission-stat">
+          <div class="mission-stat-value">30+</div>
+          <div class="mission-stat-label">Years of Impact</div>
+        </div>
+      </div>
+
+      <div class="mission-center reveal">
+        <h2 class="heading-lg">Building futures through education, health, and sustainable livelihoods</h2>
+        <p>Amana Charity Hub is dedicated to uplifting the most vulnerable and helping spark hope where it is needed most. From scholarships that unlock doors for young minds, to healthcare solutions that protect mothers and children, to climate-smart farming initiatives that strengthen rural livelihoods — our work delivers bold action and tangible results.</p>
+      </div>
+
+      <div class="mission-right reveal-right">
+        <div class="mission-divider"></div>
+        <div class="mission-right-text">Driven by faith. Focused on people. Fuelled by purpose.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ HORIZONTAL STATS ═══════ -->
+<section class="stats-gallery-wrapper" id="stats-wrapper">
+  <div class="stats-gallery" id="statsGallery">
+    <div class="stat-card">
+      <div class="stat-card-number">400K+</div>
+      <div class="stat-card-label">Scholarships awarded to vulnerable and academically gifted children across Africa</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-number">65K+</div>
+      <div class="stat-card-label">Teachers trained in digital skills, literacy, and numeracy</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-number">2M</div>
+      <div class="stat-card-label">Learners reached with high-quality e-learning materials</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-number">40M</div>
+      <div class="stat-card-label">NTD treatments delivered to at-risk communities</div>
+    </div>
+  </div>
+  <div class="stats-progress">
+    <span id="statsCounter">01 / 04</span>
+    <div class="stats-progress-bar"><div class="stats-progress-fill" id="statsProgressFill"></div></div>
+  </div>
+</section>
+
+<!-- ═══════ ABOUT ═══════ -->
+<section class="about">
+  <div class="container">
+    <div class="about-grid">
+      <div class="about-image-wrapper reveal-left">
+        <img class="about-image" src="https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=800&auto=format&fit=crop&q=80" alt="Children in classroom">
+        <div class="about-image-accent"></div>
+      </div>
+      <div class="about-content reveal-right">
+        <div class="kicker" style="margin-bottom: 20px;">Our Story</div>
+        <h2 class="heading-lg">From a single spark to a movement</h2>
+        <p>Founded with a clear purpose: to uplift the most vulnerable and help spark hope where it was needed most. Today, that spark has grown into a movement with investments across several African countries.</p>
+        <p>Higherlife Foundation stands as a catalyst for progress — working to nurture potential, expand opportunity, and build pathways out of poverty. Our programmes strengthen food systems, build institutional resilience, and equip people with the skills and resources to thrive.</p>
+        <a href="#" class="btn-primary" style="margin-top: 16px;">Read Our Story</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ CAMPAIGNS ═══════ -->
+<section class="campaigns" id="campaigns">
+  <div class="container">
+    <div class="campaigns-header">
+      <div class="kicker reveal">Active Campaigns</div>
+      <h2 class="heading-lg reveal" style="margin-top: 12px;">Make a difference today</h2>
+    </div>
+
+    <div class="campaigns-grid">
+      <!-- Large card -->
+      <article class="campaign-card campaign-card-large reveal-scale">
+        <img class="campaign-card-image" src="https://images.unsplash.com/photo-1594398901394-4e34939a4fd0?w=1200&auto=format&fit=crop&q=80" alt="Clean water project">
+        <div class="campaign-card-body">
+          <span class="campaign-card-tag">Healthcare</span>
+          <h3 class="campaign-card-title">Clean Water for Villages</h3>
+          <p class="campaign-card-desc">Providing clean drinking water access to 15 rural villages in East Africa. Every well built serves hundreds of families for decades.</p>
+          <div class="campaign-card-progress"><div class="campaign-card-progress-fill" style="width: 75%"></div></div>
+          <div class="campaign-card-meta">
+            <span>$45,000 raised</span>
+            <span>of $60,000</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- Stacked cards -->
+      <article class="campaign-card reveal">
+        <img class="campaign-card-image" src="https://images.unsplash.com/photo-1497486751825-1233686d5d80?w=800&auto=format&fit=crop&q=80" alt="Education program">
+        <div class="campaign-card-body">
+          <span class="campaign-card-tag">Education</span>
+          <h3 class="campaign-card-title">Education for Orphans</h3>
+          <p class="campaign-card-desc">Supporting 200 orphaned children with school supplies, uniforms, and tuition fees for a full academic year.</p>
+          <div class="campaign-card-progress"><div class="campaign-card-progress-fill" style="width: 64%"></div></div>
+          <div class="campaign-card-meta">
+            <span>$32,000 raised</span>
+            <span>of $50,000</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="campaign-card reveal">
+        <img class="campaign-card-image" src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=800&auto=format&fit=crop&q=80" alt="Medical fund">
+        <div class="campaign-card-body">
+          <span class="campaign-card-tag">Medical</span>
+          <h3 class="campaign-card-title">Emergency Medical Fund</h3>
+          <p class="campaign-card-desc">Providing life-saving surgeries and treatments for children in critical need across underserved regions.</p>
+          <div class="campaign-card-progress"><div class="campaign-card-progress-fill" style="width: 78%"></div></div>
+          <div class="campaign-card-meta">
+            <span>$78,000 raised</span>
+            <span>of $100,000</span>
+          </div>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ VIDEO BREAK ═══════ -->
+<section class="video-break">
+  <div class="video-break-bg">
+    <!-- PLACEHOLDER: Replace with <video autoplay muted loop playsinline><source src="impact.mp4" type="video/mp4"></video> -->
+    <div class="video-placeholder">
+      <span class="video-placeholder-label">Impact Video — Secondary Loop</span>
+    </div>
+    <div class="video-break-overlay"></div>
+  </div>
+  <div class="video-break-content reveal">
+    <div class="play-btn">
+      <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+    </div>
+    <h2 class="heading-xl">See the impact<br>your generosity creates</h2>
+    <p>From classroom chalkboards to hospital beds, every donation writes a new chapter of hope.</p>
+  </div>
+</section>
+
+<!-- ═══════ IMPACT ═══════ -->
+<section class="impact" id="impact">
+  <div class="container">
+    <div class="impact-header">
+      <div>
+        <div class="kicker reveal">Our Impact</div>
+        <h2 class="heading-lg reveal" style="margin-top: 12px;">Numbers that speak louder than words</h2>
+      </div>
+      <p class="body-lg reveal">Over the past three decades, our programmes have transformed millions of lives across Africa and beyond.</p>
+    </div>
+
+    <div class="impact-grid">
+      <div class="impact-cell reveal">
+        <div class="impact-cell-number">50,000+</div>
+        <div class="impact-cell-label">Lives Changed</div>
+        <div class="impact-cell-desc">Families lifted out of poverty through sustainable livelihood programmes.</div>
+      </div>
+      <div class="impact-cell reveal">
+        <div class="impact-cell-number">8,500</div>
+        <div class="impact-cell-label">Students Educated</div>
+        <div class="impact-cell-desc">Children receiving quality education through scholarship programmes.</div>
+      </div>
+      <div class="impact-cell reveal">
+        <div class="impact-cell-number">12,000</div>
+        <div class="impact-cell-label">Medical Treatments</div>
+        <div class="impact-cell-desc">Life-saving treatments delivered to communities in critical need.</div>
+      </div>
+      <div class="impact-cell reveal">
+        <div class="impact-cell-number">2,400</div>
+        <div class="impact-cell-label">Homes Rebuilt</div>
+        <div class="impact-cell-desc">Families provided with safe, durable shelter after crisis events.</div>
+      </div>
+      <div class="impact-cell reveal">
+        <div class="impact-cell-number">1.2M</div>
+        <div class="impact-cell-label">Meals Served</div>
+        <div class="impact-cell-desc">Nutritious meals provided to food-insecure communities.</div>
+      </div>
+      <div class="impact-cell reveal">
+        <div class="impact-cell-number">45</div>
+        <div class="impact-cell-label">Water Wells Built</div>
+        <div class="impact-cell-desc">Clean water access points serving thousands of rural families.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ TESTIMONIALS ═══════ -->
+<section class="testimonials" id="stories">
+  <div class="container">
+    <div class="testimonials-header">
+      <div class="kicker reveal">Stories of Hope</div>
+      <h2 class="heading-lg reveal" style="margin-top: 12px;">Voices from the communities we serve</h2>
+    </div>
+
+    <div class="testimonials-grid">
+      <article class="testimonial-card reveal">
+        <div class="testimonial-quote-mark">"</div>
+        <p class="testimonial-text">Thanks to the scholarship programme, I became the first in my family to attend university. Now I'm a nurse, giving back to my community.</p>
+        <div class="testimonial-author">
+          <img class="testimonial-avatar" src="https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=100&auto=format&fit=crop&q=80" alt="Amara K.">
+          <div>
+            <div class="testimonial-name">Amara K.</div>
+            <div class="testimonial-role">Kenya — Education Programme</div>
+          </div>
+        </div>
+      </article>
+
+      <article class="testimonial-card reveal">
+        <div class="testimonial-quote-mark">"</div>
+        <p class="testimonial-text">After the flood destroyed our home, Amana helped us rebuild. We now have a safe place for our children to grow up.</p>
+        <div class="testimonial-author">
+          <img class="testimonial-avatar" src="https://images.unsplash.com/photo-1609220136736-443140cffec6?w=100&auto=format&fit=crop&q=80" alt="The Rahman Family">
+          <div>
+            <div class="testimonial-name">The Rahman Family</div>
+            <div class="testimonial-role">Bangladesh — Housing Programme</div>
+          </div>
+        </div>
+      </article>
+
+      <article class="testimonial-card reveal">
+        <div class="testimonial-quote-mark">"</div>
+        <p class="testimonial-text">The medical fund saved my daughter's life. She needed heart surgery we couldn't afford. Today, she's healthy and thriving.</p>
+        <div class="testimonial-author">
+          <img class="testimonial-avatar" src="https://images.unsplash.com/photo-1516627145497-ae6968895b74?w=100&auto=format&fit=crop&q=80" alt="Maya">
+          <div>
+            <div class="testimonial-name">Little Maya</div>
+            <div class="testimonial-role">Nepal — Medical Programme</div>
+          </div>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ CTA ═══════ -->
+<section class="cta-band" id="donate">
+  <div class="container-tight">
+    <div class="kicker reveal">Join Our Mission</div>
+    <h2 class="heading-xl reveal">Your generosity<br>changes everything</h2>
+    <p class="reveal">Every contribution, no matter the size, creates a ripple of change that extends far beyond what you see today.</p>
+    <div class="hero-actions reveal" style="justify-content: center;">
+      <button class="btn-primary" style="font-size: 1.1rem; padding: 18px 44px;">
+        Donate Now
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+      </button>
+      <button class="btn-outline" style="font-size: 1.1rem; padding: 18px 44px;">Become a Partner</button>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ FOOTER ═══════ -->
+<footer class="footer" id="contact">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="nav-logo" style="color: var(--bg);">
+          <div class="nav-logo-icon" style="background: var(--accent);">
+            <svg viewBox="0 0 122 110" style="fill: var(--accent-fg);"><path d="M12 35.5C12 19.5 24.5 7 40 7C49.5 7 57.5 12.5 61 21C64.5 12.5 72.5 7 82 7C97.5 7 110 19.5 110 35.5C110 60 85 82 61 101C37 82 12 60 12 35.5Z"/></svg>
+          </div>
+          Amana<span style="color: var(--accent);">Charity</span>
+        </div>
+        <p class="footer-brand-desc">Empowering communities through charitable initiatives — clean water, education, healthcare, and sustainable livelihoods for those who need it most.</p>
+      </div>
+
+      <div class="footer-col">
+        <h4>About</h4>
+        <ul>
+          <li><a href="#">Our Mission</a></li>
+          <li><a href="#">Leadership Team</a></li>
+          <li><a href="#">Annual Reports</a></li>
+          <li><a href="#">Careers</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Programmes</h4>
+        <ul>
+          <li><a href="#">Education</a></li>
+          <li><a href="#">Healthcare</a></li>
+          <li><a href="#">Clean Water</a></li>
+          <li><a href="#">Emergency Relief</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Get Involved</h4>
+        <ul>
+          <li><a href="#">Donate</a></li>
+          <li><a href="#">Volunteer</a></li>
+          <li><a href="#">Corporate Partners</a></li>
+          <li><a href="#">Fundraise</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <span>&copy; 2026 Amana Charity Hub. All Rights Reserved.</span>
+      <span>Privacy Policy &middot; Terms of Service</span>
+    </div>
+  </div>
+</footer>
+
+<!-- ═══════════════════════════════════════════════════════
+     SCRIPTS
+     ═══════════════════════════════════════════════════════ -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+  /* ── Theme Toggle ── */
+  const toggle = document.getElementById('themeToggle');
+  const html = document.documentElement;
+  const stored = localStorage.getItem('amana-theme');
+  if (stored) html.className = stored;
+  else html.className = 'dark'; // default
+
+  toggle.addEventListener('click', () => {
+    html.classList.toggle('dark');
+    localStorage.setItem('amana-theme', html.className);
+  });
+
+  /* ── Lenis Smooth Scroll ── */
+  const lenis = new Lenis({
+    duration: 1.2,
+    easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+    smoothWheel: true,
+  });
+
+  function raf(time) {
+    lenis.raf(time);
+    requestAnimationFrame(raf);
+  }
+  requestAnimationFrame(raf);
+
+  /* ── GSAP ScrollTrigger ── */
+  gsap.registerPlugin(ScrollTrigger);
+
+  // Hero entrance
+  gsap.to('.hero-title .line-inner', {
+    y: 0,
+    duration: 1.2,
+    stagger: 0.12,
+    ease: 'expo.out',
+    delay: 0.3,
+  });
+
+  // General reveals
+  document.querySelectorAll('.reveal').forEach(el => {
+    gsap.to(el, {
+      opacity: 1,
+      y: 0,
+      duration: 0.9,
+      ease: 'power3.out',
+      scrollTrigger: {
+        trigger: el,
+        start: 'top 88%',
+        once: true,
+      },
+    });
+  });
+
+  document.querySelectorAll('.reveal-left').forEach(el => {
+    gsap.to(el, {
+      opacity: 1,
+      x: 0,
+      duration: 1,
+      ease: 'power3.out',
+      scrollTrigger: {
+        trigger: el,
+        start: 'top 88%',
+        once: true,
+      },
+    });
+  });
+
+  document.querySelectorAll('.reveal-right').forEach(el => {
+    gsap.to(el, {
+      opacity: 1,
+      x: 0,
+      duration: 1,
+      ease: 'power3.out',
+      scrollTrigger: {
+        trigger: el,
+        start: 'top 88%',
+        once: true,
+      },
+    });
+  });
+
+  document.querySelectorAll('.reveal-scale').forEach(el => {
+    gsap.to(el, {
+      opacity: 1,
+      scale: 1,
+      duration: 1,
+      ease: 'power3.out',
+      scrollTrigger: {
+        trigger: el,
+        start: 'top 88%',
+        once: true,
+      },
+    });
+  });
+
+  /* ── Horizontal Stats Gallery (GSAP ScrollTrigger pin) ── */
+  const gallery = document.getElementById('statsGallery');
+  const wrapper = document.getElementById('stats-wrapper');
+  const counter = document.getElementById('statsCounter');
+  const progressFill = document.getElementById('statsProgressFill');
+  const cards = gallery.querySelectorAll('.stat-card');
+  const totalCards = cards.length;
+
+  // Calculate scroll width
+  function getScrollWidth() {
+    return gallery.scrollWidth - window.innerWidth;
+  }
+
+  let currentCard = 0;
+
+  const scrollTween = gsap.to(gallery, {
+    x: () => -getScrollWidth(),
+    ease: 'none',
+    scrollTrigger: {
+      trigger: wrapper,
+      start: 'top top',
+      end: () => `+=${getScrollWidth()}`,
+      pin: true,
+      scrub: 1,
+      invalidateOnRefresh: true,
+      onUpdate: (self) => {
+        const progress = self.progress;
+        const newIndex = Math.min(Math.floor(progress * totalCards), totalCards - 1);
+        if (newIndex !== currentCard) {
+          currentCard = newIndex;
+          counter.textContent = `0${currentCard + 1} / 0${totalCards}`;
+          progressFill.style.width = `${((currentCard + 1) / totalCards) * 100}%`;
+        }
+      },
+    },
+  });
+
+  /* ── Nav scroll effect ── */
+  const nav = document.getElementById('nav');
+  ScrollTrigger.create({
+    start: 80,
+    onUpdate: (self) => {
+      nav.classList.toggle('scrolled', self.progress > 0);
+    },
+  });
+
+  /* ── Refresh on resize ── */
+  window.addEventListener('resize', () => {
+    ScrollTrigger.refresh();
+  });
+
+});
+</script>
+
+</body>
+</html>

@@ -116,6 +116,7 @@ interface AuthContextType {
   register: (data: RegisterData) => Promise<void>;
   loginWithGoogle: () => void;
   setAuthSession: (token: string, user: User) => void;
+  updateUser: (updates: Partial<User>) => void;
   logout: () => Promise<void>;
 }
 
@@ -183,6 +184,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     authApi.loginWithGoogle(); // Full page redirect
   };
 
+  const updateUser = (updates: Partial<User>) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const updated = { ...prev, ...updates };
+      localStorage.setItem('user', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
   const logout = async () => {
     try {
       await authApi.logout(); 
@@ -205,6 +215,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         register,
         loginWithGoogle,
         setAuthSession,
+        updateUser,
         logout,
       }}
     >

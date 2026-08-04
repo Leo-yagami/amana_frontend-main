@@ -2,11 +2,11 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Filter, Mail, Phone, Eye, Edit, Trash2 } from "lucide-react";
+import { Plus, Search, Filter, Mail, Phone, Edit, Trash2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { donorApi, dashboardApi } from "@/services/api.service";
+import { donorApi, dashboardApi, donationApi } from "@/services/api.service";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
@@ -38,6 +38,8 @@ const getTypeColor = (type: string) => {
       return "bg-primary/10 text-primary border-primary/20";
     case "Foundation":
       return "bg-accent/10 text-accent border-accent/20";
+    case "Embassy":
+      return "bg-sky-500/10 text-sky-600 border-sky-500/20";
     default:
       return "bg-muted text-muted-foreground border-muted";
   }
@@ -84,6 +86,21 @@ const Donors = () => {
     refetchOnWindowFocus: false, // ✅ ADD
   });
 
+  const { data: pledgedDonations } = useQuery({
+    queryKey: ['donations', 'pledged', 'stats'],
+    queryFn: async () => {
+      const response = await donationApi.getAll({ page: 1, limit: 10000, status: 'pledged' });
+      return response?.data[0]?.data || [];
+    },
+    staleTime: 30 * 1000,
+  });
+
+  const promisedMonetaryAmount = pledgedDonations
+    ?.filter((d: any) => d.donationType === 'monetary')
+    ?.reduce((sum: number, d: any) => sum + Number(d.amount || 0), 0) || 0;
+
+  const receivedMonetaryAmount = (overview?.donations?.totalAmount || 0) - promisedMonetaryAmount;
+
   //formatting date consistently
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString("en", {
@@ -103,7 +120,7 @@ const Donors = () => {
     if (!donorToDelete) return;
 
     try {
-      await donorApi.delete(donorToDelete._id);
+      await donorApi.delete((donorToDelete as any)._id || donorToDelete.id);
       toast({
         title: t("dashboard.donorsPage.toastSuccessTitle"),
         description: t("dashboard.donorsPage.toastDeleted"),
@@ -153,7 +170,7 @@ const Donors = () => {
         <div className="bg-card rounded-lg sm:rounded-xl border border-border p-4 sm:p-6">
           <p className="text-muted-foreground text-xs sm:text-sm mb-1">{t("dashboard.donorsPage.statsTotalDonated")}</p>
           <p className="text-2xl sm:text-3xl font-bold text-primary">
-            {overview ? `$${overview?.donations?.totalAmount?.toLocaleString()}` : '-' || 0}
+            {overview ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'ETB' }).format(receivedMonetaryAmount) : '-'}
           </p>
         </div>
       </div>
@@ -190,6 +207,7 @@ const Donors = () => {
             <SelectItem value="Corporate">{t("dashboard.donorsPage.corporate")}</SelectItem>
             <SelectItem value="Foundation">{t("dashboard.donorsPage.foundation")}</SelectItem>
             <SelectItem value="Organization">{t("dashboard.donorsPage.organization")}</SelectItem>
+            <SelectItem value="Embassy">{t("dashboard.donorsPage.embassy")}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -226,7 +244,8 @@ const Donors = () => {
           donorsData?.data?.map((donor) => (
           <div
             key={donor._id}
-            className="bg-card rounded-lg sm:rounded-xl border border-border p-4 sm:p-6 hover:shadow-md transition-shadow"
+            className="bg-card rounded-lg sm:rounded-xl border border-border p-4 sm:p-6 transition-all cursor-pointer hover:bg-muted hover:shadow-sm [&:has(.actions-area:hover)]:bg-transparent [&:has(.actions-area:hover)]:shadow-none"
+            onClick={() => navigate(`/dashboard/donors/${donor._id}`)}
           >
             <div className="flex items-start gap-3 sm:gap-4 mb-4">
               <Avatar className="h-10 sm:h-14 w-10 sm:w-14 flex-shrink-0">
@@ -242,7 +261,7 @@ const Donors = () => {
                     <p className="text-xs text-muted-foreground truncate">{donor.donorCode}</p>
                   </div>
                   <Badge variant="outline" className={`${getTypeColor(donor.donorType)} text-xs flex-shrink-0`}>
-                    {donor.donorType}
+                    {t(`dashboard.donorsPage.${donor.donorType.toLowerCase()}`)}
                   </Badge>
                 </div>
               </div>
@@ -270,31 +289,31 @@ const Donors = () => {
                   {formatDate(donor.registeredAt)}
                 </p>
               </div>
-              <div className="flex gap-1">
+              <div className="flex gap-1 actions-area">
                 <Button
                   size="sm"
                   variant="ghost"
-                  onClick={() => navigate(`/dashboard/donors/${donor._id}`)}
-                  title={t("dashboard.donorsPage.viewDetails")}
-                  className="h-8 w-8 p-0"
+                  onClick={(e) => { e.stopPropagation(); navigate(`/dashboard/donations/new?donor=${donor._id}`); }}
+                  title={t("dashboard.donorsPage.recordDonation")}
+                  className="hover:bg-primary/20 h-8 w-8 p-0"
                 >
-                  <Eye className="w-3 sm:w-4 h-3 sm:h-4" />
+                  <Plus className="w-3 sm:w-4 h-3 sm:h-4" />
                 </Button>
                 <Button
                   size="sm"
                   variant="ghost"
-                  onClick={() => navigate(`/dashboard/donors/edit/${donor._id}`)}
+                  onClick={(e) => { e.stopPropagation(); navigate(`/dashboard/donors/edit/${donor._id}`); }}
                   title={t("dashboard.donorsPage.editTitle")}
-                  className="h-8 w-8 p-0"
+                  className="hover:bg-primary/20 h-8 w-8 p-0"
                 >
                   <Edit className="w-3 sm:w-4 h-3 sm:h-4" />
                 </Button>
                 <Button
                   size="sm"
                   variant="ghost"
-                  onClick={() => handleDeleteClick(donor)}
+                  onClick={(e) => { e.stopPropagation(); handleDeleteClick(donor); }}
                   title={t("dashboard.donorsPage.deleteAction")}
-                  className="text-destructive hover:text-destructive h-8 w-8 p-0"
+                  className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8 p-0"
                 >
                   <Trash2 className="w-3 sm:w-4 h-3 sm:h-4" />
                 </Button>

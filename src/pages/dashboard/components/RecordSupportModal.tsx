@@ -23,7 +23,10 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Heart } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useTranslation } from "react-i18next";
 import { Donor } from "@/types/api";
+
+const NS = "dashboard.recordSupport";
 
 interface RecordSupportModalProps {
   open: boolean;
@@ -42,6 +45,7 @@ const RecordSupportModal = ({
   targetName,
   onSuccess,
 }: RecordSupportModalProps) => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [donors, setDonors] = useState<Donor[]>([]);
   const [loadingDonors, setLoadingDonors] = useState(false);
@@ -112,8 +116,8 @@ const RecordSupportModal = ({
       await supportHistoryApi.create(supportData);
       
       toast({
-        title: "Success",
-        description: "Support recorded successfully",
+        title: t(`${NS}.toastSuccessTitle`),
+        description: t(`${NS}.toastSuccessDesc`),
       });
 
       // Reset form
@@ -135,8 +139,8 @@ const RecordSupportModal = ({
       onClose();
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to record support",
+        title: t(`${NS}.toastErrorTitle`),
+        description: error.response?.data?.message || t(`${NS}.toastErrorDesc`),
         variant: "destructive",
       });
     } finally {
@@ -157,21 +161,21 @@ const RecordSupportModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      {/* old: scroll broke with lenis — added data-lenis-prevent */}
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto" data-lenis-prevent>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Heart className="h-5 w-5 text-red-500" />
-            Record Support
+            {t(`${NS}.title`)}
           </DialogTitle>
           <DialogDescription>
-            Record support provided to {targetName}
+            {t(`${NS}.description`, { name: targetName })}
           </DialogDescription>
         </DialogHeader>
 
         <Alert>
           <AlertDescription className="text-sm">
-            Document all support provided including financial assistance, items, services, 
-            or other forms of aid.
+            {t(`${NS}.alert`)}
           </AlertDescription>
         </Alert>
 
@@ -180,7 +184,7 @@ const RecordSupportModal = ({
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="supportType">
-                Support Type <span className="text-red-500">*</span>
+                {t(`${NS}.supportType`)} <span className="text-red-500">*</span>
               </Label>
               <Select
                 value={formData.supportType}
@@ -191,23 +195,23 @@ const RecordSupportModal = ({
                 disabled={loading}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select type" />
+                  <SelectValue placeholder={t(`${NS}.selectType`)} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="financial">Financial Assistance</SelectItem>
-                  <SelectItem value="food">Food Supply</SelectItem>
-                  <SelectItem value="clothing">Clothing</SelectItem>
-                  <SelectItem value="education">Educational Support</SelectItem>
-                  <SelectItem value="medical">Medical Assistance</SelectItem>
-                  <SelectItem value="housing">Housing Support</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
+                  <SelectItem value="financial">{t(`${NS}.typeFinancial`)}</SelectItem>
+                  <SelectItem value="food">{t(`${NS}.typeFood`)}</SelectItem>
+                  <SelectItem value="clothing">{t(`${NS}.typeClothing`)}</SelectItem>
+                  <SelectItem value="education">{t(`${NS}.typeEducation`)}</SelectItem>
+                  <SelectItem value="medical">{t(`${NS}.typeMedical`)}</SelectItem>
+                  <SelectItem value="housing">{t(`${NS}.typeHousing`)}</SelectItem>
+                  <SelectItem value="other">{t(`${NS}.typeOther`)}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="supportDate">
-                Date <span className="text-red-500">*</span>
+                {t(`${NS}.date`)} <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="supportDate"
@@ -225,10 +229,10 @@ const RecordSupportModal = ({
 
           {/* Financial Support */}
           <div className="space-y-4">
-            <h3 className="font-semibold text-sm">Financial Support (Optional)</h3>
+            <h3 className="font-semibold text-sm">{t(`${NS}.financialSupport`)}</h3>
             <div className="grid grid-cols-3 gap-4">
               <div className="col-span-2 space-y-2">
-                <Label htmlFor="amountValue">Amount</Label>
+                <Label htmlFor="amountValue">{t(`${NS}.amount`)}</Label>
                 <Input
                   id="amountValue"
                   className="text-sm sm:text-base"
@@ -239,12 +243,12 @@ const RecordSupportModal = ({
                   onChange={(e) =>
                     setFormData({ ...formData, amountValue: e.target.value })
                   }
-                  placeholder="e.g., 500.00"
+                  placeholder={t(`${NS}.amountPh`)}
                   disabled={loading}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="currency">Currency</Label>
+                <Label htmlFor="currency">{t(`${NS}.currency`)}</Label>
                 <Select
                   value={formData.currency}
                   onValueChange={(value) =>
@@ -267,7 +271,7 @@ const RecordSupportModal = ({
 
           {/* Items Provided */}
           <div className="space-y-4">
-            <h3 className="font-semibold text-sm">Items Provided (Optional)</h3>
+            <h3 className="font-semibold text-sm">{t(`${NS}.itemsProvided`)}</h3>
             
             {/* Added Items List */}
             {items.length > 0 && (
@@ -294,7 +298,7 @@ const RecordSupportModal = ({
             {/* Add Item Form */}
             <div className="grid grid-cols-12 gap-2">
               <div className="col-span-5 space-y-2">
-                <Label htmlFor="itemName">Item Name</Label>
+                <Label htmlFor="itemName">{t(`${NS}.itemName`)}</Label>
                 <Input
                   id="itemName"
                   className="text-sm sm:text-base"
@@ -302,12 +306,12 @@ const RecordSupportModal = ({
                   onChange={(e) =>
                     setCurrentItem({ ...currentItem, name: e.target.value })
                   }
-                  placeholder="e.g., Rice, Oil"
+                  placeholder={t(`${NS}.itemNamePh`)}
                   disabled={loading}
                 />
               </div>
               <div className="col-span-3 space-y-2">
-                <Label htmlFor="itemQuantity">Quantity</Label>
+                <Label htmlFor="itemQuantity">{t(`${NS}.quantity`)}</Label>
                 <Input
                   id="itemQuantity"
                   className="text-sm sm:text-base"
@@ -318,12 +322,12 @@ const RecordSupportModal = ({
                   onChange={(e) =>
                     setCurrentItem({ ...currentItem, quantity: e.target.value })
                   }
-                  placeholder="5"
+                  placeholder={t(`${NS}.quantityPh`)}
                   disabled={loading}
                 />
               </div>
               <div className="col-span-2 space-y-2">
-                <Label htmlFor="itemUnit">Unit</Label>
+                <Label htmlFor="itemUnit">{t(`${NS}.unit`)}</Label>
                 <Input
                   id="itemUnit"
                   className="text-sm sm:text-base"
@@ -331,7 +335,7 @@ const RecordSupportModal = ({
                   onChange={(e) =>
                     setCurrentItem({ ...currentItem, unit: e.target.value })
                   }
-                  placeholder="kg, lt"
+                  placeholder={t(`${NS}.unitPh`)}
                   disabled={loading}
                 />
               </div>
@@ -353,10 +357,10 @@ const RecordSupportModal = ({
           {false && (
 
           <div className="space-y-4">
-            <h3 className="font-semibold text-sm">Delivery & Attribution (Optional)</h3>
+            <h3 className="font-semibold text-sm">{t(`${NS}.deliveryAttribution`)}</h3>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="donorId">Donor</Label>
+                <Label htmlFor="donorId">{t(`${NS}.donor`)}</Label>
                 <Select
                   value={formData.donorId || undefined}
                   onValueChange={(value) =>
@@ -365,7 +369,7 @@ const RecordSupportModal = ({
                   disabled={loading || loadingDonors}
                   >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select donor (optional)" />
+                    <SelectValue placeholder={t(`${NS}.selectDonor`)} />
                   </SelectTrigger>
                   <SelectContent>
                     {donors.map((donor) => (
@@ -381,12 +385,12 @@ const RecordSupportModal = ({
                   onClick={() => setFormData({ ...formData, donorId: "" })}
                   className="text-xs text-muted-foreground hover:text-foreground underline"
                   >
-                    Clear selection
+                    {t(`${NS}.clearSelection`)}
                   </button>
                 )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="volunteerId">Volunteer/Staff</Label>
+                <Label htmlFor="volunteerId">{t(`${NS}.volunteerStaff`)}</Label>
                 <Input
                   id="volunteerId"
                   className="text-sm sm:text-base"
@@ -394,13 +398,13 @@ const RecordSupportModal = ({
                   onChange={(e) =>
                     setFormData({ ...formData, volunteerId: e.target.value })
                   }
-                  placeholder="Volunteer ID (optional)"
+                  placeholder={t(`${NS}.volunteerPh`)}
                   disabled={loading}
                   />
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="deliveredBy">Delivered By</Label>
+              <Label htmlFor="deliveredBy">{t(`${NS}.deliveredBy`)}</Label>
               <Input
                 id="deliveredBy"
                 className="text-sm sm:text-base"
@@ -408,7 +412,7 @@ const RecordSupportModal = ({
                 onChange={(e) =>
                   setFormData({ ...formData, deliveredBy: e.target.value })
                 }
-                placeholder="Name of person/organization"
+                placeholder={t(`${NS}.deliveredByPh`)}
                 disabled={loading}
                 />
             </div>
@@ -418,27 +422,27 @@ const RecordSupportModal = ({
           {/* Description & Notes */}
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">{t(`${NS}.description`)}</Label>
               <Textarea
                 id="description"
                 value={formData.description}
                 onChange={(e) =>
                   setFormData({ ...formData, description: e.target.value })
                 }
-                placeholder="Brief description of the support"
+                placeholder={t(`${NS}.descriptionPh`)}
                 rows={2}
                 disabled={loading}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="notes">Additional Notes</Label>
+              <Label htmlFor="notes">{t(`${NS}.notes`)}</Label>
               <Textarea
                 id="notes"
                 value={formData.notes}
                 onChange={(e) =>
                   setFormData({ ...formData, notes: e.target.value })
                 }
-                placeholder="Any additional information"
+                placeholder={t(`${NS}.notesPh`)}
                 rows={2}
                 disabled={loading}
               />
@@ -447,7 +451,7 @@ const RecordSupportModal = ({
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
-              Cancel
+              {t(`${NS}.cancel`)}
             </Button>
             <Button
             className="mb-3"
@@ -455,12 +459,12 @@ const RecordSupportModal = ({
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Recording...
+                  {t(`${NS}.recording`)}
                 </>
               ) : (
                 <>
                   <Heart className="mr-2 h-4 w-4" />
-                  Record Support
+                  {t(`${NS}.recordSupportBtn`)}
                 </>
               )}
             </Button>

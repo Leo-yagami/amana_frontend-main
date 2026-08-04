@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Card,
@@ -37,7 +37,52 @@ import { useTranslation } from "react-i18next";
 
 const Settings = () => {
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Avatar size must be under 2MB");
+      return;
+    }
+
+    try {
+      setSaving(true);
+      const formData = new FormData();
+      formData.append("avatar", file);
+
+      const response = await api.post("/upload/avatar", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      const baseUrl = import.meta.env.VITE_API_URL || "";
+      const avatarUrl = response.data.url.startsWith("http") 
+        ? response.data.url 
+        : `${baseUrl}${response.data.url}`;
+
+      setProfileData((prev) => ({
+        ...prev,
+        avatar: avatarUrl,
+      }));
+      updateUser({ avatar: avatarUrl });
+      toast.success("Avatar uploaded successfully");
+    } catch (error: any) {
+      console.error("Avatar upload failed:", error);
+      toast.error(error?.response?.data?.error || "Failed to upload avatar");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   // Loading states
   const [profileLoading, setProfileLoading] = useState(true);
@@ -45,12 +90,20 @@ const Settings = () => {
   const [saving, setSaving] = useState(false);
   const [tabValue, setTabValue] = useState("profile");
 
+  // Profile error state
+  const [profileErrors, setProfileErrors] = useState({
+    email: "",
+    phone: "",
+  });
+
   // Profile state
   const [profileData, setProfileData] = useState({
     fullName: "",
     email: "",
     phone: "",
     role: "",
+    authType: "",
+    avatar: "",
   });
 
   // Organization state
@@ -88,10 +141,12 @@ const Settings = () => {
         const response = await api.get("/auth/me");
         const data = response.data;
         setProfileData({
-          fullName: data.fullName || "",
+          fullName: data.fullName || data.name || "",
           email: data.email || "",
-          phone: data.phone || "",
-          role: data.role || "",
+          phone: data.phoneNumber || "",
+          role: data.role || "user",
+          authType: data.authType || "local",
+          avatar: data.avatar || "",
         });
       } catch (error) {
         console.error("Failed to fetch profile:", error);
@@ -129,12 +184,35 @@ const Settings = () => {
 
   // Handle profile update
   const handleProfileUpdate = async () => {
+    setProfileErrors({ email: "", phone: "" });
     try {
       setSaving(true);
-      await api.put("/auth/me", profileData);
+      const response = await api.put("/auth/me", {
+        name: profileData.fullName,
+        email: profileData.email,
+        phoneNumber: profileData.phone,
+        avatar: profileData.avatar,
+      });
+      updateUser({
+        fullName: response.data.fullName,
+        email: response.data.email,
+        phoneNumber: response.data.phoneNumber,
+        avatar: response.data.avatar,
+      });
       toast.success(t("dashboard.settingsScreen.toastProfileOk"));
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || t("dashboard.settingsScreen.toastProfileErr"));
+      const serverMsg = error?.response?.data?.message || "";
+      const newErrors = { email: "", phone: "" };
+      if (serverMsg.toLowerCase().includes("email")) {
+        newErrors.email = serverMsg;
+      }
+      if (serverMsg.toLowerCase().includes("phone")) {
+        newErrors.phone = serverMsg;
+      }
+      setProfileErrors(newErrors);
+      if (!newErrors.email && !newErrors.phone) {
+        toast.error(serverMsg || t("dashboard.settingsScreen.toastProfileErr"));
+      }
     } finally {
       setSaving(false);
     }
@@ -152,7 +230,7 @@ const Settings = () => {
     }
     try {
       setSaving(true);
-      await api.put("/auth/change-password", {
+      await api.post("/auth/change-password", {
         currentPassword: passwordData.currentPassword,
         newPassword: passwordData.newPassword,
       });
@@ -242,19 +320,42 @@ const Settings = () => {
                 {/* Avatar */}
                 <div className="flex items-center gap-6">
                   <Avatar className="w-24 h-24">
-                    <AvatarImage src={undefined} />
+                    <AvatarImage src={profileData.avatar || undefined} />
                     <AvatarFallback className="text-2xl">
                       {profileData.fullName?.charAt(0) || "U"}
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <Button variant="outline" size="sm">
-                      <Upload className="w-4 h-4 mr-2" />
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={handleAvatarClick}
+                      disabled={profileData.authType === "google" || saving}
+                    >
+                      {saving ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <Upload className="w-4 h-4 mr-2" />
+                      )}
                       {t("dashboard.settingsScreen.changePhoto")}
                     </Button>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      {t("dashboard.settingsScreen.photoHint")}
-                    </p>
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleAvatarChange}
+                      style={{ display: "none" }}
+                      accept="image/*"
+                    />
+                    {profileData.authType === "google" && (
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Google OAuth users cannot modify their profile picture
+                      </p>
+                    )}
+                    {profileData.authType !== "google" && (
+                      <p className="text-xs text-muted-foreground mt-2">
+                        {t("dashboard.settingsScreen.photoHint")}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -276,8 +377,14 @@ const Settings = () => {
                           })
                         }
                         className="pl-10"
+                        disabled={profileData.authType === "google"}
                       />
                     </div>
+                    {profileData.authType === "google" && (
+                      <p className="text-xs text-muted-foreground">
+                        Google OAuth users cannot modify their name
+                      </p>
+                    )}
                   </div>
 
                   <div className="grid gap-2">
@@ -288,15 +395,22 @@ const Settings = () => {
                         id="email"
                         type="email"
                         value={profileData.email}
-                        onChange={(e) =>
-                          setProfileData({
-                            ...profileData,
-                            email: e.target.value,
-                          })
-                        }
-                        className="pl-10"
+                        onChange={(e) => {
+                          setProfileData({ ...profileData, email: e.target.value });
+                          if (profileErrors.email) setProfileErrors({ ...profileErrors, email: "" });
+                        }}
+                        className={`pl-10 ${profileErrors.email ? "border-destructive" : ""}`}
+                        disabled={profileData.authType === "google"}
                       />
                     </div>
+                    {profileData.authType === "google" && (
+                      <p className="text-xs text-muted-foreground">
+                        Google OAuth users cannot modify their email
+                      </p>
+                    )}
+                    {profileErrors.email && (
+                      <p className="text-sm text-destructive">{profileErrors.email}</p>
+                    )}
                   </div>
 
                   <div className="grid gap-2">
@@ -307,16 +421,17 @@ const Settings = () => {
                         id="phone"
                         type="tel"
                         value={profileData.phone}
-                        onChange={(e) =>
-                          setProfileData({
-                            ...profileData,
-                            phone: e.target.value,
-                          })
-                        }
-                        className="pl-10"
+                        onChange={(e) => {
+                          setProfileData({ ...profileData, phone: e.target.value });
+                          if (profileErrors.phone) setProfileErrors({ ...profileErrors, phone: "" });
+                        }}
+                        className={`pl-10 ${profileErrors.phone ? "border-destructive" : ""}`}
                         placeholder={t("dashboard.settingsScreen.phonePh")}
                       />
                     </div>
+                    {profileErrors.phone && (
+                      <p className="text-sm text-destructive">{profileErrors.phone}</p>
+                    )}
                   </div>
 
                   <div className="grid gap-2">
@@ -536,93 +651,121 @@ const Settings = () => {
 
         {/* Security Tab */}
         <TabsContent value="security" className="space-y-6 mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>{t("dashboard.settingsScreen.securityTitle")}</CardTitle>
-              <CardDescription>
-                {t("dashboard.settingsScreen.securityDesc")}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-2">
-                <Label htmlFor="currentPassword">{t("dashboard.settingsScreen.currentPassword")}</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    id="currentPassword"
-                    type="password"
-                    value={passwordData.currentPassword}
-                    onChange={(e) =>
-                      setPasswordData({
-                        ...passwordData,
-                        currentPassword: e.target.value,
-                      })
-                    }
-                    className="pl-10"
-                  />
+          {profileData.authType === "google" ? (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="w-5 h-5" />
+                  {t("dashboard.settingsScreen.securityTitle")}
+                </CardTitle>
+                <CardDescription>
+                  {t("dashboard.settingsScreen.securityDesc")}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="p-6 border rounded-lg bg-muted/50">
+                  <div className="flex items-center gap-3">
+                    <AlertCircle className="w-5 h-5 text-muted-foreground" />
+                    <div>
+                      <p className="font-medium">Google OAuth Account</p>
+                      <p className="text-sm text-muted-foreground">
+                        Google OAuth users cannot change their password. 
+                        Password management is handled by Google.
+                      </p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="newPassword">{t("dashboard.settingsScreen.newPassword")}</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    id="newPassword"
-                    type="password"
-                    value={passwordData.newPassword}
-                    onChange={(e) =>
-                      setPasswordData({
-                        ...passwordData,
-                        newPassword: e.target.value,
-                      })
-                    }
-                    className="pl-10"
-                  />
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle>{t("dashboard.settingsScreen.securityTitle")}</CardTitle>
+                <CardDescription>
+                  {t("dashboard.settingsScreen.securityDesc")}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="currentPassword">{t("dashboard.settingsScreen.currentPassword")}</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      id="currentPassword"
+                      type="password"
+                      value={passwordData.currentPassword}
+                      onChange={(e) =>
+                        setPasswordData({
+                          ...passwordData,
+                          currentPassword: e.target.value,
+                        })
+                      }
+                      className="pl-10"
+                    />
+                  </div>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  {t("dashboard.settingsScreen.passwordHint")}
-                </p>
-              </div>
 
-              <div className="grid gap-2">
-                <Label htmlFor="confirmPassword">{t("dashboard.settingsScreen.confirmNewPassword")}</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    value={passwordData.confirmPassword}
-                    onChange={(e) =>
-                      setPasswordData({
-                        ...passwordData,
-                        confirmPassword: e.target.value,
-                      })
-                    }
-                    className="pl-10"
-                  />
+                <div className="grid gap-2">
+                  <Label htmlFor="newPassword">{t("dashboard.settingsScreen.newPassword")}</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      id="newPassword"
+                      type="password"
+                      value={passwordData.newPassword}
+                      onChange={(e) =>
+                        setPasswordData({
+                          ...passwordData,
+                          newPassword: e.target.value,
+                        })
+                      }
+                      className="pl-10"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {t("dashboard.settingsScreen.passwordHint")}
+                  </p>
                 </div>
-              </div>
 
-              <div className="flex justify-end">
-                <Button onClick={handlePasswordChange} disabled={saving}>
-                  {saving ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      {t("dashboard.settingsScreen.changingPassword")}
-                    </>
-                  ) : (
-                    <>
-                      <Shield className="w-4 h-4 mr-2" />
-                      {t("dashboard.settingsScreen.changePasswordButton")}
-                    </>
-                  )}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+                <div className="grid gap-2">
+                  <Label htmlFor="confirmPassword">{t("dashboard.settingsScreen.confirmNewPassword")}</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      id="confirmPassword"
+                      type="password"
+                      value={passwordData.confirmPassword}
+                      onChange={(e) =>
+                        setPasswordData({
+                          ...passwordData,
+                          confirmPassword: e.target.value,
+                        })
+                      }
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
 
-          <Card>
+                <div className="flex justify-end">
+                  <Button onClick={handlePasswordChange} disabled={saving}>
+                    {saving ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        {t("dashboard.settingsScreen.changingPassword")}
+                      </>
+                    ) : (
+                      <>
+                        <Shield className="w-4 h-4 mr-2" />
+                        {t("dashboard.settingsScreen.changePasswordButton")}
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {false && (<Card>
             <CardHeader>
               <CardTitle>Session Management</CardTitle>
               <CardDescription>Manage your active sessions</CardDescription>
@@ -638,7 +781,7 @@ const Settings = () => {
                 <Button variant="outline">View Sessions</Button>
               </div>
             </CardContent>
-          </Card>
+          </Card>)}
         </TabsContent>
 
         {/* Notifications Tab */}

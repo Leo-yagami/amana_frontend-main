@@ -434,7 +434,7 @@
 
 import { useMemo, useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useQueries } from "@tanstack/react-query";
+import { useQueries, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -500,6 +500,43 @@ const formatCurrency = (amount: number) =>
     currency: "USD",
   }).format(amount);
 
+const DONUT_LABEL_KEYS: Record<string, string> = {
+  // urgency
+  Critical: "dashboard.reports2.urgency.critical",
+  High: "dashboard.reports2.urgency.high",
+  Medium: "dashboard.reports2.urgency.medium",
+  Low: "dashboard.reports2.urgency.low",
+  // donation sources
+  Individual: "dashboard.reports2.source.individual",
+  Corporate: "dashboard.reports2.source.corporate",
+  NGO: "dashboard.reports2.source.ngo",
+  Other: "dashboard.reports2.source.other",
+  Foundation: "dashboard.reports2.source.foundation",
+  Organization: "dashboard.reports2.source.organization",
+  // event types
+  "Food Aid": "dashboard.reports2.eventType.foodAid",
+  "Food Package": "dashboard.reports2.eventType.foodAid",
+  Medical: "dashboard.reports2.eventType.medical",
+  "Medical Aid": "dashboard.reports2.eventType.medical",
+  "Job Support": "dashboard.reports2.eventType.jobSupport",
+  "Job Opportunity": "dashboard.reports2.eventType.jobSupport",
+  Education: "dashboard.reports2.eventType.education",
+  Distribution: "dashboard.reports2.eventType.distribution",
+  Fundraising: "dashboard.reports2.eventType.fundraising",
+  Awareness: "dashboard.reports2.eventType.awareness",
+};
+
+const translateDonutItems = (
+  t: (k: string, fallback: string) => string,
+  items: DonutSlice[]
+): DonutSlice[] =>
+  items.map((item) => ({
+    ...item,
+    label: DONUT_LABEL_KEYS[item.label]
+      ? t(DONUT_LABEL_KEYS[item.label], item.label)
+      : item.label,
+  }));
+
 // const ChangeText = ({ value }: { value: number }) => (
 //   <div className="bg-primary/10 rounded-xl p-2 border border-border shadow-sm hover:shadow-md transition-shadow duration-300">
 //   <span className={value >= 0 ? "text-success" : "text-destructive"}>
@@ -514,7 +551,7 @@ const formatCurrency = (amount: number) =>
 // );
 
 const ChangeText = ({ value }: { value: number }) => (
-  <div className={`flex items-center gap-1 ${value < 0 ? "bg-destructive/10" : "bg-primary/10"} rounded-full px-2 py-1 border border-border w-fit`}>
+  <span className={`inline-flex items-center gap-1 ${value < 0 ? "bg-destructive/10" : "bg-primary/10"} rounded-full px-2 py-1 border border-border w-fit`}>
     <span className={`text-xs font-medium ${value >= 0 ? "text-success" : "text-destructive"}`}>
       {/* {value > 0 ? "+" : ""} */}
       {value < 0? Math.abs(value) : value}%
@@ -524,7 +561,7 @@ const ChangeText = ({ value }: { value: number }) => (
     ) : value < 0 ? (
       <TrendingDown className="w-3.5 h-3.5 text-destructive" />
     ) : null}
-  </div>
+  </span>
 );
 
 const StatsSkeleton = () => (
@@ -575,7 +612,7 @@ const SummarySkeleton = () => (
 );
 
 // ---- constants ----
-const CACHE_KEY   = "reports_analytics_cache";
+const CACHE_KEY   = "reports_analytics_cache_v3";  // incremented on backend schema change
 const SEEN_KEY    = "reports_analytics_seen";   // sessionStorage — clears on tab close
 const RANGES: RangeType[] = ["month", "3m", "6m", "1y"];
 
@@ -602,10 +639,18 @@ const ReportsAnalytics = () => {
   // First-load gate: skip skeleton if user has visited this session
   const hasSeenBefore = sessionStorage.getItem(SEEN_KEY) === "1";
 
+  const queryClient = useQueryClient();
+
   const { ref, isInView } = useInView({ threshold: 0, rootMargin: "0px", once: true });
   const shouldReveal = isInView;
-  
-  
+
+  // Force refetch month data whenever user selects "This Month"
+  useEffect(() => {
+    if (range === "month") {
+      queryClient.invalidateQueries({ queryKey: ["dashboard", "analytics", "month"], refetchType: "active" });
+    }
+  }, [range, queryClient]);
+
   const cachedData = useMemo(readCache, []);
   
   
@@ -615,7 +660,8 @@ const ReportsAnalytics = () => {
       queryFn: async () => {
         const res = await dashboardApi.getAnalytics({ range: r });
         // supports either { analytics: {...} } or raw analytics object
-        console.log("HIIIIIIIIIIIIIIII",res.data)
+        console.log("HIIIIIIIIIIIIIIII", res.data)
+        console.log("AAAAAAAAAAAAAAAAAA")
         return (res.data?.analytics ?? res.data) as DashboardAnalytics;
       },
       // Seed from localStorage so the page renders instantly after refresh
@@ -676,11 +722,11 @@ const isLoading = !hasSeenBefore && analyticsQueries.every((q) => q.isLoading);
         labels: analytics?.monthlyTrends?.labels ?? [],
         values: analytics?.monthlyTrends?.values ?? [],
       },
-      urgencyLevels: analytics?.urgencyLevels ?? [],
-      donationSources: analytics?.donationSources ?? [],
-      eventTypes: analytics?.eventTypes ?? [],
+      urgencyLevels: translateDonutItems(t, analytics?.urgencyLevels ?? []),
+      donationSources: translateDonutItems(t, analytics?.donationSources ?? []),
+      eventTypes: translateDonutItems(t, analytics?.eventTypes ?? []),
     }),
-    [analytics]
+    [analytics, t]
   );
 
   // const errorMessage =
@@ -704,11 +750,11 @@ const isLoading = !hasSeenBefore && analyticsQueries.every((q) => q.isLoading);
         </div>
 
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 items-stretch sm:items-stretch mt-2 sm:mt-0">
-          <Button variant="default" disabled={isLoading || isFetching} size="default" className="text-xs sm:text-sm mb-4 sm:mb-0 h">
+          {false && (<Button variant="default" disabled={isLoading || isFetching} size="default" className="text-xs sm:text-sm mb-4 sm:mb-0 h">
             <Download className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
             <span className="hidden sm:inline">{t("dashboard.reports2.exportFull")}</span>
             <span className="sm:hidden">{t("dashboard.reports2.export")}</span>
-          </Button>
+          </Button>)}
         </div>
       </div>
 
@@ -850,7 +896,8 @@ const isLoading = !hasSeenBefore && analyticsQueries.every((q) => q.isLoading);
                     <CardDescription className="text-xs sm:text-sm">{t("dashboard.reports2.urgencyDesc")}</CardDescription>
                   </CardHeader>
                   <CardContent className="p-2 sm:p-6">
-                    <div  className="h-52 sm:h-60 overflow-y-auto scrollbar-hide">
+                    {/* old: scroll broke with lenis — added data-lenis-prevent */}
+                    <div  className="h-52 sm:h-60 overflow-y-auto scrollbar-hide" data-lenis-prevent>
                       {shouldReveal ? (<AnalyticsDonutChart items={safeAnalytics.urgencyLevels} />
                       ) : (<Skeleton className="h-full w-full rounded-xl" />
                     )}
@@ -864,7 +911,8 @@ const isLoading = !hasSeenBefore && analyticsQueries.every((q) => q.isLoading);
                     <CardDescription className="text-xs sm:text-sm">{t("dashboard.reports2.sourcesDesc")}</CardDescription>
                   </CardHeader>
                   <CardContent className="p-2 sm:p-6">
-                    <div  className="h-52 sm:h-60 overflow-y-auto scrollbar-hide">
+                    {/* old: scroll broke with lenis — added data-lenis-prevent */}
+                    <div  className="h-52 sm:h-60 overflow-y-auto scrollbar-hide" data-lenis-prevent>
                       {shouldReveal ? (<AnalyticsDonutChart items={safeAnalytics.donationSources} />
                       ) : (<Skeleton className="h-full w-full rounded-xl" />
                       )}
@@ -878,7 +926,8 @@ const isLoading = !hasSeenBefore && analyticsQueries.every((q) => q.isLoading);
                     <CardDescription className="text-xs sm:text-sm">{t("dashboard.reports2.eventTypesDesc")}</CardDescription>
                   </CardHeader>
                   <CardContent className="p-2 sm:p-6">
-                    <div  className="h-52 sm:h-60 overflow-y-auto scrollbar-hide">
+                    {/* old: scroll broke with lenis — added data-lenis-prevent */}
+                    <div  className="h-52 sm:h-60 overflow-y-auto scrollbar-hide" data-lenis-prevent>
                       {shouldReveal ? (<AnalyticsDonutChart items={safeAnalytics.eventTypes} />
                       ) : (<Skeleton className="h-full w-full rounded-xl" />
                       )}

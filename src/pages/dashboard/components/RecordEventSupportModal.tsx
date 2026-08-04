@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { X, Search, Heart, Loader2 } from "lucide-react";
 import { supportHistoryApi, donorApi, familyApi } from "@/services/api.service";
 import {
@@ -34,6 +35,8 @@ interface RecordEventSupportModalProps {
   onSuccess: () => void;
 }
 
+const NS = "dashboard.recordEventSupport";
+
 const RecordEventSupportModal = ({
   open,
   onClose,
@@ -41,6 +44,7 @@ const RecordEventSupportModal = ({
   eventName,
   onSuccess,
 }: RecordEventSupportModalProps) => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [donors, setDonors] = useState<Donor[]>([]);
   const [families, setFamilies] = useState<Family[]>([]);
@@ -77,10 +81,10 @@ const RecordEventSupportModal = ({
     try {
       const response = await donorApi.getAll({ page: 1, limit: 100 });
       console.log("RESPOOOOOOONSE", response)
-      setDonors(response.data);
+      setDonors(response.data[0]?.data || []);
     } catch (error) {
       console.error("Failed to fetch donors", error);
-      toast.error("Failed to load donors");
+      toast.error(t(`${NS}.loadDonorsErr`, "Failed to load donors"));
     } finally {
       setLoadingDonors(false);
     }
@@ -91,10 +95,10 @@ const RecordEventSupportModal = ({
     try {
       const response = await familyApi.getAll({ page: 1, limit: 100 });
       console.log("RESPOOOOOOOOOOOOOOOOOOOOOOOONS",response)
-      setFamilies(response.data);
+      setFamilies(response.data[0]?.data || []);
     } catch (error) {
       console.error("Failed to fetch families", error);
-      toast.error("Failed to load families");
+      toast.error(t(`${NS}.loadFamiliesErr`, "Failed to load families"));
     } finally {
       setLoadingFamilies(false);
     }
@@ -104,7 +108,7 @@ const RecordEventSupportModal = ({
     e.preventDefault();
 
     if (selectedFamilyIds.length === 0) {
-      toast.error("Please select at least one family");
+      toast.error(t(`${NS}.selectFamily`, "Please select at least one family"));
       return;
     }
 
@@ -133,7 +137,7 @@ const RecordEventSupportModal = ({
 
       const response = await supportHistoryApi.createBulk(supportData);
 
-      toast.success(response.data.message || `Support recorded for ${selectedFamilyIds.length} families`);
+      toast.success(response.data.message || t(`${NS}.success`, "Support recorded for {{count}} families", { count: selectedFamilyIds.length }));
 
       // Reset form
       setFormData({
@@ -155,7 +159,7 @@ const RecordEventSupportModal = ({
       onSuccess();
       onClose();
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Failed to record support");
+      toast.error(error?.response?.data?.message || t(`${NS}.recordErr`, "Failed to record support"));
     } finally {
       setLoading(false);
     }
@@ -206,11 +210,12 @@ const RecordEventSupportModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      {/* old: scroll broke with lenis — added data-lenis-prevent */}
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" data-lenis-prevent>
         <DialogHeader>
-          <DialogTitle>Record Support for Event</DialogTitle>
+          <DialogTitle>{t(`${NS}.title`, "Record Support for Event")}</DialogTitle>
           <DialogDescription>
-            Record support provided during "{eventName}" to multiple families
+            {t(`${NS}.desc`, "Record support provided during \"{{name}}\" to multiple families", { name: eventName })}
           </DialogDescription>
         </DialogHeader>
 
@@ -219,7 +224,7 @@ const RecordEventSupportModal = ({
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="supportType">
-                Support Type <span className="text-destructive">*</span>
+                {t(`${NS}.supportType`, "Support Type")} <span className="text-destructive">*</span>
               </Label>
               <Select
                 value={formData.supportType}
@@ -230,23 +235,23 @@ const RecordEventSupportModal = ({
                 required
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select type" />
+                  <SelectValue placeholder={t(`${NS}.supportTypePh`, "Select type")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="food">Food Distribution</SelectItem>
-                  <SelectItem value="medical">Medical Aid</SelectItem>
-                  <SelectItem value="education">Education Support</SelectItem>
-                  <SelectItem value="clothing">Clothing</SelectItem>
-                  <SelectItem value="shelter">Shelter/Housing</SelectItem>
-                  <SelectItem value="financial">Financial Aid</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
+                  <SelectItem value="food">{t(`${NS}.type.food`, "Food Distribution")}</SelectItem>
+                  <SelectItem value="medical">{t(`${NS}.type.medical`, "Medical Aid")}</SelectItem>
+                  <SelectItem value="education">{t(`${NS}.type.education`, "Education Support")}</SelectItem>
+                  <SelectItem value="clothing">{t(`${NS}.type.clothing`, "Clothing")}</SelectItem>
+                  <SelectItem value="shelter">{t(`${NS}.type.shelter`, "Shelter/Housing")}</SelectItem>
+                  <SelectItem value="financial">{t(`${NS}.type.financial`, "Financial Aid")}</SelectItem>
+                  <SelectItem value="other">{t(`${NS}.type.other`, "Other")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="supportDate">
-                Date <span className="text-destructive">*</span>
+                {t(`${NS}.date`, "Date")} <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="supportDate"
@@ -266,10 +271,10 @@ const RecordEventSupportModal = ({
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <Label>
-                Select Families <span className="text-destructive">*</span>
+                {t(`${NS}.selectFamilies`, "Select Families")} <span className="text-destructive">*</span>
               </Label>
               <Badge variant="secondary">
-                {selectedFamilyIds.length} selected
+                {t(`${NS}.selected`, "{{count}} selected", { count: selectedFamilyIds.length })}
               </Badge>
             </div>
 
@@ -277,7 +282,7 @@ const RecordEventSupportModal = ({
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Search families by code, or name..."
+                placeholder={t(`${NS}.searchPh`, "Search families by code, or name...")}
                 value={familySearch}
                 onChange={(e) => setFamilySearch(e.target.value)}
                 className="pl-10 text-sm sm:text-base"
@@ -295,7 +300,7 @@ const RecordEventSupportModal = ({
                 htmlFor="select-all"
                 className="text-sm font-medium leading-none cursor-pointer"
               >
-                Select All ({filteredFamilies.length} families)
+                {t(`${NS}.selectAll`, "Select All ({{count}} families)", { count: filteredFamilies.length })}
               </label>
             </div>
 
@@ -307,13 +312,13 @@ const RecordEventSupportModal = ({
                 </div>
               ) : filteredFamilies.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  No families found
+                  {t(`${NS}.noFamilies`, "No families found")}
                 </div>
               ) : (
                 <div className="space-y-2">
                   {true && (filteredFamilies.map((family) => (
                     <div
-                      key={family.id}
+                      key={family._id}
                       className="flex items-center space-x-3 p-2 hover:bg-muted rounded-md cursor-pointer"
                       onClick={(e) => {
                         // Only toggle if clicking on the div itself, not the checkbox
@@ -344,7 +349,7 @@ const RecordEventSupportModal = ({
                   {/*replacement for filtered families selection*/}
                   {false && (filteredFamilies.map((family) => (
                     <div
-                      key={family.id}
+                      key={family._id}
                       className="flex items-center space-x-3 p-2 hover:bg-muted rounded-md cursor-pointer"
                       onClick={() => toggleFamilySelection(family._id)}
                     >
@@ -375,10 +380,10 @@ const RecordEventSupportModal = ({
 
           {/* Financial Support */}
           <div className="space-y-4">
-            <h3 className="font-semibold text-sm">Financial Support (Optional)</h3>
+            <h3 className="font-semibold text-sm">{t(`${NS}.financial`, "Financial Support (Optional)")}</h3>
             <div className="grid grid-cols-3 gap-4">
               <div className="col-span-2 space-y-2">
-                <Label htmlFor="totalAmount">Total Amount</Label>
+                <Label htmlFor="totalAmount">{t(`${NS}.totalAmount`, "Total Amount")}</Label>
                 <Input
                   id="totalAmount"
                   className="text-sm sm:text-base"
@@ -394,12 +399,12 @@ const RecordEventSupportModal = ({
                 />
                 {formData.totalAmount && selectedFamilyIds.length > 0 && (
                   <p className="text-xs text-muted-foreground">
-                    {formData.distributeEqually ? "≈ " : ""}ETB {amountPerFamily} per family
+                    {formData.distributeEqually ? "≈ " : ""}{t(`${NS}.perFamily`, "ETB {{amount}} per family", { amount: amountPerFamily })}
                   </p>
                 )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="currency">Currency</Label>
+                <Label htmlFor="currency">{t(`${NS}.currency`, "Currency")}</Label>
                 <Select
                   value={formData.currency}
                   onValueChange={(value) =>
@@ -411,9 +416,9 @@ const RecordEventSupportModal = ({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="ETB">ETB (Birr)</SelectItem>
-                    <SelectItem value="USD">USD ($)</SelectItem>
-                    <SelectItem value="EUR">EUR (€)</SelectItem>
+                    <SelectItem value="ETB">{t(`${NS}.cur.etb`, "ETB (Birr)")}</SelectItem>
+                    <SelectItem value="USD">{t(`${NS}.cur.usd`, "USD ($)")}</SelectItem>
+                    <SelectItem value="EUR">{t(`${NS}.cur.eur`, "EUR (€)")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -430,14 +435,14 @@ const RecordEventSupportModal = ({
                 htmlFor="distributeEqually"
                 className="text-sm font-medium leading-none cursor-pointer"
               >
-                Distribute amount equally among families
+                {t(`${NS}.distributeEqually`, "Distribute amount equally among families")}
               </label>
             </div>
           </div>
 
           {/* Items Provided */}
           <div className="space-y-4">
-            <h3 className="font-semibold text-sm">Items Provided (Optional)</h3>
+            <h3 className="font-semibold text-sm">{t(`${NS}.items`, "Items Provided (Optional)")}</h3>
             
             {items.length > 0 && (
               <div className="space-y-2">
@@ -462,7 +467,7 @@ const RecordEventSupportModal = ({
 
             <div className="grid grid-cols-12 gap-2">
               <div className="col-span-4 sm:col-span-5 space-y-2">
-                <Label htmlFor="itemName">Item Name</Label>
+                <Label htmlFor="itemName">{t(`${NS}.itemName`, "Item Name")}</Label>
                 <Input
                   id="itemName"
                   className="text-sm sm:text-base"
@@ -470,12 +475,12 @@ const RecordEventSupportModal = ({
                   onChange={(e) =>
                     setCurrentItem({ ...currentItem, name: e.target.value })
                   }
-                  placeholder="e.g., Rice"
+                  placeholder={t(`${NS}.itemNamePh`, "e.g., Rice")}
                   disabled={loading}
                 />
               </div>
               <div className="col-span-3 space-y-2">
-                <Label htmlFor="quantity">Quantity</Label>
+                <Label htmlFor="quantity">{t(`${NS}.quantity`, "Quantity")}</Label>
                 <Input
                   id="quantity"
                   className="text-sm sm:text-base"
@@ -485,12 +490,12 @@ const RecordEventSupportModal = ({
                   onChange={(e) =>
                     setCurrentItem({ ...currentItem, quantity: e.target.value })
                   }
-                  placeholder="10"
+                  placeholder={t(`${NS}.quantityPh`, "10")}
                   disabled={loading}
                 />
               </div>
               <div className="col-span-3 space-y-2">
-                <Label htmlFor="unit">Unit</Label>
+                <Label htmlFor="unit">{t(`${NS}.unit`, "Unit")}</Label>
                 <Input
                   id="unit"
                   className="text-sm sm:text-base"
@@ -498,7 +503,7 @@ const RecordEventSupportModal = ({
                   onChange={(e) =>
                     setCurrentItem({ ...currentItem, unit: e.target.value })
                   }
-                  placeholder="kg"
+                  placeholder={t(`${NS}.unitPh`, "kg")}
                   disabled={loading}
                 />
               </div>
@@ -518,10 +523,10 @@ const RecordEventSupportModal = ({
 
           {/* Delivery Info */}
           <div className="space-y-4">
-            <h3 className="font-semibold text-sm">Delivery Information</h3>
+            <h3 className="font-semibold text-sm">{t(`${NS}.delivery`, "Delivery Information")}</h3>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="donorId">Donor (Optional)</Label>
+                <Label htmlFor="donorId">{t(`${NS}.donor`, "Donor (Optional)")}</Label>
                 <Select
                   value={formData.donorId}
                   onValueChange={(value) =>
@@ -530,11 +535,11 @@ const RecordEventSupportModal = ({
                   disabled={loading || loadingDonors}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select donor (optional)" />
+                    <SelectValue placeholder={t(`${NS}.donorPh`, "Select donor (optional)")} />
                   </SelectTrigger>
                   <SelectContent>
                     {donors.map((donor) => (
-                      <SelectItem key={donor.id} value={donor._id}>
+                      <SelectItem key={donor.id} value={donor.id}>
                         {donor.name}
                       </SelectItem>
                     ))}
@@ -542,7 +547,7 @@ const RecordEventSupportModal = ({
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="deliveredBy">Delivered By</Label>
+                <Label htmlFor="deliveredBy">{t(`${NS}.deliveredBy`, "Delivered By")}</Label>
                 <Input
                   id="deliveredBy"
                   className="text-xs sm:text-base"
@@ -550,7 +555,7 @@ const RecordEventSupportModal = ({
                   onChange={(e) =>
                     setFormData({ ...formData, deliveredBy: e.target.value })
                   }
-                  placeholder="Name of person/organization"
+                  placeholder={t(`${NS}.deliveredByPh`, "Name of person/organization")}
                   disabled={loading}
                 />
               </div>
@@ -560,7 +565,7 @@ const RecordEventSupportModal = ({
           {/* Description & Notes */}
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">{t(`${NS}.description`, "Description")}</Label>
               <Textarea
                 id="description"
                 className="text-sm sm:text-base"
@@ -568,13 +573,13 @@ const RecordEventSupportModal = ({
                 onChange={(e) =>
                   setFormData({ ...formData, description: e.target.value })
                 }
-                placeholder="Brief description of the support"
+                placeholder={t(`${NS}.descriptionPh`, "Brief description of the support")}
                 rows={2}
                 disabled={loading}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="notes">Additional Notes</Label>
+              <Label htmlFor="notes">{t(`${NS}.notes`, "Additional Notes")}</Label>
               <Textarea
                 id="notes"
                 className="text-sm sm:text-base"
@@ -582,7 +587,7 @@ const RecordEventSupportModal = ({
                 onChange={(e) =>
                   setFormData({ ...formData, notes: e.target.value })
                 }
-                placeholder="Any additional information"
+                placeholder={t(`${NS}.notesPh`, "Any additional information")}
                 rows={2}
                 disabled={loading}
               />
@@ -591,18 +596,18 @@ const RecordEventSupportModal = ({
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
-              Cancel
+              {t(`${NS}.cancel`, "Cancel")}
             </Button>
             <Button className="mb-3 sm:mb-0" type="submit" disabled={loading || selectedFamilyIds.length === 0}>
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Recording...
+                  {t(`${NS}.recording`, "Recording...")}
                 </>
               ) : (
                 <>
                   <Heart className="mr-2 h-4 w-4" />
-                  Record Support ({selectedFamilyIds.length} families)
+                  {t(`${NS}.submit`, "Record Support ({{count}} families)", { count: selectedFamilyIds.length })}
                 </>
               )}
             </Button>

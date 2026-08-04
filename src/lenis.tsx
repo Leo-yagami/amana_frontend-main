@@ -1,6 +1,9 @@
 import React, { ReactNode, useEffect, useRef } from 'react';
 import { ReactLenis } from 'lenis/react';
 import { gsap } from 'gsap';
+// src/lenis.tsx — your existing Layout component
+import Preloader from "@/components/Preloader";
+import { AnimationProvider } from "@/components/AnimationCoordinator";
 
 interface LayoutProps {
   children: ReactNode;
@@ -38,7 +41,10 @@ export default function Layout({ children }: LayoutProps) {
         gestureOrientation: 'vertical',
       }}
     >
-      {children}
+      <AnimationProvider>
+        <Preloader />
+        {children}
+      </AnimationProvider>
     </ReactLenis>
   );
 }

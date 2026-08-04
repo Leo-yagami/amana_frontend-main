@@ -14,6 +14,11 @@ export const createPaymentSchema = (t: TFunction) =>
       cardNumber: z.string().optional(),
       expiryDate: z.string().optional(),
       cvv: z.string().optional(),
+      eventId: z.string().optional(),
+      familyClassification: z
+        .enum(["orphan", "disabled_disease", "old_age", "single_mother"])
+        .nullable()
+        .optional(),
     })
     .superRefine((data, ctx) => {
       // if (data.customAmount && data.customAmount.trim() !== "") {

@@ -1,9 +1,9 @@
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, Clock, AlertCircle } from "lucide-react";
+import { CheckCircle2, Clock, AlertCircle, XCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 interface RegistrationStatusBadgeProps {
-  status?: "incomplete" | "pending" | "verified";
+  status?: "incomplete" | "pending" | "verified" | "rejected";
   size?: "sm" | "default" | "lg";
 }
 
@@ -28,6 +28,13 @@ export default function RegistrationStatusBadge({
           variant: "secondary" as const,
           className: "bg-yellow-500 hover:bg-yellow-600 text-white",
           icon: Clock,
+        };
+      case "rejected":
+        return {
+          label: t("dashboard.registrationStatus.rejected"),
+          variant: "destructive" as const,
+          className: "bg-red-700 hover:bg-red-800 text-white",
+          icon: XCircle,
         };
       case "incomplete":
       default:

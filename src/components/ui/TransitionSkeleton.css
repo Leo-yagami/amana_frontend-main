@@ -4,6 +4,7 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ── Master Container ── */
+
 .tx-master-container {
   position: fixed;
   inset: 0;
@@ -84,9 +85,9 @@
   will-change: stroke-dashoffset, fill;
 }
 
-/* ── Dark theme refinements ── */
+
 .dark .tx-block {
-  /* Slightly different border opacity in dark mode for subtlety */
+  
   border-right-color: hsl(var(--border) / 0.15);
 }
 
@@ -96,9 +97,126 @@
     0 8px 20px hsl(var(--primary) / 0.15);
 }
 
-/* ── Reduced motion support ── */
+
 @media (prefers-reduced-motion: reduce) {
   .tx-block,
+  .tx-squircle,
+  #txHeartPath {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+.tx-master-container {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100dvh;
+  pointer-events: none;
+  z-index: 9999;
+  overflow: hidden;
+}
+
+.tx-blocks-layer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  z-index: 1;
+}
+
+.tx-block {
+  flex: 1;
+  height: 100%;
+  transform: scaleX(0);
+  will-change: transform;
+  position: relative;
+  overflow: hidden;
+  /* Primary color for the cover-in moment — more dramatic than card bg */
+  background-color: hsl(var(--primary));
+}
+
+/* Sweep sheen — slides across each block at peak coverage */
+.tx-block::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 0%,
+    hsl(var(--primary-foreground) / 0.06) 40%,
+    hsl(var(--primary-foreground) / 0.12) 50%,
+    hsl(var(--primary-foreground) / 0.06) 60%,
+    transparent 100%
+  );
+  transform: translateX(-100%);
+  will-change: transform;
+}
+
+/* Subtle column separator — visible against the primary bg */
+.tx-block:not(:last-child) {
+  border-right: 1px solid hsl(var(--primary-foreground) / 0.08);
+}
+
+/* ── Logo Layer ── */
+.tx-logo-layer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  z-index: 2;
+}
+
+/* ── Squircle Badge ── */
+.tx-squircle {
+  width: 110px;
+  height: 110px;
+  background: hsl(var(--background));
+  border-radius: 28px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  transform: scale(0.6);
+  will-change: transform, opacity;
+  box-shadow:
+    0 0 0 1px hsl(var(--border) / 0.2),
+    0 8px 24px hsl(var(--foreground) / 0.12),
+    0 32px 64px hsl(var(--foreground) / 0.08);
+}
+
+/* ── SVG Heart ── */
+.tx-svg {
+  width: 55%;
+  height: 55%;
+  overflow: visible;
+}
+
+#txHeartPath {
+  fill: transparent;
+  stroke: hsl(var(--primary));
+  stroke-width: 7px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  will-change: stroke-dashoffset, fill;
+}
+
+/* ── Dark refinements ── */
+.dark .tx-block {
+  border-right-color: hsl(var(--primary-foreground) / 0.05);
+}
+
+.dark .tx-squircle {
+  box-shadow:
+    0 0 0 1px hsl(var(--border) / 0.15),
+    0 8px 24px hsl(var(--foreground) / 0.3),
+    0 32px 64px hsl(var(--foreground) / 0.2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tx-block,
+  .tx-block::after,
   .tx-squircle,
   #txHeartPath {
     transition: none !important;
