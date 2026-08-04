@@ -772,6 +772,8 @@ function CampaignCard({
           <img
             src={campaign.image}
             alt={campaign.title}
+            loading="lazy"
+            decoding="async"
             className={`relative w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 ${imgError ? "opacity-0" : ""}`}
             onError={() => setImgError(true)}
           />

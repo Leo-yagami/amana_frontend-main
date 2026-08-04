@@ -1791,11 +1791,13 @@ const statsPromise = heroApi
 
 const ready = Promise.all([
   document.fonts ? document.fonts.ready : Promise.resolve(),
-  document.readyState === "complete"
-    ? Promise.resolve()
-    : new Promise<void>((resolve) =>
-        window.addEventListener("load", () => resolve(), { once: true })
-      ),
+  // Deliberately NOT gated on the window `load` event. That event only fires
+  // after every resource on the page — including large event image blobs —
+  // has finished downloading, which can hold the preloader hostage for many
+  // seconds on a slow image host. By the time this effect runs React has
+  // already committed, so the DOM is parsed; waiting on anything heavier than
+  // fonts and the hero stats only delays the reveal for no benefit.
+  Promise.resolve(),
   new Promise((resolve) => setTimeout(resolve, 900)), // minimum hold so the reveal isn't cut short on fast loads
   statsPromise,
 ]);
@@ -1810,7 +1812,7 @@ const ready = Promise.all([
         ease: "sine.inOut",
       });
 
-      ready.then(([_fontReady, _loadReady, _minHold, heroStatsResult]) => {
+      ready.then(([_fontReady, _minHold, heroStatsResult]) => {
         idlePulse.kill();
         gsap.set(ruleRef.current, { opacity: 1 });
         const stats = heroStatsResult as HeroStats;

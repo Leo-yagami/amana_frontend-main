@@ -455,7 +455,7 @@ export default function StoriesSection() {
           the load-bearing fix rather than reverting to the reference's pin. */}
       <div
         className="sticky top-0 flex flex-col items-center justify-center py-16 lg:py-20"
-        style={{ height: "100vh" }}
+        style={{ height: "100svh" }}
       >
         <div className="container mx-auto px-4">
           <SectionHeading

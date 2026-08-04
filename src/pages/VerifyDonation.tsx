@@ -122,7 +122,7 @@ const VerifyDonation = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 flex items-center justify-center p-4">
+      <div className="min-h-svh bg-gradient-to-br from-primary/5 via-background to-accent/5 flex items-center justify-center p-4">
         <Card className="w-full max-w-2xl">
           <CardContent className="p-8">
             <Skeleton className="h-8 w-64 mb-4" />
@@ -135,7 +135,7 @@ const VerifyDonation = () => {
 
   if (error || !donation) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 flex items-center justify-center p-4">
+      <div className="min-h-svh bg-gradient-to-br from-primary/5 via-background to-accent/5 flex items-center justify-center p-4">
         <Card className="w-full max-w-2xl">
           <CardContent className="p-8">
             <Alert variant="destructive">
@@ -158,7 +158,7 @@ const VerifyDonation = () => {
 
   if (uploadSuccess || donation.verificationStatus === 'submitted' || donation.verificationStatus === 'verified') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 flex items-center justify-center p-4">
+      <div className="min-h-svh bg-gradient-to-br from-primary/5 via-background to-accent/5 flex items-center justify-center p-4">
         <Card className="w-full max-w-2xl">
           <CardContent className="p-8 text-center">
             <div className="mb-6">
@@ -191,7 +191,7 @@ const VerifyDonation = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 flex items-center justify-center p-4">
+    <div className="min-h-svh bg-gradient-to-br from-primary/5 via-background to-accent/5 flex items-center justify-center p-4">
       <Card className="w-full max-w-2xl">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">{t("verifyDonation.pageTitle")}</CardTitle>

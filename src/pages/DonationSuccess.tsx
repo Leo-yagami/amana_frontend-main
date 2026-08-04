@@ -163,7 +163,7 @@ ringRefs.current.forEach((ring, i) => {
   return (
     <main
       ref={wrapperRef}
-      className="relative min-h-screen flex items-center justify-center overflow-hidden bg-background px-6 py-0"
+        className="relative min-h-svh flex items-center justify-center overflow-hidden bg-background px-6 py-0"
     >
       {/* A soft paper grain, because charity still lives in the physical world. */}
       <svg
@@ -183,8 +183,8 @@ ringRefs.current.forEach((ring, i) => {
       </svg>
 
       {/* Very faint ink wash from the brand palette. */}
-      <div className="pointer-events-none absolute -top-1/4 left-1/2 h-[80vh] w-[80vh] -translate-x-1/2 rounded-full bg-primary/[0.04] blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-1/4 right-0 h-[60vh] w-[60vh] rounded-full bg-accent/[0.04] blur-3xl" />
+      <div className="pointer-events-none absolute -top-1/4 left-1/2 h-[80svh] w-[80svh] -translate-x-1/2 rounded-full bg-primary/[0.04] blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-1/4 right-0 h-[60svh] w-[60svh] rounded-full bg-accent/[0.04] blur-3xl" />
 
       <section className="relative z-10 w-full max-w-lg">
         <div

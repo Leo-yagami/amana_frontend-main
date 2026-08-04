@@ -114,7 +114,7 @@ useEffect(() => {
   return (
     <aside
       className={cn(
-        "h-screen bg-sidebar border-r border-sidebar-border flex flex-col transition-all duration-300",
+            "h-svh bg-sidebar border-r border-sidebar-border flex flex-col transition-all duration-300",
         collapsed ? "w-20" : "w-56 sm:w-60 lg:w-64"
       )}
     >

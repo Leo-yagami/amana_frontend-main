@@ -364,7 +364,7 @@ const Payment = () => {
   const stageOrder: Array<typeof stage> = ["waiting", "confirming", "finalizing"];
 
   return (
-    <main className="min-h-screen bg-background py-16 px-4 sm:px-6 relative">
+    <main className="min-h-svh bg-background py-16 px-4 sm:px-6 relative">
       {processing && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm px-6"

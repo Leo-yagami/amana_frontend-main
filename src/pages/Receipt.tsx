@@ -44,7 +44,7 @@ const Receipt = () => {
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-6 py-20 bg-background">
+    <main className="min-h-svh flex items-center justify-center px-6 py-20 bg-background">
       <div
         ref={cardRef}
         className="w-full max-w-md bg-card border border-border rounded-3xl p-10 text-center shadow-sm"

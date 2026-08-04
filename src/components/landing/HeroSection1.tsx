@@ -50,11 +50,13 @@ export default function HeroSection() {
   };
 
   return (
-    <section className="relative overflow-hidden flex items-center min-h-[88vh] sm:min-h-[80vh] pt-24 pb-16 sm:pt-28 sm:pb-20">
+    <section className="relative overflow-hidden flex items-center min-h-[88svh] sm:min-h-[80svh] pt-24 pb-16 sm:pt-28 sm:pb-20">
       <div className="absolute inset-0 z-0">
         <img
           src="https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=1800&auto=format&fit=crop&q=80"
           alt={t("hero.imageAlt", "Making an impact in our community")}
+          decoding="async"
+          fetchpriority="high"
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/30" />

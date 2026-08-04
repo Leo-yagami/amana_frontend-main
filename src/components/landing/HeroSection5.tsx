@@ -919,7 +919,7 @@ tl.call(() => { tickerRevealedRef.current = true; }, [], tickerScrollStart);
   return (
     <section
     ref={sectionRef}
-    className="relative h-dvh lg:h-screen flex flex-col overflow-hidden bg-background"
+    className="relative h-svh flex flex-col overflow-hidden bg-background"
     >
       {/* ── WebGL shader background — held at 0 opacity until the gradient-intro beat ── */}
       <canvas

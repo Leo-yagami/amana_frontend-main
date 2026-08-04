@@ -12,7 +12,7 @@ export const ProtectedRoute2 = ({ children }: ProtectedRouteProps) => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-svh bg-background flex items-center justify-center">
           <Loader2 className="w-10 h-10 animate-spin text-primary" />
       </div>
     );

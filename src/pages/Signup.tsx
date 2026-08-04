@@ -110,7 +110,7 @@ const Signup = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent/5 p-4 pr-16 pl-16">
+    <div className="min-h-svh flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent/5 p-4 pr-16 pl-16">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 pt-16">
           <CardTitle className="text-2xl font-bold text-center">{t("auth.googleTitle")}</CardTitle>

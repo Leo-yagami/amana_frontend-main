@@ -1123,6 +1123,8 @@ export default function Events() {
                           <img
                             src={imgUrl}
                             alt={event.title}
+                            loading="lazy"
+                            decoding="async"
                             className="relative w-full h-full object-cover"
                             onError={(e) => {
                               (e.target as HTMLImageElement).style.opacity = "0";

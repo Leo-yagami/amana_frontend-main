@@ -135,7 +135,7 @@ export default function StatsSection() {
       {STATS.map((stat, i) => (
         <div
           key={stat.labelKey}
-          className="flex-shrink-0 w-screen min-h-screen flex flex-col items-center justify-center text-center px-8 relative"
+              className="flex-shrink-0 w-screen min-h-svh flex flex-col items-center justify-center text-center px-8 relative"
         >
           {i !== STATS.length - 1 && (
             <span className="absolute right-0 top-1/4 h-1/2 w-px bg-border" />
