@@ -775,7 +775,20 @@ function useShaderBackground(
     const uC1 = gl.getUniformLocation(prog, "u_c1");
     const uC2 = gl.getUniformLocation(prog, "u_c2");
 
-    const getScale = () => window.screen.width <= 768 ? 0.35 : 0.35;
+    const getScale = () => {
+      // Detect device capability via devicePixelRatio + screen width
+      const dpr = window.devicePixelRatio || 1;
+      const width = window.screen.width;
+      
+      // High-end mobile (dpr 3+, wide) or desktop → higher resolution
+      if (dpr >= 3 || width > 1200) return 0.65;
+      
+      // Mid-range (dpr 2, medium screen) → balanced
+      if (dpr >= 2) return 0.5;
+      
+      // Low-end or super tiny → keep conservative
+      return 0.35;
+    };
 
     const resize = () => {
       if (!canvas) return;
@@ -1105,6 +1118,7 @@ export default function HeroSection() {
       },
     ];
   }, [heroStats]);
+
 
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
