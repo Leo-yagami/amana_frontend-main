@@ -624,20 +624,290 @@ function isDarkMode(): boolean {
   return document.documentElement.classList.contains("dark");
 }
 
+// const VERT_SRC = `
+// attribute vec2 a_pos;
+// void main() { gl_Position = vec4(a_pos, 0.0, 1.0); }
+// `;
+
+// // MOBILE-OPTIMIZED SHADER
+// // Changes:
+// // 1. precision highp — mobile GPU precision fix (defaults to lowp, breaks FBM iteration)
+// // 2. FBM reduced to 3 octaves (was 4) — maintains quality, half the math
+// // 3. Precomputed sin(0.5) & cos(0.5) constants — avoids repeated trig calls on mobile
+// // 4. Explicit vec2(0.0, 0.0) etc — ensures float literals, not int coercion
+// // 5. Unrolled rotation matrix to avoid mat2 overhead on low-end mobile
+// const FRAG_SRC = `
+// precision highp float;
+
+// uniform vec2 u_res;
+// uniform vec2 u_mouse;
+// uniform float u_scroll;
+// uniform float u_time;
+// uniform float u_dark;
+// uniform vec3 u_c1;
+// uniform vec3 u_c2;
+// uniform float u_platform;
+
+// // Precomputed: sin(0.5) = 0.479425538604, cos(0.5) = 0.877582561890
+// const float ROT_SIN = 0.479425538604;
+// const float ROT_COS = 0.877582561890;
+
+// float hash(vec2 p) {
+//   return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+// }
+
+// float noise(vec2 p) {
+//   vec2 i = floor(p);
+//   vec2 f = fract(p);
+//   vec2 u = f * f * (3.0 - 2.0 * f);
+//   return mix(
+//     mix(hash(i + vec2(0.0, 0.0)), hash(i + vec2(1.0, 0.0)), u.x),
+//     mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x),
+//     u.y
+//   );
+// }
+
+// // FBM with 3 octaves (reduced from 4) — normalize by 1.75 (1+0.5+0.25)
+// // Unrolled rotation matrix to avoid mat2 overhead
+// float fbm(vec2 p) {
+//   float v = 0.0;
+//   float a = 1.0;
+  
+//   // Octave 1
+//   v += a * noise(p);
+//   float px = p.x * ROT_COS - p.y * ROT_SIN;
+//   float py = p.x * ROT_SIN + p.y * ROT_COS;
+//   p = vec2(px, py) * 2.1 + vec2(100.0);
+//   a *= 0.5;
+  
+//   // Octave 2
+//   v += a * noise(p);
+//   px = p.x * ROT_COS - p.y * ROT_SIN;
+//   py = p.x * ROT_SIN + p.y * ROT_COS;
+//   p = vec2(px, py) * 2.1 + vec2(100.0);
+//   a *= 0.5;
+  
+//   // Octave 3
+//   v += a * noise(p);
+  
+//   return v / 1.75;
+// }
+
+// void main() {
+//   vec2 st = gl_FragCoord.xy / u_res.y;
+//   float zoom = u_res.x < u_res.y ? 1.5 : 1.0;
+//   st *= zoom;
+//   st -= 0.5 * vec2(u_res.x / u_res.y * zoom, zoom);
+
+//   float t = u_time * 0.04;
+//   vec2 mouseWarp = (u_mouse - 0.5) * 0.12;
+//   float scrollDrift = u_scroll * 0.22;
+
+//   vec2 q = vec2(
+//     fbm(st + t + mouseWarp + vec2(0.0, scrollDrift * 0.3)),
+//     fbm(st + vec2(5.20, 1.30) + t + mouseWarp + vec2(0.0, scrollDrift * 0.3))
+//   );
+
+//   float f = fbm(st + 0.7 * q + vec2(0.0, scrollDrift * 0.5) + t * 0.6);
+//   float fc = smoothstep(0.30, 0.70, f);
+
+//   vec3 colDark = mix(u_c1 * 0.55, u_c1 * 1.05, f) + u_c2 * pow(f, 4.0) * 0.35;
+//   float alphaDark = 0.18 * f + u_platform * 0.04;
+
+//   vec3 colLight = mix(u_c1 * 2.6, u_c1 * 3.1, fc) + u_c2 * pow(fc, 3.0) * 0.45;
+//   float alphaLight = 0.25 * mix(0.4, 1.0, fc);
+
+//   vec3 col = mix(colLight, colDark, u_dark);
+//   float alpha = mix(alphaLight, alphaDark, u_dark);
+
+//   gl_FragColor = vec4(col * alpha, alpha);
+// }
+// `;
+
+// function useShaderBackground(
+//   canvasRef: React.RefObject<HTMLCanvasElement>,
+//   scrollProgressRef: React.MutableRefObject<number>
+// ) {
+//   useEffect(() => {
+//     const canvas = canvasRef.current;
+//     if (!canvas) return;
+
+//     const gl = canvas.getContext("webgl", {
+//       alpha: true,
+//       premultipliedAlpha: true,
+//       antialias: false,
+//       powerPreference: "high-performance",
+//     });
+    
+//     if (!gl) {
+//       const gl2 = canvas.getContext("webgl", { alpha: false, antialias: false });
+//       if (!gl2) return;
+//     }
+
+//     const compile = (type: number, src: string) => {
+//       const sh = gl.createShader(type)!;
+//       gl.shaderSource(sh, src);
+//       gl.compileShader(sh);
+//       if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) {
+//         console.warn("[shader]", gl.getShaderInfoLog(sh));
+//       }
+//       return sh;
+//     };
+
+//     const prog = gl.createProgram()!;
+//     gl.attachShader(prog, compile(gl.VERTEX_SHADER, VERT_SRC));
+//     gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FRAG_SRC));
+//     gl.linkProgram(prog);
+//     gl.useProgram(prog);
+
+//     const buf = gl.createBuffer();
+//     gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+//     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+//     const aPos = gl.getAttribLocation(prog, "a_pos");
+//     gl.enableVertexAttribArray(aPos);
+//     gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+//     const uRes = gl.getUniformLocation(prog, "u_res");
+//     const uMouse = gl.getUniformLocation(prog, "u_mouse");
+//     const uScroll = gl.getUniformLocation(prog, "u_scroll");
+//     const uTime = gl.getUniformLocation(prog, "u_time");
+//     const uDark = gl.getUniformLocation(prog, "u_dark");
+//     const uC1 = gl.getUniformLocation(prog, "u_c1");
+//     const uC2 = gl.getUniformLocation(prog, "u_c2");
+
+//     const getScale = () => {
+//       // Detect device capability via devicePixelRatio + screen width
+//       const dpr = window.devicePixelRatio || 1;
+//       const width = window.screen.width;
+      
+//       // High-end mobile (dpr 3+, wide) or desktop → higher resolution
+//       if (dpr >= 3 || width > 1200) return 0.65;
+      
+//       // Mid-range (dpr 2, medium screen) → balanced
+//       if (dpr >= 2) return 0.5;
+      
+//       // Low-end or super tiny → keep conservative
+//       return 0.35;
+//     };
+
+//     const resize = () => {
+//       if (!canvas) return;
+//       const SCALE = getScale();
+//       canvas.width = Math.floor(canvas.clientWidth * SCALE);
+//       canvas.height = Math.floor(canvas.clientHeight * SCALE);
+//       gl.viewport(0, 0, canvas.width, canvas.height);
+//     };
+
+//     resize();
+//     const ro = new ResizeObserver(resize);
+//     ro.observe(canvas);
+
+//     const mouseTarget = { x: 0.5, y: 0.5 };
+//     const mouseCurrent = { x: 0.5, y: 0.5 };
+//     const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+
+//     const onMouseMove = (e: MouseEvent) => {
+//       const rect = canvas.getBoundingClientRect();
+//       mouseTarget.x = (e.clientX - rect.left) / rect.width;
+//       mouseTarget.y = (e.clientY - rect.top) / rect.height;
+//     };
+//     window.addEventListener("mousemove", onMouseMove, { passive: true });
+//     window.addEventListener("touchmove", (e: TouchEvent) => {
+//       const touch = e.touches[0];
+//       if (!touch) return;
+//       const rect = canvas.getBoundingClientRect();
+//       mouseTarget.x = (touch.clientX - rect.left) / rect.width;
+//       mouseTarget.y = (touch.clientY - rect.top) / rect.height;
+//     }, { passive: true });
+
+//     let cachedDark = isDarkMode();
+//     let hasFoundValidColors = false;
+//     let cachedC1: [number, number, number] = [0, 0, 0];
+//     let cachedC2: [number, number, number] = [0, 0, 0];
+
+//     const updateColors = () => {
+//       cachedDark = isDarkMode();
+//       const c1Var = cachedDark ? "--primary" : "--foreground";
+//       const c2Var = cachedDark ? "--accent" : "--muted-foreground";
+//       const rawC1 = getComputedStyle(document.documentElement).getPropertyValue(c1Var).trim();
+//       const rawC2 = getComputedStyle(document.documentElement).getPropertyValue(c2Var).trim();
+
+//       if (rawC1 && rawC2) {
+//         hasFoundValidColors = true;
+//         cachedC1 = parseHsl(rawC1);
+//         cachedC2 = parseHsl(rawC2);
+//       }
+//     };
+
+//     updateColors();
+
+//     let rafId: number;
+
+//     const render = (now: number) => {
+//       const expectedW = Math.floor(canvas.clientWidth * getScale());
+//       const expectedH = Math.floor(canvas.clientHeight * getScale());
+//       if (canvas.width !== expectedW || canvas.height !== expectedH) {
+//         resize();
+//       }
+
+//       const currentDark = isDarkMode();
+//       if (!hasFoundValidColors || currentDark !== cachedDark) {
+//         updateColors();
+//       }
+
+//       const t = now * 0.001;
+
+//       mouseCurrent.x = lerp(mouseCurrent.x, mouseTarget.x, 0.018);
+//       mouseCurrent.y = lerp(mouseCurrent.y, mouseTarget.y, 0.018);
+
+//       gl.clearColor(0, 0, 0, 0);
+//       gl.clear(gl.COLOR_BUFFER_BIT);
+
+//       gl.uniform2f(uRes, canvas.width, canvas.height);
+//       gl.uniform2f(uMouse, mouseCurrent.x, mouseCurrent.y);
+//       gl.uniform1f(uScroll, scrollProgressRef.current);
+//       gl.uniform1f(uTime, t);
+//       gl.uniform1f(uDark, cachedDark ? 1.0 : 0.0);
+//       gl.uniform3fv(uC1, cachedC1);
+//       gl.uniform3fv(uC2, cachedC2);
+
+//       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+//       rafId = requestAnimationFrame(render);
+//     };
+
+//     rafId = requestAnimationFrame(render);
+
+//     return () => {
+//       cancelAnimationFrame(rafId);
+//       window.removeEventListener("mousemove", onMouseMove);
+//       ro.disconnect();
+//       gl.deleteProgram(prog);
+//       gl.deleteBuffer(buf);
+//     };
+//   }, [canvasRef, scrollProgressRef]);
+// }
+
 const VERT_SRC = `
 attribute vec2 a_pos;
 void main() { gl_Position = vec4(a_pos, 0.0, 1.0); }
 `;
 
-// MOBILE-OPTIMIZED SHADER
-// Changes:
-// 1. precision highp — mobile GPU precision fix (defaults to lowp, breaks FBM iteration)
-// 2. FBM reduced to 3 octaves (was 4) — maintains quality, half the math
-// 3. Precomputed sin(0.5) & cos(0.5) constants — avoids repeated trig calls on mobile
-// 4. Explicit vec2(0.0, 0.0) etc — ensures float literals, not int coercion
-// 5. Unrolled rotation matrix to avoid mat2 overhead on low-end mobile
+// Domain-warped FBM shader, mobile-optimized without sacrificing detail:
+// 1. precision mediump — matches the original desktop version. highp is
+//    NOT a guaranteed fast/correct path on mobile GPUs; several common
+//    mobile chips (Adreno/Mali) show banding or odd artifacts under highp
+//    that mediump doesn't. The original ran 4 octaves fine at mediump, so
+//    there's no evidence highp was ever needed here.
+// 2. FBM at 4 octaves (restored from 3) — this is what actually reads as
+//    "quality." Fewer octaves means less fine-grain noise layered on top
+//    of the base warp, which makes the render resolution show through as
+//    flat/aliased. Normalize by 1.875, matching the original.
+// 3. Precomputed sin(0.5)/cos(0.5) + unrolled rotation — kept from the
+//    mobile pass. These are free perf wins (same math, fewer ops) that
+//    don't cost any visual quality, so there's no reason to drop them
+//    just because octave count goes back to 4.
 const FRAG_SRC = `
-precision highp float;
+precision mediump float;
 
 uniform vec2 u_res;
 uniform vec2 u_mouse;
@@ -667,30 +937,37 @@ float noise(vec2 p) {
   );
 }
 
-// FBM with 3 octaves (reduced from 4) — normalize by 1.75 (1+0.5+0.25)
-// Unrolled rotation matrix to avoid mat2 overhead
+// FBM at 4 octaves — normalize by 1.875 (1 + 0.5 + 0.25 + 0.125).
+// Rotation unrolled per-octave to avoid mat2 overhead.
 float fbm(vec2 p) {
   float v = 0.0;
   float a = 1.0;
-  
+
   // Octave 1
   v += a * noise(p);
   float px = p.x * ROT_COS - p.y * ROT_SIN;
   float py = p.x * ROT_SIN + p.y * ROT_COS;
   p = vec2(px, py) * 2.1 + vec2(100.0);
   a *= 0.5;
-  
+
   // Octave 2
   v += a * noise(p);
   px = p.x * ROT_COS - p.y * ROT_SIN;
   py = p.x * ROT_SIN + p.y * ROT_COS;
   p = vec2(px, py) * 2.1 + vec2(100.0);
   a *= 0.5;
-  
+
   // Octave 3
   v += a * noise(p);
-  
-  return v / 1.75;
+  px = p.x * ROT_COS - p.y * ROT_SIN;
+  py = p.x * ROT_SIN + p.y * ROT_COS;
+  p = vec2(px, py) * 2.1 + vec2(100.0);
+  a *= 0.5;
+
+  // Octave 4
+  v += a * noise(p);
+
+  return v / 1.875;
 }
 
 void main() {
@@ -738,7 +1015,7 @@ function useShaderBackground(
       antialias: false,
       powerPreference: "high-performance",
     });
-    
+
     if (!gl) {
       const gl2 = canvas.getContext("webgl", { alpha: false, antialias: false });
       if (!gl2) return;
@@ -775,20 +1052,18 @@ function useShaderBackground(
     const uC1 = gl.getUniformLocation(prog, "u_c1");
     const uC2 = gl.getUniformLocation(prog, "u_c2");
 
-    const getScale = () => {
-      // Detect device capability via devicePixelRatio + screen width
-      const dpr = window.devicePixelRatio || 1;
-      const width = window.screen.width;
-      
-      // High-end mobile (dpr 3+, wide) or desktop → higher resolution
-      if (dpr >= 3 || width > 1200) return 0.65;
-      
-      // Mid-range (dpr 2, medium screen) → balanced
-      if (dpr >= 2) return 0.5;
-      
-      // Low-end or super tiny → keep conservative
-      return 0.35;
-    };
+    // Flat 0.35 scale everywhere — matches the original desktop version
+    // exactly. The earlier tiered version (0.35–0.65 by dpr/screen width)
+    // wasn't wrong, but it wasn't the fix either: desktop always ran at
+    // 0.35 too, so raising mobile above that never closed a "mobile vs
+    // desktop" gap — there wasn't one. The visible aliasing came from
+    // the octave cut above, not resolution. Reverting to flat 0.35 keeps
+    // this simple; only reintroduce tiering later if aliasing is still
+    // visible on real devices after the octave fix, and if so, tier by
+    // capping absolute rendered pixels (not just a scale multiplier) so a
+    // high-dpr phone and a small desktop window don't get inconsistent
+    // absolute resolution from the same ratio.
+    const getScale = () => 0.35;
 
     const resize = () => {
       if (!canvas) return;
