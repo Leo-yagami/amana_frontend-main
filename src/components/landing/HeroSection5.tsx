@@ -1,3 +1,586 @@
+// import React, { useRef, useLayoutEffect, useEffect, useState, useMemo } from "react";
+// import { Link } from "react-router-dom";
+// import { useTranslation } from "react-i18next";
+// import { useLenis } from "lenis/react";
+// import { ArrowRight } from "lucide-react";
+// import gsap from "gsap";
+// import { ScrollTrigger } from "gsap/ScrollTrigger";
+// import { useAnimationCoordinator, type AnimationMode } from "@/components/AnimationCoordinator";
+// import { heroApi } from "@/services/api.service";
+// import type { HeroStats } from "@/types/api";
+// // import Copy, { type CopyHandle } from "@/components/Copy";
+
+// // ─── Domain-warped FBM shader — full-field organic noise, theme-aware ────────
+// // Technique: Inigo Quilez's domain-warp FBM (noise fed into its own domain).
+// // The result is soft, cloud-like flow fields — reads as living paper/watercolor.
+// // Extremely subtle opacity so text is always the hero.
+// // Mouse: offsets the warp domain for gentle parallax feel.
+// // Scroll: drifts the Y coordinate, creating true vertical parallax.
+// // Renders at 0.35× resolution — plenty for smooth noise, zero perf cost.
+
+// function parseHsl(hslStr: string): [number, number, number] {
+//   if (!hslStr) return [0, 0, 0]; // Fallback to black if CSS isn't loaded yet
+
+//   // Splits by space OR comma to be extra safe against different CSS formats
+//   const parts = hslStr.trim().split(/[\s,]+/);
+//   const h = parseFloat(parts[0]) / 360;
+//   const s = parseFloat(parts[1]) / 100;
+//   const l = parseFloat(parts[2]) / 100;
+
+//   // If parsing fails, return a safe fallback to prevent NaN poisoning
+//   if (isNaN(h) || isNaN(s) || isNaN(l)) return [0, 0, 0];
+
+//   const hue2rgb = (p: number, q: number, t: number) => {
+//     if (t < 0) t += 1; if (t > 1) t -= 1;
+//     if (t < 1/6) return p + (q - p) * 6 * t;
+//     if (t < 1/2) return q;
+//     if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+//     return p;
+//   };
+
+//   if (s === 0) return [l, l, l];
+//   const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+//   const p = 2 * l - q;
+//   return [hue2rgb(p, q, h + 1/3), hue2rgb(p, q, h), hue2rgb(p, q, h - 1/3)];
+// }
+
+// function getCssColor(varName: string): [number, number, number] {
+//   const raw = getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+//   return parseHsl(raw);
+// }
+
+// function isDarkMode(): boolean {
+//   return document.documentElement.classList.contains("dark");
+// }
+
+// const VERT_SRC = `
+// attribute vec2 a_pos;
+// void main() { gl_Position = vec4(a_pos, 0.0, 1.0); }
+// `;
+
+// // Domain-warped FBM fragment shader — confirmed working.
+// // u_mouse: normalized mouse position, used to subtly warp domain origin.
+// // u_scroll: 0→1 scroll progress — drifts Y of domain for parallax.
+// // u_dark: 1.0 = dark mode, 0.0 = light mode — adjusts opacity + tint.
+// // u_c1/u_c2: primary teal + accent amber from CSS vars.
+// const FRAG_SRC = `
+// precision mediump float;
+
+// uniform vec2 u_res;
+// uniform vec2 u_mouse; // normalized 0-1
+// uniform float u_scroll; // 0-1 scroll progress in section
+// uniform float u_time;
+// uniform float u_dark; // 0 = light, 1 = dark
+// uniform vec3 u_c1; // primary color (teal)
+// uniform vec3 u_c2; // accent color (amber)
+// uniform float u_platform;
+
+// float hash(vec2 p) {
+//   return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+// }
+
+// float noise(vec2 p) {
+//   vec2 i = floor(p);
+//   vec2 f = fract(p);
+//   vec2 u = f * f * (3.0 - 2.0 * f);
+//   return mix(
+//     mix(hash(i + vec2(0,0)), hash(i + vec2(1,0)), u.x),
+//     mix(hash(i + vec2(0,1)), hash(i + vec2(1,1)), u.x),
+//     u.y
+//   );
+// }
+
+// // FBM — amplitude starts at 1.0, normalized by theoretical max (1.875)
+// // so output is a true [0, 1] range. Critical fix vs prior version.
+// float fbm(vec2 p) {
+//   float v = 0.0;
+//   float a = 1.0;
+//   vec2 shift = vec2(100.0);
+//   mat2 rot = mat2(cos(0.5), sin(0.5), -sin(0.5), cos(0.5));
+//   for (int i = 0; i < 4; i++) {
+//     v += a * noise(p);
+//     p = rot * p * 2.1 + shift;
+//     a *= 0.5;
+//   }
+//   return v / 1.875;
+// }
+
+// void main() {
+//   // 1. Normalize and fix aspect ratio immediately
+//   // We divide by u_res.y to ensure the vertical scale is 1.0
+//   // and the horizontal scale adjusts based on the container width.
+//   vec2 st = gl_FragCoord.xy / u_res.y;
+
+//   // 2. Dynamic Zoom: Apply to the already aspect-corrected coordinate
+//   float zoom = u_res.x < u_res.y ? 1.5 : 1.0;
+//   st *= zoom;
+
+//   // Center the coordinates (Optional but recommended for swirling effects)
+//   // This ensures the "zoom" happens from the middle, not the bottom-left corner
+//   st -= 0.5 * vec2(u_res.x / u_res.y * zoom, zoom);
+
+//   float t = u_time * 0.04;
+//   vec2 mouseWarp = (u_mouse - 0.5) * 0.12;
+//   float scrollDrift = u_scroll * 0.22;
+
+//   // 3. Noise generation (using your st)
+//   vec2 q = vec2(
+//     fbm(st + t + mouseWarp + vec2(0.0, scrollDrift * 0.3)),
+//     fbm(st + vec2(5.20, 1.30) + t + mouseWarp + vec2(0.0, scrollDrift * 0.3))
+//   );
+
+//   float f = fbm(st + 0.7 * q + vec2(0.0, scrollDrift * 0.5) + t * 0.6);
+//   // f = pow(f, 0.8);
+
+//   // Contrast-boosted version — only used for light mode, where noise needs to
+//   // read as distinct light/dark passages instead of flat gray. Dark mode keeps
+//   // using raw f untouched, since that's the version you're already happy with.
+//   float fc = smoothstep(0.30, 0.70, f);
+
+//   // ── Dark mode — exactly the values you confirmed look good. Untouched. ──
+// vec3 colDark = mix(u_c1 * 0.55, u_c1 * 1.05, f) + u_c2 * pow(f, 4.0) * 0.35;
+// float alphaDark = 0.18 * f + u_platform * 0.04;
+
+//   // ── Light mode — wider contrast range, separate from dark mode entirely. ──
+//   vec3 colLight = mix(u_c1 * 2.6, u_c1 * 3.1, fc) + u_c2 * pow(fc, 3.0) * 0.45;
+//   float alphaLight = 0.25 * mix(0.4, 1.0, fc);
+
+//   // Select branch by mode — no shared range, no cross-contamination.
+//   vec3 col = mix(colLight, colDark, u_dark);
+//   float alpha = mix(alphaLight, alphaDark, u_dark);
+
+//   gl_FragColor = vec4(col * alpha, alpha);
+// }
+// `;
+
+// const i = 1;
+
+// function useShaderBackground(
+//   canvasRef: React.RefObject<HTMLCanvasElement>,
+//   scrollProgressRef: React.MutableRefObject<number>
+// ) {
+//   useEffect(() => {
+//     const canvas = canvasRef.current;
+//     if (!canvas) return;
+
+// const gl = canvas.getContext("webgl", {
+//   alpha: true,
+//   premultipliedAlpha: true,
+//   antialias: false,
+//   powerPreference: "high-performance",
+// });
+// if (!gl) {
+//   const gl2 = canvas.getContext("webgl", { alpha: false, antialias: false });
+//   if (!gl2) return;
+// }
+
+//     const compile = (type: number, src: string) => {
+//       const sh = gl.createShader(type)!;
+//       gl.shaderSource(sh, src);
+//       gl.compileShader(sh);
+//       if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) {
+//         console.warn("[shader]", gl.getShaderInfoLog(sh));
+//       }
+//       return sh;
+//     };
+
+//     const prog = gl.createProgram()!;
+//     gl.attachShader(prog, compile(gl.VERTEX_SHADER, VERT_SRC));
+//     gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FRAG_SRC));
+//     gl.linkProgram(prog);
+//     gl.useProgram(prog);
+
+//     const buf = gl.createBuffer();
+//     gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+//     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+//     const aPos = gl.getAttribLocation(prog, "a_pos");
+//     gl.enableVertexAttribArray(aPos);
+//     gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+//     const uRes = gl.getUniformLocation(prog, "u_res");
+//     const uMouse = gl.getUniformLocation(prog, "u_mouse");
+//     const uScroll = gl.getUniformLocation(prog, "u_scroll");
+//     const uTime = gl.getUniformLocation(prog, "u_time");
+//     const uDark = gl.getUniformLocation(prog, "u_dark");
+//     const uC1 = gl.getUniformLocation(prog, "u_c1");
+//     const uC2 = gl.getUniformLocation(prog, "u_c2");
+
+//     const getScale = () => window.screen.width <= 768 ? 0.35 : 0.35;
+
+//     const resize = () => {
+//       if (!canvas) return;
+//       const SCALE = getScale();
+//       canvas.width = Math.floor(canvas.clientWidth * SCALE);
+//       canvas.height = Math.floor(canvas.clientHeight * SCALE);
+//       gl.viewport(0, 0, canvas.width, canvas.height);
+//     };
+
+//     resize();
+//     const ro = new ResizeObserver(resize);
+//     ro.observe(canvas);
+
+//     const mouseTarget = { x: 0.5, y: 0.5 };
+//     const mouseCurrent = { x: 0.5, y: 0.5 };
+//     const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+
+//     const onMouseMove = (e: MouseEvent) => {
+//       const rect = canvas.getBoundingClientRect();
+//       mouseTarget.x = (e.clientX - rect.left) / rect.width;
+//       mouseTarget.y = (e.clientY - rect.top) / rect.height;
+//     };
+//     window.addEventListener("mousemove", onMouseMove, { passive: true });
+//   window.addEventListener("touchmove", (e: TouchEvent) => {
+//     const touch = e.touches[0];
+//     if (!touch) return;
+//     const rect = canvas.getBoundingClientRect();
+//     mouseTarget.x = (touch.clientX - rect.left) / rect.width;
+//     mouseTarget.y = (touch.clientY - rect.top) / rect.height;
+//   }, { passive: true });
+
+//     // Track state of CSS variables to handle the initial load race condition
+//     let cachedDark = isDarkMode();
+//     let hasFoundValidColors = false;
+//     let cachedC1: [number, number, number] = [0, 0, 0];
+//     let cachedC2: [number, number, number] = [0, 0, 0];
+
+//     const updateColors = () => {
+//       cachedDark = isDarkMode();
+//       // Light mode: use the foreground/text color so the shader reads as a soft
+//       // ink-like wash tied to the typography, instead of teal competing with
+//       // the CTA accent color against the cream background.
+//       // Dark mode: keep primary teal — it already reads well against near-black.
+//       const c1Var = cachedDark ? "--primary" : "--foreground";
+//       const c2Var = cachedDark ? "--accent" : "--muted-foreground";
+//       const rawC1 = getComputedStyle(document.documentElement).getPropertyValue(c1Var).trim();
+//       const rawC2 = getComputedStyle(document.documentElement).getPropertyValue(c2Var).trim();
+
+//       if (rawC1 && rawC2) {
+//         hasFoundValidColors = true;
+//         cachedC1 = parseHsl(rawC1);
+//         cachedC2 = parseHsl(rawC2);
+//       }
+//     };
+
+//     // Initial fetch attempt
+//     updateColors();
+
+//     let rafId: number;
+
+//     const render = (now: number) => {
+//       // 1. FIX ROUTE TRANSITION RACE:
+//       // Force resize if dimensions are out of sync (e.g., missed by ResizeObserver during page transition)
+//       const expectedW = Math.floor(canvas.clientWidth * getScale());
+//       const expectedH = Math.floor(canvas.clientHeight * getScale());
+//       if (canvas.width !== expectedW || canvas.height !== expectedH) {
+//         resize();
+//       }
+
+//       // 2. FIX CSS RACE:
+//       // Keep trying to fetch colors if the first attempt returned empty strings
+//       const currentDark = isDarkMode();
+//       if (!hasFoundValidColors || currentDark !== cachedDark) {
+//         updateColors();
+//       }
+
+//       const t = now * 0.001;
+
+//       mouseCurrent.x = lerp(mouseCurrent.x, mouseTarget.x, 0.018);
+//       mouseCurrent.y = lerp(mouseCurrent.y, mouseTarget.y, 0.018);
+
+//       gl.clearColor(0, 0, 0, 0);
+//       gl.clear(gl.COLOR_BUFFER_BIT);
+
+//       gl.uniform2f(uRes, canvas.width, canvas.height);
+//       gl.uniform2f(uMouse, mouseCurrent.x, mouseCurrent.y);
+//       gl.uniform1f(uScroll, scrollProgressRef.current);
+//       gl.uniform1f(uTime, t);
+//       gl.uniform1f(uDark, cachedDark ? 1.0 : 0.0);
+//       gl.uniform3fv(uC1, cachedC1);
+//       gl.uniform3fv(uC2, cachedC2);
+
+//       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+//       rafId = requestAnimationFrame(render);
+//     };
+
+//     rafId = requestAnimationFrame(render);
+
+//     return () => {
+//       cancelAnimationFrame(rafId);
+//       window.removeEventListener("mousemove", onMouseMove);
+//       ro.disconnect();
+//       gl.deleteProgram(prog);
+//       gl.deleteBuffer(buf);
+//     };
+//   }, [canvasRef, scrollProgressRef]);
+// }
+
+// // ─── Ticker tape items — live data pulled from API, mixed with brand glyphs ───
+// // These are generated from heroStats so they update with live data.
+
+// // ─── The diagonal shard boundary angles match the Preloader's SLICES exactly ──
+// // Preloader shard lines: 20/40/60/80% x-intercepts top → 40/60/80/100% x-intercepts bottom
+// // We mirror the rightmost shard boundary for the panel clip
+
+// function CounterCard({
+//   item,
+//   active,
+//   index,
+// }: {
+//   item: { value: number; labelKey: string; label: string; sublabelKey: string; sublabel: string };
+//   active: boolean;
+//   index: number;
+// }) {
+//   const { t } = useTranslation();
+//   const count = useCountUp(item.value, 1.4 + index * 0.2, active);
+//   const label = t(item.labelKey, item.label);
+//   const sublabel = t(item.sublabelKey, item.sublabel);
+//   return (
+//     <div className="border-l border-border/60 pl-4 py-1">
+//       <div className="font-display font-black text-[clamp(1.6rem,3.5vw,2.6rem)] leading-none tabular-nums text-foreground">
+//         {count}
+//         {item.label === "ETB (K)" && "K"}
+//       </div>
+//       <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground mt-1">
+//         {label}
+//         <span className="block text-muted-foreground/50 tracking-[0.1em] normal-case font-sans text-[10px] mt-0.5">
+//           {sublabel}
+//         </span>
+//       </div>
+//     </div>
+//   );
+// }
+
+// function useCountUp(target: number, duration = 1.6, start = false) {
+//   const [count, setCount] = useState(0);
+//   useEffect(() => {
+//     if (!start) return;
+//     const startTime = performance.now();
+//     const raf = (now: number) => {
+//       const elapsed = (now - startTime) / 1000;
+//       const t = Math.min(elapsed / duration, 1);
+//       // ease out expo
+//       const eased = t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
+//       setCount(Math.round(eased * target));
+//       if (t < 1) requestAnimationFrame(raf);
+//     };
+//     requestAnimationFrame(raf);
+//   }, [start, target, duration]);
+//   return count;
+// }
+
+// // Splits a line into individual masked words instead of masking the whole
+// // line as one block — this is what actually reads as a tight, cascading
+// // reveal rather than three big blocks landing one after another.
+// function MaskedWords({
+//   text,
+//   className,
+//   wordRefs,
+// }: {
+//   text: string;
+//   className: string;
+//   wordRefs: React.MutableRefObject<HTMLSpanElement[]>;
+// }) {
+//   const words = text.split(" ");
+//   return (
+//     <span className="block">
+//       {words.map((word, idx) => (
+//         <span key={idx} className="inline-block overflow-hidden align-top">
+//           <span
+//             ref={(el) => {
+//               if (el) wordRefs.current[idx] = el;
+//             }}
+//             className={`inline-block will-change-transform ${className}`}
+//           >
+//             {word}
+//             {idx < words.length - 1 ? "\u00A0" : ""}
+//           </span>
+//         </span>
+//       ))}
+//     </span>
+//   );
+// }
+
+// // ─── Cache layer ────────────────────────────────────────────────────────────
+// // Pattern lifted directly from pages/dashboard/Reports2_0.tsx: read fresh data
+// // from localStorage on init, write back when a fetch lands. This means
+// // refresh/navigation doesn't keep hammering /api/hero-stats and the page
+// // renders with real numbers immediately on revisit.
+// const CACHE_KEY = "amana_hero_stats_cache_v1";
+// const SEEN_KEY = "amana_hero_stats_seen"; // sessionStorage — clears on tab close
+// const STALE_MS = 5 * 60 * 1000;            // 5 min, matches Reports2_0
+
+// const readStatsCache = (): { data: HeroStats; cachedAt: number } | null => {
+//   try {
+//     const raw = localStorage.getItem(CACHE_KEY);
+//     if (!raw) return null;
+//     const parsed = JSON.parse(raw);
+//     if (!parsed?.data?.counters || !parsed?.data?.progress || !parsed?.data?.ticker) return null;
+//     return parsed;
+//   } catch {
+//     return null;
+//   }
+// };
+
+// const writeStatsCache = (data: HeroStats) => {
+//   try {
+//     localStorage.setItem(
+//       CACHE_KEY,
+//       JSON.stringify({ data, cachedAt: Date.now() })
+//     );
+//     sessionStorage.setItem(SEEN_KEY, "1");
+//   } catch {
+//     /* ignore — private mode etc. */
+//   }
+// };
+
+// export default function HeroSection() {
+//   const { t } = useTranslation();
+//   const lenis = useLenis();
+//   const { registerAnimation, heroStats: coordinatorStats } = useAnimationCoordinator();
+
+//   // First-load gate so we don't refetch on every page navigation.
+//   // Matches the cookie-style "has the user seen this before?" feel of Reports2_0.
+//   const hasSeenBefore = (() => {
+//     try {
+//       return sessionStorage.getItem(SEEN_KEY) === "1";
+//     } catch {
+//       return false;
+//     }
+//   })();
+
+//   // Seed from localStorage so the page renders instantly after refresh — no
+//   // blank panel, no fetch flicker.
+//   const [heroStats, setHeroStats] = useState<HeroStats | null>(() => {
+//     const cached = readStatsCache();
+//     return cached?.data ?? null;
+//   });
+
+//   // When the coordinator receives stats from the preloader, adopt them
+//   // AND persist so refreshes will be instant.
+//   useEffect(() => {
+//     if (coordinatorStats) {
+//       setHeroStats(coordinatorStats);
+//       writeStatsCache(coordinatorStats);
+//     }
+//   }, [coordinatorStats]);
+
+//   // Cache-only fetch: only hit the network if (a) we have no cache yet, or
+//   // (b) the cache has gone stale. SessionStorage gates the "no cache" path
+//   // so we don't refetch on every route bounce once the user has landed here.
+//   useEffect(() => {
+//     if (coordinatorStats) return;
+
+//     const cached = readStatsCache();
+//     const isFresh = cached && Date.now() - cached.cachedAt < STALE_MS;
+
+//     if (isFresh) return;
+
+//     // Already saw this session — skip the fetch unless cache is stale
+//     if (hasSeenBefore && cached) return;
+
+//     heroApi
+//       .getStats()
+//       .then((res) => {
+//         setHeroStats(res.data);
+//         writeStatsCache(res.data);
+//       })
+//       .catch((err) => console.warn("Hero stats fetch failed:", err));
+//   }, [coordinatorStats, hasSeenBefore, heroStats]);
+
+//   // Live ticker items — recomputed whenever heroStats changes
+//   const TICKER_ITEMS = useMemo(() => {
+//     if (!heroStats) return [];
+//     const glyphs = ["ቤተሰቦች", "ምሕረት", "ተስፋ", "ሰላም", "ፍቅር", "አሚን"];
+    
+
+//     function pickGlyph() {
+//       return glyphs[Math.floor(Math.random() * glyphs.length)];
+//     }
+
+//     const items: string[] = [];
+
+//     heroStats.ticker.donations?.forEach((d) => {
+//       items.push(
+//         t("ticker.donation", "{{name}} · ETB {{amount}}", {
+//           name: d.donorName?.split(" ")[0] || t("ticker.someone", "Someone"),
+//           amount: d.etbEquivalent.toLocaleString(),
+//         })
+//       );
+//       items.push(pickGlyph());
+//     });
+
+//     heroStats.ticker.support?.forEach((s) => {
+//       const typeLabel = t(`ticker.supportType.${s.supportType}`, s.supportType);
+//       items.push(
+//         t("ticker.support", "{{type}} delivered — {{family}}", {
+//           type: typeLabel,
+//           family: s.familyCode || t("ticker.aFamily", "a family"),
+//         })
+//       );
+//       items.push(pickGlyph());
+//     });
+
+//     if (heroStats.ticker.aggregates.raisedThisMonth > 0) {
+//       items.push(
+//         t("ticker.raisedThisMonth", "ETB {{amount}} raised this month", {
+//           amount: heroStats.ticker.aggregates.raisedThisMonth.toLocaleString(),
+//         })
+//       );
+//       items.push(pickGlyph());
+//     }
+
+//     if (heroStats.ticker.aggregates.urgentFamilies > 0) {
+//       items.push(
+//         t("ticker.urgentFamilies", "{{count}} families need urgent support", {
+//           count: heroStats.ticker.aggregates.urgentFamilies,
+//         })
+//       );
+//       items.push(pickGlyph());
+//     }
+
+//     if (heroStats.ticker.aggregates.totalDonors) {
+//       items.push(
+//         t("ticker.donorCount", "{{count}} donors registered", {
+//           count: heroStats.ticker.aggregates.totalDonors,
+//         })
+//       );
+//       items.push(pickGlyph());
+//     }
+
+//     items.push(t("ticker.dispatch", "Live dispatch — Addis Ababa"));
+//     items.push(...glyphs);
+
+//     return items;
+//   }, [heroStats, t]);
+
+//   // Counter targets derived from live stats (displayed in K for ETB)
+//   const COUNTER_TARGETS = useMemo(() => {
+//     if (!heroStats) return [];
+//     return [
+//       {
+//         value: heroStats.counters.familiesSupported,
+//         labelKey: "hero.counters.families",
+//         label: "Families",
+//         sublabelKey: "hero.counters.familiesSub",
+//         sublabel: "directly supported",
+//       },
+//       {
+//         value: heroStats.counters.eventsThisYear,
+//         labelKey: "hero.counters.events",
+//         label: "Events",
+//         sublabelKey: "hero.counters.eventsSub",
+//         sublabel: "this year",
+//       },
+//       {
+//         value: Math.round(heroStats.counters.raisedEtb / 1000),
+//         labelKey: "hero.counters.raised",
+//         label: "ETB (K)",
+//         sublabelKey: "hero.counters.raisedSub",
+//         sublabel: "raised to date",
+//       },
+//     ];
+//   }, [heroStats]);
+
 import React, { useRef, useLayoutEffect, useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -8,26 +591,14 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useAnimationCoordinator, type AnimationMode } from "@/components/AnimationCoordinator";
 import { heroApi } from "@/services/api.service";
 import type { HeroStats } from "@/types/api";
-// import Copy, { type CopyHandle } from "@/components/Copy";
-
-// ─── Domain-warped FBM shader — full-field organic noise, theme-aware ────────
-// Technique: Inigo Quilez's domain-warp FBM (noise fed into its own domain).
-// The result is soft, cloud-like flow fields — reads as living paper/watercolor.
-// Extremely subtle opacity so text is always the hero.
-// Mouse: offsets the warp domain for gentle parallax feel.
-// Scroll: drifts the Y coordinate, creating true vertical parallax.
-// Renders at 0.35× resolution — plenty for smooth noise, zero perf cost.
 
 function parseHsl(hslStr: string): [number, number, number] {
-  if (!hslStr) return [0, 0, 0]; // Fallback to black if CSS isn't loaded yet
-
-  // Splits by space OR comma to be extra safe against different CSS formats
+  if (!hslStr) return [0, 0, 0];
   const parts = hslStr.trim().split(/[\s,]+/);
   const h = parseFloat(parts[0]) / 360;
   const s = parseFloat(parts[1]) / 100;
   const l = parseFloat(parts[2]) / 100;
 
-  // If parsing fails, return a safe fallback to prevent NaN poisoning
   if (isNaN(h) || isNaN(s) || isNaN(l)) return [0, 0, 0];
 
   const hue2rgb = (p: number, q: number, t: number) => {
@@ -58,22 +629,28 @@ attribute vec2 a_pos;
 void main() { gl_Position = vec4(a_pos, 0.0, 1.0); }
 `;
 
-// Domain-warped FBM fragment shader — confirmed working.
-// u_mouse: normalized mouse position, used to subtly warp domain origin.
-// u_scroll: 0→1 scroll progress — drifts Y of domain for parallax.
-// u_dark: 1.0 = dark mode, 0.0 = light mode — adjusts opacity + tint.
-// u_c1/u_c2: primary teal + accent amber from CSS vars.
+// MOBILE-OPTIMIZED SHADER
+// Changes:
+// 1. precision highp — mobile GPU precision fix (defaults to lowp, breaks FBM iteration)
+// 2. FBM reduced to 3 octaves (was 4) — maintains quality, half the math
+// 3. Precomputed sin(0.5) & cos(0.5) constants — avoids repeated trig calls on mobile
+// 4. Explicit vec2(0.0, 0.0) etc — ensures float literals, not int coercion
+// 5. Unrolled rotation matrix to avoid mat2 overhead on low-end mobile
 const FRAG_SRC = `
-precision mediump float;
+precision highp float;
 
 uniform vec2 u_res;
-uniform vec2 u_mouse; // normalized 0-1
-uniform float u_scroll; // 0-1 scroll progress in section
+uniform vec2 u_mouse;
+uniform float u_scroll;
 uniform float u_time;
-uniform float u_dark; // 0 = light, 1 = dark
-uniform vec3 u_c1; // primary color (teal)
-uniform vec3 u_c2; // accent color (amber)
+uniform float u_dark;
+uniform vec3 u_c1;
+uniform vec3 u_c2;
 uniform float u_platform;
+
+// Precomputed: sin(0.5) = 0.479425538604, cos(0.5) = 0.877582561890
+const float ROT_SIN = 0.479425538604;
+const float ROT_COS = 0.877582561890;
 
 float hash(vec2 p) {
   return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
@@ -84,76 +661,68 @@ float noise(vec2 p) {
   vec2 f = fract(p);
   vec2 u = f * f * (3.0 - 2.0 * f);
   return mix(
-    mix(hash(i + vec2(0,0)), hash(i + vec2(1,0)), u.x),
-    mix(hash(i + vec2(0,1)), hash(i + vec2(1,1)), u.x),
+    mix(hash(i + vec2(0.0, 0.0)), hash(i + vec2(1.0, 0.0)), u.x),
+    mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x),
     u.y
   );
 }
 
-// FBM — amplitude starts at 1.0, normalized by theoretical max (1.875)
-// so output is a true [0, 1] range. Critical fix vs prior version.
+// FBM with 3 octaves (reduced from 4) — normalize by 1.75 (1+0.5+0.25)
+// Unrolled rotation matrix to avoid mat2 overhead
 float fbm(vec2 p) {
   float v = 0.0;
   float a = 1.0;
-  vec2 shift = vec2(100.0);
-  mat2 rot = mat2(cos(0.5), sin(0.5), -sin(0.5), cos(0.5));
-  for (int i = 0; i < 4; i++) {
-    v += a * noise(p);
-    p = rot * p * 2.1 + shift;
-    a *= 0.5;
-  }
-  return v / 1.875;
+  
+  // Octave 1
+  v += a * noise(p);
+  float px = p.x * ROT_COS - p.y * ROT_SIN;
+  float py = p.x * ROT_SIN + p.y * ROT_COS;
+  p = vec2(px, py) * 2.1 + vec2(100.0);
+  a *= 0.5;
+  
+  // Octave 2
+  v += a * noise(p);
+  px = p.x * ROT_COS - p.y * ROT_SIN;
+  py = p.x * ROT_SIN + p.y * ROT_COS;
+  p = vec2(px, py) * 2.1 + vec2(100.0);
+  a *= 0.5;
+  
+  // Octave 3
+  v += a * noise(p);
+  
+  return v / 1.75;
 }
 
 void main() {
-  // 1. Normalize and fix aspect ratio immediately
-  // We divide by u_res.y to ensure the vertical scale is 1.0
-  // and the horizontal scale adjusts based on the container width.
   vec2 st = gl_FragCoord.xy / u_res.y;
-
-  // 2. Dynamic Zoom: Apply to the already aspect-corrected coordinate
   float zoom = u_res.x < u_res.y ? 1.5 : 1.0;
   st *= zoom;
-
-  // Center the coordinates (Optional but recommended for swirling effects)
-  // This ensures the "zoom" happens from the middle, not the bottom-left corner
   st -= 0.5 * vec2(u_res.x / u_res.y * zoom, zoom);
 
   float t = u_time * 0.04;
   vec2 mouseWarp = (u_mouse - 0.5) * 0.12;
   float scrollDrift = u_scroll * 0.22;
 
-  // 3. Noise generation (using your st)
   vec2 q = vec2(
     fbm(st + t + mouseWarp + vec2(0.0, scrollDrift * 0.3)),
     fbm(st + vec2(5.20, 1.30) + t + mouseWarp + vec2(0.0, scrollDrift * 0.3))
   );
 
   float f = fbm(st + 0.7 * q + vec2(0.0, scrollDrift * 0.5) + t * 0.6);
-  // f = pow(f, 0.8);
-
-  // Contrast-boosted version — only used for light mode, where noise needs to
-  // read as distinct light/dark passages instead of flat gray. Dark mode keeps
-  // using raw f untouched, since that's the version you're already happy with.
   float fc = smoothstep(0.30, 0.70, f);
 
-  // ── Dark mode — exactly the values you confirmed look good. Untouched. ──
-vec3 colDark = mix(u_c1 * 0.55, u_c1 * 1.05, f) + u_c2 * pow(f, 4.0) * 0.35;
-float alphaDark = 0.18 * f + u_platform * 0.04;
+  vec3 colDark = mix(u_c1 * 0.55, u_c1 * 1.05, f) + u_c2 * pow(f, 4.0) * 0.35;
+  float alphaDark = 0.18 * f + u_platform * 0.04;
 
-  // ── Light mode — wider contrast range, separate from dark mode entirely. ──
   vec3 colLight = mix(u_c1 * 2.6, u_c1 * 3.1, fc) + u_c2 * pow(fc, 3.0) * 0.45;
   float alphaLight = 0.25 * mix(0.4, 1.0, fc);
 
-  // Select branch by mode — no shared range, no cross-contamination.
   vec3 col = mix(colLight, colDark, u_dark);
   float alpha = mix(alphaLight, alphaDark, u_dark);
 
   gl_FragColor = vec4(col * alpha, alpha);
 }
 `;
-
-const i = 1;
 
 function useShaderBackground(
   canvasRef: React.RefObject<HTMLCanvasElement>,
@@ -163,16 +732,17 @@ function useShaderBackground(
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-const gl = canvas.getContext("webgl", {
-  alpha: true,
-  premultipliedAlpha: true,
-  antialias: false,
-  powerPreference: "high-performance",
-});
-if (!gl) {
-  const gl2 = canvas.getContext("webgl", { alpha: false, antialias: false });
-  if (!gl2) return;
-}
+    const gl = canvas.getContext("webgl", {
+      alpha: true,
+      premultipliedAlpha: true,
+      antialias: false,
+      powerPreference: "high-performance",
+    });
+    
+    if (!gl) {
+      const gl2 = canvas.getContext("webgl", { alpha: false, antialias: false });
+      if (!gl2) return;
+    }
 
     const compile = (type: number, src: string) => {
       const sh = gl.createShader(type)!;
@@ -229,15 +799,14 @@ if (!gl) {
       mouseTarget.y = (e.clientY - rect.top) / rect.height;
     };
     window.addEventListener("mousemove", onMouseMove, { passive: true });
-  window.addEventListener("touchmove", (e: TouchEvent) => {
-    const touch = e.touches[0];
-    if (!touch) return;
-    const rect = canvas.getBoundingClientRect();
-    mouseTarget.x = (touch.clientX - rect.left) / rect.width;
-    mouseTarget.y = (touch.clientY - rect.top) / rect.height;
-  }, { passive: true });
+    window.addEventListener("touchmove", (e: TouchEvent) => {
+      const touch = e.touches[0];
+      if (!touch) return;
+      const rect = canvas.getBoundingClientRect();
+      mouseTarget.x = (touch.clientX - rect.left) / rect.width;
+      mouseTarget.y = (touch.clientY - rect.top) / rect.height;
+    }, { passive: true });
 
-    // Track state of CSS variables to handle the initial load race condition
     let cachedDark = isDarkMode();
     let hasFoundValidColors = false;
     let cachedC1: [number, number, number] = [0, 0, 0];
@@ -245,10 +814,6 @@ if (!gl) {
 
     const updateColors = () => {
       cachedDark = isDarkMode();
-      // Light mode: use the foreground/text color so the shader reads as a soft
-      // ink-like wash tied to the typography, instead of teal competing with
-      // the CTA accent color against the cream background.
-      // Dark mode: keep primary teal — it already reads well against near-black.
       const c1Var = cachedDark ? "--primary" : "--foreground";
       const c2Var = cachedDark ? "--accent" : "--muted-foreground";
       const rawC1 = getComputedStyle(document.documentElement).getPropertyValue(c1Var).trim();
@@ -261,22 +826,17 @@ if (!gl) {
       }
     };
 
-    // Initial fetch attempt
     updateColors();
 
     let rafId: number;
 
     const render = (now: number) => {
-      // 1. FIX ROUTE TRANSITION RACE:
-      // Force resize if dimensions are out of sync (e.g., missed by ResizeObserver during page transition)
       const expectedW = Math.floor(canvas.clientWidth * getScale());
       const expectedH = Math.floor(canvas.clientHeight * getScale());
       if (canvas.width !== expectedW || canvas.height !== expectedH) {
         resize();
       }
 
-      // 2. FIX CSS RACE:
-      // Keep trying to fetch colors if the first attempt returned empty strings
       const currentDark = isDarkMode();
       if (!hasFoundValidColors || currentDark !== cachedDark) {
         updateColors();
@@ -313,13 +873,6 @@ if (!gl) {
     };
   }, [canvasRef, scrollProgressRef]);
 }
-
-// ─── Ticker tape items — live data pulled from API, mixed with brand glyphs ───
-// These are generated from heroStats so they update with live data.
-
-// ─── The diagonal shard boundary angles match the Preloader's SLICES exactly ──
-// Preloader shard lines: 20/40/60/80% x-intercepts top → 40/60/80/100% x-intercepts bottom
-// We mirror the rightmost shard boundary for the panel clip
 
 function CounterCard({
   item,
@@ -358,7 +911,6 @@ function useCountUp(target: number, duration = 1.6, start = false) {
     const raf = (now: number) => {
       const elapsed = (now - startTime) / 1000;
       const t = Math.min(elapsed / duration, 1);
-      // ease out expo
       const eased = t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
       setCount(Math.round(eased * target));
       if (t < 1) requestAnimationFrame(raf);
@@ -368,9 +920,6 @@ function useCountUp(target: number, duration = 1.6, start = false) {
   return count;
 }
 
-// Splits a line into individual masked words instead of masking the whole
-// line as one block — this is what actually reads as a tight, cascading
-// reveal rather than three big blocks landing one after another.
 function MaskedWords({
   text,
   className,
@@ -400,14 +949,9 @@ function MaskedWords({
   );
 }
 
-// ─── Cache layer ────────────────────────────────────────────────────────────
-// Pattern lifted directly from pages/dashboard/Reports2_0.tsx: read fresh data
-// from localStorage on init, write back when a fetch lands. This means
-// refresh/navigation doesn't keep hammering /api/hero-stats and the page
-// renders with real numbers immediately on revisit.
 const CACHE_KEY = "amana_hero_stats_cache_v1";
-const SEEN_KEY = "amana_hero_stats_seen"; // sessionStorage — clears on tab close
-const STALE_MS = 5 * 60 * 1000;            // 5 min, matches Reports2_0
+const SEEN_KEY = "amana_hero_stats_seen";
+const STALE_MS = 5 * 60 * 1000;
 
 const readStatsCache = (): { data: HeroStats; cachedAt: number } | null => {
   try {
@@ -423,13 +967,10 @@ const readStatsCache = (): { data: HeroStats; cachedAt: number } | null => {
 
 const writeStatsCache = (data: HeroStats) => {
   try {
-    localStorage.setItem(
-      CACHE_KEY,
-      JSON.stringify({ data, cachedAt: Date.now() })
-    );
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ data, cachedAt: Date.now() }));
     sessionStorage.setItem(SEEN_KEY, "1");
   } catch {
-    /* ignore — private mode etc. */
+    /* ignore */
   }
 };
 
@@ -438,8 +979,6 @@ export default function HeroSection() {
   const lenis = useLenis();
   const { registerAnimation, heroStats: coordinatorStats } = useAnimationCoordinator();
 
-  // First-load gate so we don't refetch on every page navigation.
-  // Matches the cookie-style "has the user seen this before?" feel of Reports2_0.
   const hasSeenBefore = (() => {
     try {
       return sessionStorage.getItem(SEEN_KEY) === "1";
@@ -448,15 +987,11 @@ export default function HeroSection() {
     }
   })();
 
-  // Seed from localStorage so the page renders instantly after refresh — no
-  // blank panel, no fetch flicker.
   const [heroStats, setHeroStats] = useState<HeroStats | null>(() => {
     const cached = readStatsCache();
     return cached?.data ?? null;
   });
 
-  // When the coordinator receives stats from the preloader, adopt them
-  // AND persist so refreshes will be instant.
   useEffect(() => {
     if (coordinatorStats) {
       setHeroStats(coordinatorStats);
@@ -464,18 +999,11 @@ export default function HeroSection() {
     }
   }, [coordinatorStats]);
 
-  // Cache-only fetch: only hit the network if (a) we have no cache yet, or
-  // (b) the cache has gone stale. SessionStorage gates the "no cache" path
-  // so we don't refetch on every route bounce once the user has landed here.
   useEffect(() => {
     if (coordinatorStats) return;
-
     const cached = readStatsCache();
     const isFresh = cached && Date.now() - cached.cachedAt < STALE_MS;
-
     if (isFresh) return;
-
-    // Already saw this session — skip the fetch unless cache is stale
     if (hasSeenBefore && cached) return;
 
     heroApi
@@ -487,11 +1015,9 @@ export default function HeroSection() {
       .catch((err) => console.warn("Hero stats fetch failed:", err));
   }, [coordinatorStats, hasSeenBefore, heroStats]);
 
-  // Live ticker items — recomputed whenever heroStats changes
   const TICKER_ITEMS = useMemo(() => {
     if (!heroStats) return [];
     const glyphs = ["ቤተሰቦች", "ምሕረት", "ተስፋ", "ሰላም", "ፍቅር", "አሚን"];
-    
 
     function pickGlyph() {
       return glyphs[Math.floor(Math.random() * glyphs.length)];
@@ -553,7 +1079,6 @@ export default function HeroSection() {
     return items;
   }, [heroStats, t]);
 
-  // Counter targets derived from live stats (displayed in K for ETB)
   const COUNTER_TARGETS = useMemo(() => {
     if (!heroStats) return [];
     return [
@@ -580,6 +1105,7 @@ export default function HeroSection() {
       },
     ];
   }, [heroStats]);
+
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const sectionRef = useRef<HTMLElement>(null);
