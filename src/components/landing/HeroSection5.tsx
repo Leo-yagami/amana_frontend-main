@@ -73,6 +73,7 @@ uniform float u_time;
 uniform float u_dark; // 0 = light, 1 = dark
 uniform vec3 u_c1; // primary color (teal)
 uniform vec3 u_c2; // accent color (amber)
+uniform float u_platform;
 
 float hash(vec2 p) {
   return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
@@ -138,7 +139,6 @@ void main() {
 
   // ── Dark mode — exactly the values you confirmed look good. Untouched. ──
 vec3 colDark = mix(u_c1 * 0.55, u_c1 * 1.05, f) + u_c2 * pow(f, 4.0) * 0.35;
-uniform float u_platform;
 float alphaDark = 0.18 * f + u_platform * 0.04;
 
   // ── Light mode — wider contrast range, separate from dark mode entirely. ──
