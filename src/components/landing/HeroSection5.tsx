@@ -4225,7 +4225,7 @@ void main() { gl_Position = vec4(a_pos, 0.0, 1.0); }
 // MOBILE-OPTIMIZED SHADER
 // Changes:
 // 1. precision highp — mobile GPU precision fix (defaults to lowp, breaks FBM iteration)
-// 2. FBM reduced to 4 octaves — maintains quality with better mobile performance
+// 2. FBM reduced to 3 octaves (was 4) — maintains quality, half the math
 // 3. Precomputed sin(0.5) & cos(0.5) constants — avoids repeated trig calls on mobile
 // 4. Explicit vec2(0.0, 0.0) etc — ensures float literals, not int coercion
 // 5. Unrolled rotation matrix to avoid mat2 overhead on low-end mobile
@@ -4260,9 +4260,9 @@ float noise(vec2 p) {
   );
 }
 
-// FBM with 4 octaves — normalize by 1.875 (1 + 0.5 + 0.25 + 0.125)
-// Unrolled rotation matrix to avoid mat2 overhead. With highp precision,
-// 4 octaves is stable on mobile and gives rich detail.
+// FBM with 3 octaves — normalize by 1.75 (1 + 0.5 + 0.25)
+// At lower render scales, 3 octaves balances detail without over-complexity.
+// Unrolled rotation matrix avoids mat2 overhead.
 float fbm(vec2 p) {
   float v = 0.0;
   float a = 1.0;
@@ -4283,15 +4283,8 @@ float fbm(vec2 p) {
   
   // Octave 3
   v += a * noise(p);
-  px = p.x * ROT_COS - p.y * ROT_SIN;
-  py = p.x * ROT_SIN + p.y * ROT_COS;
-  p = vec2(px, py) * 2.1 + vec2(100.0);
-  a *= 0.5;
   
-  // Octave 4
-  v += a * noise(p);
-  
-  return v / 1.875;
+  return v / 1.75;
 }
 
 void main() {
@@ -4377,18 +4370,20 @@ function useShaderBackground(
     const uC2 = gl.getUniformLocation(prog, "u_c2");
 
     const getScale = () => {
-      // Detect device capability via devicePixelRatio + screen width
+      // Lower scale = better visual quality on mobile due to upscaling
+      // The shader math stays the same, but rendering at lower resolution
+      // and letting the browser upscale creates a smoother, less pixelated look
       const dpr = window.devicePixelRatio || 1;
       const width = window.screen.width;
       
-      // High-end mobile (dpr 3+, wide) or desktop → higher resolution
-      if (dpr >= 3 || width > 1200) return 0.7;
+      // High-end mobile (dpr 3+) or desktop → moderate scale
+      if (dpr >= 3 || width > 1200) return 0.5;
       
-      // Mid-range (dpr 2, medium screen) → balanced (was 0.5, bump to 0.55)
-      if (dpr >= 2) return 0.55;
+      // Mid-range (dpr 2) → conservative
+      if (dpr >= 2) return 0.35;
       
-      // Low-end or super tiny → was 0.35, bump to 0.4 for minimum visibility
-      return 0.4;
+      // Low-end → very conservative to keep smooth
+      return 0.25;
     };
 
     const resize = () => {
@@ -4719,8 +4714,6 @@ export default function HeroSection() {
       },
     ];
   }, [heroStats]);
-
-
 
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
