@@ -139,12 +139,14 @@ const fragmentShaderMobile = `
   uniform vec3 u_c2;
   uniform float u_platform;
 
-float hash(vec2 p) {
-  vec3 p3 = fract(vec3(p.xyx) * 0.1031);
-  p3 += dot(p3, p3.yzx + 33.33);
-  return fract((p3.x + p3.y) * p3.z);
-}
+  // Precision-safe hash: no sin(), avoids mediump/highp trig degradation on mobile GPUs
+  float hash(vec2 p) {
+    vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+    p3 += dot(p3, p3.yzx + 33.33);
+    return fract((p3.x + p3.y) * p3.z);
+  }
 
+  // Smooth-min voronoi: blends between nearest neighbors to kill cell-swap popping
   vec2 voronoi(vec2 x) {
     vec2 n = floor(x);
     vec2 f = fract(x);
@@ -156,13 +158,27 @@ float hash(vec2 p) {
         vec2 o = hash(n + g) * vec2(0.5) + vec2(0.25);
         vec2 r = g + o - f;
         float d = dot(r, r);
-        if (d < md) {
-          md = d;
-          mr = r;
-        }
+        float h = smoothstep(-1.0, 1.0, (md - d) * 4.0);
+        md = mix(md, d, h) - h * (1.0 - h) * 0.5;
+        mr = mix(mr, r, h);
       }
     }
-    return vec2(sqrt(md), hash(n + mr));
+    return vec2(sqrt(max(md, 0.0)), hash(n + mr));
+  }
+
+  // Coarse 5-tap single noise for the secondary layer (replaces full 3x3 voronoi pass)
+  float noise5(vec2 x) {
+    vec2 n = floor(x);
+    vec2 f = fract(x);
+    float center = hash(n);
+    float r = hash(n + vec2(1.0, 0.0));
+    float l = hash(n + vec2(-1.0, 0.0));
+    float u = hash(n + vec2(0.0, 1.0));
+    float d = hash(n + vec2(0.0, -1.0));
+    vec2 w = f * f * (3.0 - 2.0 * f);
+    float h = mix(mix(l, center, w.x), mix(center, r, w.x), 0.5);
+    float v = mix(mix(d, center, w.y), mix(center, u, w.y), 0.5);
+    return mix(h, v, 0.5);
   }
 
   float organicWarp(vec2 p, float t) {
@@ -178,15 +194,16 @@ float hash(vec2 p) {
     st *= zoom;
     st -= 0.5 * vec2(u_res.x / u_res.y * zoom, zoom);
 
-    float t = u_time * 0.15;
+    // Wrap time to prevent unbounded growth feeding sin()/hash() precision loss
+    float t = mod(u_time, 1000.0) * 0.15;
     vec2 mouseWarp = (u_mouse - 0.5) * 0.12;
     float scrollDrift = u_scroll * 0.25;
 
     vec2 v1 = voronoi(st * 2.5 + t * 0.4 + mouseWarp);
-    vec2 v2 = voronoi(st * 4.2 + t * 0.6 - mouseWarp * 0.5 + vec2(0.0, scrollDrift * 0.3));
-    
+    float v2 = noise5(st * 4.2 + t * 0.6 - mouseWarp * 0.5 + vec2(0.0, scrollDrift * 0.3));
+
     float warp = organicWarp(st + v1 * 0.5, t);
-    float pattern = v1.x * 0.6 + v2.x * 0.4;
+    float pattern = v1.x * 0.6 + v2 * 0.4;
     pattern += warp * 0.35;
     pattern = smoothstep(0.2, 0.8, pattern);
 
@@ -199,7 +216,10 @@ float hash(vec2 p) {
     vec3 col = mix(colLight, colDark, u_dark);
     float alpha = mix(alphaLight, alphaDark, u_dark);
 
-    gl_FragColor = vec4(col * alpha, alpha);
+    // Dither to break up 8-bit banding on low alpha gradients
+    float dither = (hash(gl_FragCoord.xy) - 0.5) / 255.0;
+
+    gl_FragColor = vec4(col * alpha + dither, alpha + dither);
   }
 `;
 
