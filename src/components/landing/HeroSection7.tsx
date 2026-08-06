@@ -1,3 +1,4 @@
+
 import React, { useRef, useLayoutEffect, useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -94,9 +95,9 @@ const fragmentShader = `
 
   // Organic distortion using sine waves at multiple frequencies
   float organicWarp(vec2 p, float t) {
-    float warp = sin(p.x * 2.5 + t * 0.3) * 0.15;
-    warp += sin(p.y * 1.8 - t * 0.25) * 0.12;
-    warp += sin((p.x + p.y) * 1.2 + t * 0.4) * 0.1;
+    float warp = sin(p.x * 3.5 + t * 0.8) * 0.25;
+    warp += sin(p.y * 2.8 - t * 0.6) * 0.2;
+    warp += sin((p.x + p.y) * 2.2 + t * 0.9) * 0.18;
     return warp;
   }
 
@@ -106,20 +107,20 @@ const fragmentShader = `
     st *= zoom;
     st -= 0.5 * vec2(u_res.x / u_res.y * zoom, zoom);
 
-    float t = u_time * 0.04;
-    vec2 mouseWarp = (u_mouse - 0.5) * 0.08;
-    float scrollDrift = u_scroll * 0.15;
+    float t = u_time * 0.15;
+    vec2 mouseWarp = (u_mouse - 0.5) * 0.12;
+    float scrollDrift = u_scroll * 0.25;
 
     // Layer 1: Base Voronoi at larger scale
-    vec2 v1 = voronoi(st * 2.5 + t * 0.15 + mouseWarp);
+    vec2 v1 = voronoi(st * 2.5 + t * 0.4 + mouseWarp);
     
     // Layer 2: Smaller Voronoi for detail
-    vec2 v2 = voronoi(st * 4.2 + t * 0.22 - mouseWarp * 0.5 + vec2(0.0, scrollDrift * 0.2));
+    vec2 v2 = voronoi(st * 4.2 + t * 0.6 - mouseWarp * 0.5 + vec2(0.0, scrollDrift * 0.3));
     
     // Combine Voronoi layers with organic distortion
-    float warp = organicWarp(st + v1 * 0.3, t);
+    float warp = organicWarp(st + v1 * 0.5, t);
     float pattern = v1.x * 0.6 + v2.x * 0.4;
-    pattern += warp * 0.2;
+    pattern += warp * 0.35;
     pattern = smoothstep(0.2, 0.8, pattern);
 
     // Dark mode: richer, more saturated colors
@@ -650,6 +651,7 @@ export default function HeroSection() {
     };
   }, []);
 
+  
 const runAnimation = (mode: AnimationMode, payload?: HeroStats | null) => {
     if (payload) setHeroStats(payload);
     const isReveal = mode === "reveal";
@@ -987,6 +989,3 @@ const runAnimation = (mode: AnimationMode, payload?: HeroStats | null) => {
     </section>
   );
 }
-
-
-  
