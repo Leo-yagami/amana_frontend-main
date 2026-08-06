@@ -344,7 +344,7 @@ export const authApi = {
   
   // Exchange one-time Google OAuth handoff code for an HttpOnly JWT cookie
   exchangeGoogleCode: (code: string) =>
-    api.post('/google/callback/exchange', { code }),
+    api.post('/auth/exchange', { code }),
 };
 
 // Family API
