@@ -105,7 +105,8 @@ const fragmentShaderDesktop = `
     st *= zoom;
     st -= 0.5 * vec2(u_res.x / u_res.y * zoom, zoom);
 
-    float t = u_time * 0.04;
+    // float t = u_time * 0.04;
+    float t = mod(u_time, 1000.0) * 0.15;
     vec2 mouseWarp = (u_mouse - 0.5) * 0.12;
     float scrollDrift = u_scroll * 0.22;
 
@@ -142,9 +143,14 @@ const fragmentShaderMobile = `
   uniform vec3 u_c2;
   uniform float u_platform;
 
-  float hash(vec2 p) {
-    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
-  }
+// float hash(vec2 p) {
+  //  return fract(sin(dot(p, vec2(127.1, //311.7))) * 43758.5453);
+ // }
+float hash(vec2 p) {
+  vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+  p3 += dot(p3, p3.yzx + 33.33);
+  return fract((p3.x + p3.y) * p3.z);
+}
 
   vec2 voronoi(vec2 x) {
     vec2 n = floor(x);
