@@ -50,6 +50,82 @@ const vertexShader = `
 `;
 
 // Desktop shader: Domain-warped FBM
+// const fragmentShaderDesktop = `
+//   precision highp float;
+//   uniform vec2 u_res;
+//   uniform vec2 u_mouse;
+//   uniform float u_scroll;
+//   uniform float u_time;
+//   uniform float u_dark;
+//   uniform vec3 u_c1;
+//   uniform vec3 u_c2;
+//   uniform float u_platform;
+
+//   const float ROT_SIN = 0.479425538604;
+//   const float ROT_COS = 0.877582561890;
+
+//   float hash(vec2 p) {
+//     return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+//   }
+
+//   float noise(vec2 p) {
+//     vec2 i = floor(p);
+//     vec2 f = fract(p);
+//     vec2 u = f * f * (3.0 - 2.0 * f);
+//     return mix(
+//       mix(hash(i + vec2(0.0, 0.0)), hash(i + vec2(1.0, 0.0)), u.x),
+//       mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x),
+//       u.y
+//     );
+//   }
+
+//   float fbm(vec2 p) {
+//     float v = 0.0;
+//     float a = 1.0;
+//     v += a * noise(p);
+//     float px = p.x * ROT_COS - p.y * ROT_SIN;
+//     float py = p.x * ROT_SIN + p.y * ROT_COS;
+//     p = vec2(px, py) * 2.1 + vec2(100.0);
+//     a *= 0.5;
+//     v += a * noise(p);
+//     px = p.x * ROT_COS - p.y * ROT_SIN;
+//     py = p.x * ROT_SIN + p.y * ROT_COS;
+//     p = vec2(px, py) * 2.1 + vec2(100.0);
+//     a *= 0.5;
+//     v += a * noise(p);
+//     return v / 1.75;
+//   }
+
+//   void main() {
+//     vec2 st = gl_FragCoord.xy / u_res.y;
+//     float zoom = u_res.x < u_res.y ? 1.5 : 1.0;
+//     st *= zoom;
+//     st -= 0.5 * vec2(u_res.x / u_res.y * zoom, zoom);
+
+//     float t = u_time * 0.04;
+//     vec2 mouseWarp = (u_mouse - 0.5) * 0.12;
+//     float scrollDrift = u_scroll * 0.22;
+
+//     vec2 q = vec2(
+//       fbm(st + t + mouseWarp + vec2(0.0, scrollDrift * 0.3)),
+//       fbm(st + vec2(5.20, 1.30) + t + mouseWarp + vec2(0.0, scrollDrift * 0.3))
+//     );
+
+//     float f = fbm(st + 0.7 * q + vec2(0.0, scrollDrift * 0.5) + t * 0.6);
+//     float fc = smoothstep(0.30, 0.70, f);
+
+//     vec3 colDark = mix(u_c1 * 0.55, u_c1 * 1.05, f) + u_c2 * pow(f, 4.0) * 0.35;
+//     float alphaDark = 0.18 * f + u_platform * 0.04;
+
+//     vec3 colLight = mix(u_c1 * 2.6, u_c1 * 3.1, fc) + u_c2 * pow(fc, 3.0) * 0.45;
+//     float alphaLight = 0.25 * mix(0.4, 1.0, fc);
+
+//     vec3 col = mix(colLight, colDark, u_dark);
+//     float alpha = mix(alphaLight, alphaDark, u_dark);
+
+//     gl_FragColor = vec4(col * alpha, alpha);
+//   }
+// `;
 const fragmentShaderDesktop = `
   precision highp float;
   uniform vec2 u_res;
@@ -61,8 +137,10 @@ const fragmentShaderDesktop = `
   uniform vec3 u_c2;
   uniform float u_platform;
 
-  const float ROT_SIN = 0.479425538604;
-  const float ROT_COS = 0.877582561890;
+  // ~50 degree rotation (matches iq's classic FBM rotation matrix,
+  // decorrelates octaves better than a small angle and kills axis-aligned streaking)
+  const float ROT_SIN = 0.766044443119; // sin(50deg)
+  const float ROT_COS = 0.642787609687; // cos(50deg)
 
   float hash(vec2 p) {
     return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
@@ -79,28 +157,49 @@ const fragmentShaderDesktop = `
     );
   }
 
+  // 4 octaves now (was 3) for richer, less blobby detail.
+  // Amplitudes 1.0 + 0.5 + 0.25 + 0.125 = 1.875, divisor updated to match.
   float fbm(vec2 p) {
     float v = 0.0;
     float a = 1.0;
     v += a * noise(p);
+
     float px = p.x * ROT_COS - p.y * ROT_SIN;
     float py = p.x * ROT_SIN + p.y * ROT_COS;
     p = vec2(px, py) * 2.1 + vec2(100.0);
     a *= 0.5;
     v += a * noise(p);
+
     px = p.x * ROT_COS - p.y * ROT_SIN;
     py = p.x * ROT_SIN + p.y * ROT_COS;
     p = vec2(px, py) * 2.1 + vec2(100.0);
     a *= 0.5;
     v += a * noise(p);
-    return v / 1.75;
+
+    px = p.x * ROT_COS - p.y * ROT_SIN;
+    py = p.x * ROT_SIN + p.y * ROT_COS;
+    p = vec2(px, py) * 2.1 + vec2(100.0);
+    a *= 0.5;
+    v += a * noise(p);
+
+    return v / 1.875;
   }
 
   void main() {
     vec2 st = gl_FragCoord.xy / u_res.y;
-    float zoom = u_res.x < u_res.y ? 1.5 : 1.0;
+
+    // Zoom compensation for BOTH portrait and ultrawide, not just portrait.
+    // Scales continuously with how far the aspect ratio deviates from square,
+    // instead of a binary "is it taller than wide" check.
+    float aspect = u_res.x / u_res.y;
+    float zoom = mix(1.0, 1.5, clamp(abs(aspect - 1.0) / 1.5, 0.0, 1.0));
+    if (aspect < 1.0) {
+      // portrait: keep prior stronger correction feel
+      zoom = mix(1.0, 1.5, clamp((1.0 - aspect), 0.0, 1.0));
+    }
+
     st *= zoom;
-    st -= 0.5 * vec2(u_res.x / u_res.y * zoom, zoom);
+    st -= 0.5 * vec2(aspect * zoom, zoom);
 
     float t = u_time * 0.04;
     vec2 mouseWarp = (u_mouse - 0.5) * 0.12;
@@ -114,11 +213,21 @@ const fragmentShaderDesktop = `
     float f = fbm(st + 0.7 * q + vec2(0.0, scrollDrift * 0.5) + t * 0.6);
     float fc = smoothstep(0.30, 0.70, f);
 
-    vec3 colDark = mix(u_c1 * 0.55, u_c1 * 1.05, f) + u_c2 * pow(f, 4.0) * 0.35;
-    float alphaDark = 0.18 * f + u_platform * 0.04;
+    // Toned-down color gain: dark mode lifted slightly (was too faint),
+    // light mode gain cut roughly in half (was clipping to white).
+    // vec3 colDark = mix(u_c1 * 0.7, u_c1 * 1.3, f) + u_c2 * pow(f, 4.0) * 0.4;
+    // float alphaDark = 0.2 * f + u_platform * 0.04;
 
-    vec3 colLight = mix(u_c1 * 2.6, u_c1 * 3.1, fc) + u_c2 * pow(fc, 3.0) * 0.45;
-    float alphaLight = 0.25 * mix(0.4, 1.0, fc);
+    // vec3 colLight = mix(u_c1 * 1.3, u_c1 * 1.6, fc) + u_c2 * pow(fc, 3.0) * 0.35;
+    // float alphaLight = 0.22 * mix(0.4, 1.0, fc);
+
+    // u_c1/u_c2 are now brand colors (primary teal / accent amber) in both
+    // themes, so no more aggressive gain needed to force brightness.
+    vec3 colDark = mix(u_c1 * 0.6, u_c1 * 1.1, f) + u_c2 * pow(f, 4.0) * 0.4;
+    float alphaDark = 0.2 * f + u_platform * 0.04;
+
+    vec3 colLight = mix(u_c1 * 0.9, u_c1 * 1.3, fc) + u_c2 * pow(fc, 3.0) * 0.4;
+    float alphaLight = 0.22 * mix(0.4, 1.0, fc);
 
     vec3 col = mix(colLight, colDark, u_dark);
     float alpha = mix(alphaLight, alphaDark, u_dark);
@@ -234,12 +343,6 @@ const fragmentShaderMobile = `
   uniform vec3 u_c2;
   uniform float u_platform;
 
-  float hash(vec2 p) {
-    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
-  }
-// float hash(vec2 p) {
-  //  return fract(sin(dot(p, vec2(127.1, //311.7))) * 43758.5453);
- // }
 float hash(vec2 p) {
   vec3 p3 = fract(vec3(p.xyx) * 0.1031);
   p3 += dot(p3, p3.yzx + 33.33);
@@ -368,18 +471,42 @@ function useThreeShaderBackground(
     scene.add(mesh);
 
     // Color updater
+    // const updateColors = () => {
+    //   const isDark = isDarkMode();
+    //   uniforms.u_dark.value = isDark ? 1.0 : 0.0;
+
+    //   const c1Var = isDark ? "--primary" : "--foreground";
+    //   const c2Var = isDark ? "--accent" : "--muted-foreground";
+
+    //   const rawC1 = getComputedStyle(document.documentElement)
+    //     .getPropertyValue(c1Var)
+    //     .trim();
+    //   const rawC2 = getComputedStyle(document.documentElement)
+    //     .getPropertyValue(c2Var)
+    //     .trim();
+
+    //   if (rawC1) {
+    //     const [r, g, b] = parseHsl(rawC1);
+    //     uniforms.u_c1.value.setRGB(r, g, b);
+    //   }
+    //   if (rawC2) {
+    //     const [r, g, b] = parseHsl(rawC2);
+    //     uniforms.u_c2.value.setRGB(r, g, b);
+    //   }
+    // };
+    
     const updateColors = () => {
       const isDark = isDarkMode();
       uniforms.u_dark.value = isDark ? 1.0 : 0.0;
 
-      const c1Var = isDark ? "--primary" : "--foreground";
-      const c2Var = isDark ? "--accent" : "--muted-foreground";
-
+      // Always pull brand colors (teal primary, amber accent) — NOT --foreground.
+      // --foreground is a dark slate in light mode, which produced a muddy
+      // washed-out tint when multiplied up instead of a clean brand color.
       const rawC1 = getComputedStyle(document.documentElement)
-        .getPropertyValue(c1Var)
+        .getPropertyValue("--primary")
         .trim();
       const rawC2 = getComputedStyle(document.documentElement)
-        .getPropertyValue(c2Var)
+        .getPropertyValue("--accent")
         .trim();
 
       if (rawC1) {
