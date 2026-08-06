@@ -10,6 +10,7 @@ import { useAnimationCoordinator, type AnimationMode } from "@/components/Animat
 import { heroApi } from "@/services/api.service";
 import type { HeroStats } from "@/types/api";
 
+//checking out if herosection6.tsx works
 function parseHsl(hslStr: string): [number, number, number] {
   if (!hslStr) return [0, 0, 0];
   const parts = hslStr.trim().split(/[\s,]+/);
