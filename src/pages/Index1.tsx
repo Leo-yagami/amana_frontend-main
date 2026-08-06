@@ -1,4 +1,4 @@
-import HeroSection from "@/components/landing/HeroSection7";
+import HeroSection from "@/components/landing/HeroSection8";
 import AboutSection from "@/components/landing/AboutSection1";
 import StatsSection from "@/components/landing/StatsSection1";
 import CampaignsSection from "@/components/landing/CampaignsSection1";
