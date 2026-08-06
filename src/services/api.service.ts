@@ -332,12 +332,19 @@ export const authApi = {
   // Google OAuth: full-page redirect (proxied through Vercel in production for cookie compatibility)
   loginWithGoogle: () => {
     const apiOrigin = import.meta.env.VITE_API_URL || '';
-    window.location.href = `${apiOrigin}/api/auth/google`;
+    // If apiOrigin is empty, we're in production/Vercel - use current origin
+    // Otherwise, redirect to the API origin directly
+    if (apiOrigin) {
+      window.location.href = `${apiOrigin}/api/auth/google`;
+    } else {
+      // Production: use current origin, /api is proxied by Vercel.json
+      window.location.href = '/api/auth/google';
+    }
   },
   
   // Exchange one-time Google OAuth handoff code for an HttpOnly JWT cookie
   exchangeGoogleCode: (code: string) =>
-    api.post('/auth/exchange', { code }),
+    api.post('/google/callback/exchange', { code }),
 };
 
 // Family API

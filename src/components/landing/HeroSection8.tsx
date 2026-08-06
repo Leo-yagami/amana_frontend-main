@@ -1,3 +1,587 @@
+// import React, { useRef, useLayoutEffect, useEffect, useState, useMemo } from "react";
+// import { Link } from "react-router-dom";
+// import { useTranslation } from "react-i18next";
+// import { useLenis } from "lenis/react";
+// import { ArrowRight } from "lucide-react";
+// import gsap from "gsap";
+// import { ScrollTrigger } from "gsap/ScrollTrigger";
+// import * as THREE from "three";
+// import { useAnimationCoordinator, type AnimationMode } from "@/components/AnimationCoordinator";
+// import { heroApi } from "@/services/api.service";
+// import type { HeroStats } from "@/types/api";
+
+// function parseHsl(hslStr: string): [number, number, number] {
+//   if (!hslStr) return [0, 0, 0];
+//   const parts = hslStr.trim().split(/[\s,]+/);
+//   const h = parseFloat(parts[0]) / 360;
+//   const s = parseFloat(parts[1]) / 100;
+//   const l = parseFloat(parts[2]) / 100;
+
+//   if (isNaN(h) || isNaN(s) || isNaN(l)) return [0, 0, 0];
+
+//   const hue2rgb = (p: number, q: number, t: number) => {
+//     if (t < 0) t += 1;
+//     if (t > 1) t -= 1;
+//     if (t < 1 / 6) return p + (q - p) * 6 * t;
+//     if (t < 1 / 2) return q;
+//     if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+//     return p;
+//   };
+
+//   if (s === 0) return [l, l, l];
+//   const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+//   const p = 2 * l - q;
+//   return [
+//     hue2rgb(p, q, h + 1 / 3),
+//     hue2rgb(p, q, h),
+//     hue2rgb(p, q, h - 1 / 3),
+//   ];
+// }
+
+// function isDarkMode(): boolean {
+//   return document.documentElement.classList.contains("dark");
+// }
+
+// // Three.js shader: domain-warped FBM, fully portable across mobile/desktop
+// const vertexShader = `
+//   void main() {
+//     gl_Position = vec4(position, 1.0);
+//   }
+// `;
+
+// // Desktop shader: Domain-warped FBM
+// // const fragmentShaderDesktop = `
+// //   precision highp float;
+// //   uniform vec2 u_res;
+// //   uniform vec2 u_mouse;
+// //   uniform float u_scroll;
+// //   uniform float u_time;
+// //   uniform float u_dark;
+// //   uniform vec3 u_c1;
+// //   uniform vec3 u_c2;
+// //   uniform float u_platform;
+
+// //   const float ROT_SIN = 0.479425538604;
+// //   const float ROT_COS = 0.877582561890;
+
+// //   float hash(vec2 p) {
+// //     return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+// //   }
+
+// //   float noise(vec2 p) {
+// //     vec2 i = floor(p);
+// //     vec2 f = fract(p);
+// //     vec2 u = f * f * (3.0 - 2.0 * f);
+// //     return mix(
+// //       mix(hash(i + vec2(0.0, 0.0)), hash(i + vec2(1.0, 0.0)), u.x),
+// //       mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x),
+// //       u.y
+// //     );
+// //   }
+
+// //   float fbm(vec2 p) {
+// //     float v = 0.0;
+// //     float a = 1.0;
+// //     v += a * noise(p);
+// //     float px = p.x * ROT_COS - p.y * ROT_SIN;
+// //     float py = p.x * ROT_SIN + p.y * ROT_COS;
+// //     p = vec2(px, py) * 2.1 + vec2(100.0);
+// //     a *= 0.5;
+// //     v += a * noise(p);
+// //     px = p.x * ROT_COS - p.y * ROT_SIN;
+// //     py = p.x * ROT_SIN + p.y * ROT_COS;
+// //     p = vec2(px, py) * 2.1 + vec2(100.0);
+// //     a *= 0.5;
+// //     v += a * noise(p);
+// //     return v / 1.75;
+// //   }
+
+// //   void main() {
+// //     vec2 st = gl_FragCoord.xy / u_res.y;
+// //     float zoom = u_res.x < u_res.y ? 1.5 : 1.0;
+// //     st *= zoom;
+// //     st -= 0.5 * vec2(u_res.x / u_res.y * zoom, zoom);
+
+// //     float t = u_time * 0.04;
+// //     vec2 mouseWarp = (u_mouse - 0.5) * 0.12;
+// //     float scrollDrift = u_scroll * 0.22;
+
+// //     vec2 q = vec2(
+// //       fbm(st + t + mouseWarp + vec2(0.0, scrollDrift * 0.3)),
+// //       fbm(st + vec2(5.20, 1.30) + t + mouseWarp + vec2(0.0, scrollDrift * 0.3))
+// //     );
+
+// //     float f = fbm(st + 0.7 * q + vec2(0.0, scrollDrift * 0.5) + t * 0.6);
+// //     float fc = smoothstep(0.30, 0.70, f);
+
+// //     vec3 colDark = mix(u_c1 * 0.55, u_c1 * 1.05, f) + u_c2 * pow(f, 4.0) * 0.35;
+// //     float alphaDark = 0.18 * f + u_platform * 0.04;
+
+// //     vec3 colLight = mix(u_c1 * 2.6, u_c1 * 3.1, fc) + u_c2 * pow(fc, 3.0) * 0.45;
+// //     float alphaLight = 0.25 * mix(0.4, 1.0, fc);
+
+// //     vec3 col = mix(colLight, colDark, u_dark);
+// //     float alpha = mix(alphaLight, alphaDark, u_dark);
+
+// //     gl_FragColor = vec4(col * alpha, alpha);
+// //   }
+// // `;
+// const fragmentShaderDesktop = `
+//   precision highp float;
+//   uniform vec2 u_res;
+//   uniform vec2 u_mouse;
+//   uniform float u_scroll;
+//   uniform float u_time;
+//   uniform float u_dark;
+//   uniform vec3 u_c1;
+//   uniform vec3 u_c2;
+//   uniform float u_platform;
+
+//   // ~50 degree rotation (matches iq's classic FBM rotation matrix,
+//   // decorrelates octaves better than a small angle and kills axis-aligned streaking)
+//   const float ROT_SIN = 0.766044443119; // sin(50deg)
+//   const float ROT_COS = 0.642787609687; // cos(50deg)
+
+//   float hash(vec2 p) {
+//     return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+//   }
+
+//   float noise(vec2 p) {
+//     vec2 i = floor(p);
+//     vec2 f = fract(p);
+//     vec2 u = f * f * (3.0 - 2.0 * f);
+//     return mix(
+//       mix(hash(i + vec2(0.0, 0.0)), hash(i + vec2(1.0, 0.0)), u.x),
+//       mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x),
+//       u.y
+//     );
+//   }
+
+//   // 4 octaves now (was 3) for richer, less blobby detail.
+//   // Amplitudes 1.0 + 0.5 + 0.25 + 0.125 = 1.875, divisor updated to match.
+//   float fbm(vec2 p) {
+//     float v = 0.0;
+//     float a = 1.0;
+//     v += a * noise(p);
+
+//     float px = p.x * ROT_COS - p.y * ROT_SIN;
+//     float py = p.x * ROT_SIN + p.y * ROT_COS;
+//     p = vec2(px, py) * 2.1 + vec2(100.0);
+//     a *= 0.5;
+//     v += a * noise(p);
+
+//     px = p.x * ROT_COS - p.y * ROT_SIN;
+//     py = p.x * ROT_SIN + p.y * ROT_COS;
+//     p = vec2(px, py) * 2.1 + vec2(100.0);
+//     a *= 0.5;
+//     v += a * noise(p);
+
+//     px = p.x * ROT_COS - p.y * ROT_SIN;
+//     py = p.x * ROT_SIN + p.y * ROT_COS;
+//     p = vec2(px, py) * 2.1 + vec2(100.0);
+//     a *= 0.5;
+//     v += a * noise(p);
+
+//     return v / 1.875;
+//   }
+
+//   void main() {
+//     vec2 st = gl_FragCoord.xy / u_res.y;
+
+//     // Zoom compensation for BOTH portrait and ultrawide, not just portrait.
+//     // Scales continuously with how far the aspect ratio deviates from square,
+//     // instead of a binary "is it taller than wide" check.
+//     float aspect = u_res.x / u_res.y;
+//     float zoom = mix(1.0, 1.5, clamp(abs(aspect - 1.0) / 1.5, 0.0, 1.0));
+//     if (aspect < 1.0) {
+//       // portrait: keep prior stronger correction feel
+//       zoom = mix(1.0, 1.5, clamp((1.0 - aspect), 0.0, 1.0));
+//     }
+
+//     st *= zoom;
+//     st -= 0.5 * vec2(aspect * zoom, zoom);
+
+//     float t = u_time * 0.04;
+//     vec2 mouseWarp = (u_mouse - 0.5) * 0.12;
+//     float scrollDrift = u_scroll * 0.22;
+
+//     vec2 q = vec2(
+//       fbm(st + t + mouseWarp + vec2(0.0, scrollDrift * 0.3)),
+//       fbm(st + vec2(5.20, 1.30) + t + mouseWarp + vec2(0.0, scrollDrift * 0.3))
+//     );
+
+//     float f = fbm(st + 0.7 * q + vec2(0.0, scrollDrift * 0.5) + t * 0.6);
+//     float fc = smoothstep(0.30, 0.70, f);
+
+//     // Toned-down color gain: dark mode lifted slightly (was too faint),
+//     // light mode gain cut roughly in half (was clipping to white).
+//     // vec3 colDark = mix(u_c1 * 0.7, u_c1 * 1.3, f) + u_c2 * pow(f, 4.0) * 0.4;
+//     // float alphaDark = 0.2 * f + u_platform * 0.04;
+
+//     // vec3 colLight = mix(u_c1 * 1.3, u_c1 * 1.6, fc) + u_c2 * pow(fc, 3.0) * 0.35;
+//     // float alphaLight = 0.22 * mix(0.4, 1.0, fc);
+
+//     // u_c1/u_c2 are now brand colors (primary teal / accent amber) in both
+//     // themes, so no more aggressive gain needed to force brightness.
+//     vec3 colDark = mix(u_c1 * 0.6, u_c1 * 1.1, f) + u_c2 * pow(f, 4.0) * 0.4;
+//     float alphaDark = 0.2 * f + u_platform * 0.04;
+
+//     vec3 colLight = mix(u_c1 * 0.9, u_c1 * 1.3, fc) + u_c2 * pow(fc, 3.0) * 0.4;
+//     float alphaLight = 0.22 * mix(0.4, 1.0, fc);
+
+//     vec3 col = mix(colLight, colDark, u_dark);
+//     float alpha = mix(alphaLight, alphaDark, u_dark);
+
+//     gl_FragColor = vec4(col * alpha, alpha);
+//   }
+// `;
+
+// // Mobile shader: Voronoi cell noise
+// // const fragmentShaderMobile = `
+// //   precision highp float;
+// //   uniform vec2 u_res;
+// //   uniform vec2 u_mouse;
+// //   uniform float u_scroll;
+// //   uniform float u_time;
+// //   uniform float u_dark;
+// //   uniform vec3 u_c1;
+// //   uniform vec3 u_c2;
+// //   uniform float u_platform;
+
+// //   // Precision-safe hash: no sin(), avoids mediump/highp trig degradation on mobile GPUs
+// //   float hash(vec2 p) {
+// //     vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+// //     p3 += dot(p3, p3.yzx + 33.33);
+// //     return fract((p3.x + p3.y) * p3.z);
+// //   }
+
+// //   // Smooth-min voronoi: blends between nearest neighbors to kill cell-swap popping
+// //   vec2 voronoi(vec2 x) {
+// //     vec2 n = floor(x);
+// //     vec2 f = fract(x);
+// //     float md = 8.0;
+// //     vec2 mr = vec2(8.0);
+// //     for (int j = -1; j <= 1; j++) {
+// //       for (int i = -1; i <= 1; i++) {
+// //         vec2 g = vec2(float(i), float(j));
+// //         vec2 o = hash(n + g) * vec2(0.5) + vec2(0.25);
+// //         vec2 r = g + o - f;
+// //         float d = dot(r, r);
+// //         float h = smoothstep(-1.0, 1.0, (md - d) * 4.0);
+// //         md = mix(md, d, h) - h * (1.0 - h) * 0.5;
+// //         mr = mix(mr, r, h);
+// //       }
+// //     }
+// //     return vec2(sqrt(max(md, 0.0)), hash(n + mr));
+// //   }
+
+// //   // Coarse 5-tap single noise for the secondary layer (replaces full 3x3 voronoi pass)
+// //   float noise5(vec2 x) {
+// //     vec2 n = floor(x);
+// //     vec2 f = fract(x);
+// //     float center = hash(n);
+// //     float r = hash(n + vec2(1.0, 0.0));
+// //     float l = hash(n + vec2(-1.0, 0.0));
+// //     float u = hash(n + vec2(0.0, 1.0));
+// //     float d = hash(n + vec2(0.0, -1.0));
+// //     vec2 w = f * f * (3.0 - 2.0 * f);
+// //     float h = mix(mix(l, center, w.x), mix(center, r, w.x), 0.5);
+// //     float v = mix(mix(d, center, w.y), mix(center, u, w.y), 0.5);
+// //     return mix(h, v, 0.5);
+// //   }
+
+// //   float organicWarp(vec2 p, float t) {
+// //     float warp = sin(p.x * 3.5 + t * 0.8) * 0.25;
+// //     warp += sin(p.y * 2.8 - t * 0.6) * 0.2;
+// //     warp += sin((p.x + p.y) * 2.2 + t * 0.9) * 0.18;
+// //     return warp;
+// //   }
+
+// //   void main() {
+// //     vec2 st = gl_FragCoord.xy / u_res.y;
+// //     float zoom = u_res.x < u_res.y ? 1.5 : 1.0;
+// //     st *= zoom;
+// //     st -= 0.5 * vec2(u_res.x / u_res.y * zoom, zoom);
+
+// //     // Wrap time to prevent unbounded growth feeding sin()/hash() precision loss
+// //     float t = mod(u_time, 1000.0) * 0.15;
+// //     vec2 mouseWarp = (u_mouse - 0.5) * 0.12;
+// //     float scrollDrift = u_scroll * 0.25;
+
+// //     vec2 v1 = voronoi(st * 2.5 + t * 0.4 + mouseWarp);
+// //     float v2 = noise5(st * 4.2 + t * 0.6 - mouseWarp * 0.5 + vec2(0.0, scrollDrift * 0.3));
+
+// //     float warp = organicWarp(st + v1 * 0.5, t);
+// //     float pattern = v1.x * 0.6 + v2 * 0.4;
+// //     pattern += warp * 0.35;
+// //     pattern = smoothstep(0.2, 0.8, pattern);
+
+// //     vec3 colDark = mix(u_c1 * 0.7, u_c1 * 1.3, pattern) + u_c2 * pow(pattern, 2.5) * 0.55;
+// //     float alphaDark = 0.35 * pattern + u_platform * 0.05;
+
+// //     vec3 colLight = mix(u_c1 * 2.4, u_c1 * 3.2, pattern) + u_c2 * pow(pattern, 2.0) * 0.35;
+// //     float alphaLight = 0.28 * mix(0.5, 1.0, pattern);
+
+// //     vec3 col = mix(colLight, colDark, u_dark);
+// //     float alpha = mix(alphaLight, alphaDark, u_dark);
+
+// //     // Dither to break up 8-bit banding on low alpha gradients
+// //     float dither = (hash(gl_FragCoord.xy) - 0.5) / 255.0;
+
+// //     gl_FragColor = vec4(col * alpha + dither, alpha + dither);
+// //   }
+// // `;
+// // Mobile shader: Voronoi cell noise
+// const fragmentShaderMobile = `
+//   precision highp float;
+//   uniform vec2 u_res;
+//   uniform vec2 u_mouse;
+//   uniform float u_scroll;
+//   uniform float u_time;
+//   uniform float u_dark;
+//   uniform vec3 u_c1;
+//   uniform vec3 u_c2;
+//   uniform float u_platform;
+
+// float hash(vec2 p) {
+//   vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+//   p3 += dot(p3, p3.yzx + 33.33);
+//   return fract((p3.x + p3.y) * p3.z);
+// }
+
+//   vec2 voronoi(vec2 x) {
+//     vec2 n = floor(x);
+//     vec2 f = fract(x);
+//     float md = 8.0;
+//     vec2 mr = vec2(8.0);
+//     for (int j = -1; j <= 1; j++) {
+//       for (int i = -1; i <= 1; i++) {
+//         vec2 g = vec2(float(i), float(j));
+//         vec2 o = hash(n + g) * vec2(0.5) + vec2(0.25);
+//         vec2 r = g + o - f;
+//         float d = dot(r, r);
+//         if (d < md) {
+//           md = d;
+//           mr = r;
+//         }
+//       }
+//     }
+//     return vec2(sqrt(md), hash(n + mr));
+//   }
+
+//   float organicWarp(vec2 p, float t) {
+//     float warp = sin(p.x * 3.5 + t * 0.8) * 0.25;
+//     warp += sin(p.y * 2.8 - t * 0.6) * 0.2;
+//     warp += sin((p.x + p.y) * 2.2 + t * 0.9) * 0.18;
+//     return warp;
+//   }
+
+//   void main() {
+//     vec2 st = gl_FragCoord.xy / u_res.y;
+//     float zoom = u_res.x < u_res.y ? 1.5 : 1.0;
+//     st *= zoom;
+//     st -= 0.5 * vec2(u_res.x / u_res.y * zoom, zoom);
+
+//     float t = mod(u_time, 1000.0) * 0.15;
+//     vec2 mouseWarp = (u_mouse - 0.5) * 0.12;
+//     float scrollDrift = u_scroll * 0.25;
+
+//     vec2 v1 = voronoi(st * 2.5 + t * 0.4 + mouseWarp);
+//     vec2 v2 = voronoi(st * 4.2 + t * 0.6 - mouseWarp * 0.5 + vec2(0.0, scrollDrift * 0.3));
+    
+//     float warp = organicWarp(st + v1 * 0.5, t);
+//     float pattern = v1.x * 0.6 + v2.x * 0.4;
+//     pattern += warp * 0.35;
+//     pattern = smoothstep(0.2, 0.8, pattern);
+
+//     vec3 colDark = mix(u_c1 * 0.7, u_c1 * 1.3, pattern) + u_c2 * pow(pattern, 2.5) * 0.55;
+//     float alphaDark = 0.35 * pattern + u_platform * 0.05;
+
+//     vec3 colLight = mix(u_c1 * 2.4, u_c1 * 3.2, pattern) + u_c2 * pow(pattern, 2.0) * 0.35;
+//     float alphaLight = 0.28 * mix(0.5, 1.0, pattern);
+
+//     vec3 col = mix(colLight, colDark, u_dark);
+//     float alpha = mix(alphaLight, alphaDark, u_dark);
+
+//     gl_FragColor = vec4(col * alpha, alpha);
+//   }
+// `;
+
+// // Detect device and pick shader
+// const isMobile = () => {
+//   return window.innerWidth < 768 || 
+//          typeof window.ontouchstart !== 'undefined' ||
+//          navigator.maxTouchPoints > 0;
+// };
+
+// function useThreeShaderBackground(
+//   canvasRef: React.RefObject<HTMLCanvasElement>,
+//   scrollProgressRef: React.MutableRefObject<number>
+// ) {
+//   useEffect(() => {
+//     const canvas = canvasRef.current;
+//     if (!canvas) return;
+
+//     // Scene setup
+//     const scene = new THREE.Scene();
+//     const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 1000);
+//     camera.position.z = 1;
+
+//     const renderer = new THREE.WebGLRenderer({
+//       canvas,
+//       alpha: true,
+//       antialias: false,
+//       powerPreference: "high-performance",
+//     });
+
+//     renderer.setClearColor(0x000000, 0);
+//     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+//     // Resize handler
+//     const handleResize = () => {
+//       const width = canvas.clientWidth;
+//       const height = canvas.clientHeight;
+//       renderer.setSize(width, height);
+//     };
+//     handleResize();
+//     window.addEventListener("resize", handleResize);
+
+//     // Shader material
+//     const uniforms = {
+//       u_res: { value: new THREE.Vector2(canvas.clientWidth, canvas.clientHeight) },
+//       u_mouse: { value: new THREE.Vector2(0.5, 0.5) },
+//       u_scroll: { value: 0.0 },
+//       u_time: { value: 0.0 },
+//       u_dark: { value: isDarkMode() ? 1.0 : 0.0 },
+//       u_c1: { value: new THREE.Color(0x06b6d4) }, // teal default
+//       u_c2: { value: new THREE.Color(0xf59e0b) }, // amber default
+//       u_platform: { value: 0.0 },
+//     };
+
+//     const material = new THREE.ShaderMaterial({
+//       vertexShader,
+//       fragmentShader: isMobile() ? fragmentShaderMobile : fragmentShaderDesktop,
+//       uniforms,
+//       transparent: true,
+//       blending: THREE.NormalBlending,
+//     });
+
+//     const geometry = new THREE.PlaneGeometry(2, 2);
+//     const mesh = new THREE.Mesh(geometry, material);
+//     scene.add(mesh);
+
+//     // Color updater
+//     // const updateColors = () => {
+//     //   const isDark = isDarkMode();
+//     //   uniforms.u_dark.value = isDark ? 1.0 : 0.0;
+
+//     //   const c1Var = isDark ? "--primary" : "--foreground";
+//     //   const c2Var = isDark ? "--accent" : "--muted-foreground";
+
+//     //   const rawC1 = getComputedStyle(document.documentElement)
+//     //     .getPropertyValue(c1Var)
+//     //     .trim();
+//     //   const rawC2 = getComputedStyle(document.documentElement)
+//     //     .getPropertyValue(c2Var)
+//     //     .trim();
+
+//     //   if (rawC1) {
+//     //     const [r, g, b] = parseHsl(rawC1);
+//     //     uniforms.u_c1.value.setRGB(r, g, b);
+//     //   }
+//     //   if (rawC2) {
+//     //     const [r, g, b] = parseHsl(rawC2);
+//     //     uniforms.u_c2.value.setRGB(r, g, b);
+//     //   }
+//     // };
+    
+//     const updateColors = () => {
+//       const isDark = isDarkMode();
+//       uniforms.u_dark.value = isDark ? 1.0 : 0.0;
+
+//       // Always pull brand colors (teal primary, amber accent) — NOT --foreground.
+//       // --foreground is a dark slate in light mode, which produced a muddy
+//       // washed-out tint when multiplied up instead of a clean brand color.
+//       const rawC1 = getComputedStyle(document.documentElement)
+//         .getPropertyValue("--primary")
+//         .trim();
+//       const rawC2 = getComputedStyle(document.documentElement)
+//         .getPropertyValue("--accent")
+//         .trim();
+
+//       if (rawC1) {
+//         const [r, g, b] = parseHsl(rawC1);
+//         uniforms.u_c1.value.setRGB(r, g, b);
+//       }
+//       if (rawC2) {
+//         const [r, g, b] = parseHsl(rawC2);
+//         uniforms.u_c2.value.setRGB(r, g, b);
+//       }
+//     };
+//     updateColors();
+
+//     // Mouse tracking
+//     const mouseTarget = { x: 0.5, y: 0.5 };
+//     const mouseCurrent = { x: 0.5, y: 0.5 };
+//     const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+
+//     const onMouseMove = (e: MouseEvent) => {
+//       const rect = canvas.getBoundingClientRect();
+//       mouseTarget.x = (e.clientX - rect.left) / rect.width;
+//       mouseTarget.y = (e.clientY - rect.top) / rect.height;
+//     };
+
+//     const onTouchMove = (e: TouchEvent) => {
+//       const touch = e.touches[0];
+//       if (!touch) return;
+//       const rect = canvas.getBoundingClientRect();
+//       mouseTarget.x = (touch.clientX - rect.left) / rect.width;
+//       mouseTarget.y = (touch.clientY - rect.top) / rect.height;
+//     };
+
+//     window.addEventListener("mousemove", onMouseMove, { passive: true });
+//     window.addEventListener("touchmove", onTouchMove, { passive: true });
+
+//     // Animation loop
+//     let animationId: number;
+//     let startTime = performance.now();
+
+//     const animate = (now: number) => {
+//       const elapsed = (now - startTime) / 1000;
+
+//       mouseCurrent.x = lerp(mouseCurrent.x, mouseTarget.x, 0.018);
+//       mouseCurrent.y = lerp(mouseCurrent.y, mouseTarget.y, 0.018);
+
+//       uniforms.u_time.value = elapsed;
+//       uniforms.u_mouse.value.set(mouseCurrent.x, mouseCurrent.y);
+//       uniforms.u_scroll.value = scrollProgressRef.current;
+//       uniforms.u_res.value.set(canvas.clientWidth, canvas.clientHeight);
+
+//       // Update colors on dark mode toggle
+//       const isDark = isDarkMode();
+//       if (uniforms.u_dark.value !== (isDark ? 1.0 : 0.0)) {
+//         updateColors();
+//       }
+
+//       renderer.render(scene, camera);
+//       animationId = requestAnimationFrame(animate);
+//     };
+
+//     animationId = requestAnimationFrame(animate);
+
+//     // Cleanup
+//     return () => {
+//       cancelAnimationFrame(animationId);
+//       window.removeEventListener("resize", handleResize);
+//       window.removeEventListener("mousemove", onMouseMove);
+//       window.removeEventListener("touchmove", onTouchMove);
+//       geometry.dispose();
+//       material.dispose();
+//       renderer.dispose();
+//     };
+//   }, [canvasRef, scrollProgressRef]);
+// }
+
 import React, { useRef, useLayoutEffect, useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -49,83 +633,6 @@ const vertexShader = `
   }
 `;
 
-// Desktop shader: Domain-warped FBM
-// const fragmentShaderDesktop = `
-//   precision highp float;
-//   uniform vec2 u_res;
-//   uniform vec2 u_mouse;
-//   uniform float u_scroll;
-//   uniform float u_time;
-//   uniform float u_dark;
-//   uniform vec3 u_c1;
-//   uniform vec3 u_c2;
-//   uniform float u_platform;
-
-//   const float ROT_SIN = 0.479425538604;
-//   const float ROT_COS = 0.877582561890;
-
-//   float hash(vec2 p) {
-//     return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
-//   }
-
-//   float noise(vec2 p) {
-//     vec2 i = floor(p);
-//     vec2 f = fract(p);
-//     vec2 u = f * f * (3.0 - 2.0 * f);
-//     return mix(
-//       mix(hash(i + vec2(0.0, 0.0)), hash(i + vec2(1.0, 0.0)), u.x),
-//       mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x),
-//       u.y
-//     );
-//   }
-
-//   float fbm(vec2 p) {
-//     float v = 0.0;
-//     float a = 1.0;
-//     v += a * noise(p);
-//     float px = p.x * ROT_COS - p.y * ROT_SIN;
-//     float py = p.x * ROT_SIN + p.y * ROT_COS;
-//     p = vec2(px, py) * 2.1 + vec2(100.0);
-//     a *= 0.5;
-//     v += a * noise(p);
-//     px = p.x * ROT_COS - p.y * ROT_SIN;
-//     py = p.x * ROT_SIN + p.y * ROT_COS;
-//     p = vec2(px, py) * 2.1 + vec2(100.0);
-//     a *= 0.5;
-//     v += a * noise(p);
-//     return v / 1.75;
-//   }
-
-//   void main() {
-//     vec2 st = gl_FragCoord.xy / u_res.y;
-//     float zoom = u_res.x < u_res.y ? 1.5 : 1.0;
-//     st *= zoom;
-//     st -= 0.5 * vec2(u_res.x / u_res.y * zoom, zoom);
-
-//     float t = u_time * 0.04;
-//     vec2 mouseWarp = (u_mouse - 0.5) * 0.12;
-//     float scrollDrift = u_scroll * 0.22;
-
-//     vec2 q = vec2(
-//       fbm(st + t + mouseWarp + vec2(0.0, scrollDrift * 0.3)),
-//       fbm(st + vec2(5.20, 1.30) + t + mouseWarp + vec2(0.0, scrollDrift * 0.3))
-//     );
-
-//     float f = fbm(st + 0.7 * q + vec2(0.0, scrollDrift * 0.5) + t * 0.6);
-//     float fc = smoothstep(0.30, 0.70, f);
-
-//     vec3 colDark = mix(u_c1 * 0.55, u_c1 * 1.05, f) + u_c2 * pow(f, 4.0) * 0.35;
-//     float alphaDark = 0.18 * f + u_platform * 0.04;
-
-//     vec3 colLight = mix(u_c1 * 2.6, u_c1 * 3.1, fc) + u_c2 * pow(fc, 3.0) * 0.45;
-//     float alphaLight = 0.25 * mix(0.4, 1.0, fc);
-
-//     vec3 col = mix(colLight, colDark, u_dark);
-//     float alpha = mix(alphaLight, alphaDark, u_dark);
-
-//     gl_FragColor = vec4(col * alpha, alpha);
-//   }
-// `;
 const fragmentShaderDesktop = `
   precision highp float;
   uniform vec2 u_res;
@@ -137,8 +644,6 @@ const fragmentShaderDesktop = `
   uniform vec3 u_c2;
   uniform float u_platform;
 
-  // ~50 degree rotation (matches iq's classic FBM rotation matrix,
-  // decorrelates octaves better than a small angle and kills axis-aligned streaking)
   const float ROT_SIN = 0.766044443119; // sin(50deg)
   const float ROT_COS = 0.642787609687; // cos(50deg)
 
@@ -157,8 +662,6 @@ const fragmentShaderDesktop = `
     );
   }
 
-  // 4 octaves now (was 3) for richer, less blobby detail.
-  // Amplitudes 1.0 + 0.5 + 0.25 + 0.125 = 1.875, divisor updated to match.
   float fbm(vec2 p) {
     float v = 0.0;
     float a = 1.0;
@@ -188,13 +691,9 @@ const fragmentShaderDesktop = `
   void main() {
     vec2 st = gl_FragCoord.xy / u_res.y;
 
-    // Zoom compensation for BOTH portrait and ultrawide, not just portrait.
-    // Scales continuously with how far the aspect ratio deviates from square,
-    // instead of a binary "is it taller than wide" check.
     float aspect = u_res.x / u_res.y;
     float zoom = mix(1.0, 1.5, clamp(abs(aspect - 1.0) / 1.5, 0.0, 1.0));
     if (aspect < 1.0) {
-      // portrait: keep prior stronger correction feel
       zoom = mix(1.0, 1.5, clamp((1.0 - aspect), 0.0, 1.0));
     }
 
@@ -213,20 +712,10 @@ const fragmentShaderDesktop = `
     float f = fbm(st + 0.7 * q + vec2(0.0, scrollDrift * 0.5) + t * 0.6);
     float fc = smoothstep(0.30, 0.70, f);
 
-    // Toned-down color gain: dark mode lifted slightly (was too faint),
-    // light mode gain cut roughly in half (was clipping to white).
-    // vec3 colDark = mix(u_c1 * 0.7, u_c1 * 1.3, f) + u_c2 * pow(f, 4.0) * 0.4;
-    // float alphaDark = 0.2 * f + u_platform * 0.04;
-
-    // vec3 colLight = mix(u_c1 * 1.3, u_c1 * 1.6, fc) + u_c2 * pow(fc, 3.0) * 0.35;
-    // float alphaLight = 0.22 * mix(0.4, 1.0, fc);
-
-    // u_c1/u_c2 are now brand colors (primary teal / accent amber) in both
-    // themes, so no more aggressive gain needed to force brightness.
-    vec3 colDark = mix(u_c1 * 0.6, u_c1 * 1.1, f) + u_c2 * pow(f, 4.0) * 0.4;
+    vec3 colDark = mix(u_c1 * 0.7, u_c1 * 1.3, f) + u_c2 * pow(f, 4.0) * 0.4;
     float alphaDark = 0.2 * f + u_platform * 0.04;
 
-    vec3 colLight = mix(u_c1 * 0.9, u_c1 * 1.3, fc) + u_c2 * pow(fc, 3.0) * 0.4;
+    vec3 colLight = mix(u_c1 * 1.3, u_c1 * 1.6, fc) + u_c2 * pow(fc, 3.0) * 0.35;
     float alphaLight = 0.22 * mix(0.4, 1.0, fc);
 
     vec3 col = mix(colLight, colDark, u_dark);
@@ -236,102 +725,6 @@ const fragmentShaderDesktop = `
   }
 `;
 
-// Mobile shader: Voronoi cell noise
-// const fragmentShaderMobile = `
-//   precision highp float;
-//   uniform vec2 u_res;
-//   uniform vec2 u_mouse;
-//   uniform float u_scroll;
-//   uniform float u_time;
-//   uniform float u_dark;
-//   uniform vec3 u_c1;
-//   uniform vec3 u_c2;
-//   uniform float u_platform;
-
-//   // Precision-safe hash: no sin(), avoids mediump/highp trig degradation on mobile GPUs
-//   float hash(vec2 p) {
-//     vec3 p3 = fract(vec3(p.xyx) * 0.1031);
-//     p3 += dot(p3, p3.yzx + 33.33);
-//     return fract((p3.x + p3.y) * p3.z);
-//   }
-
-//   // Smooth-min voronoi: blends between nearest neighbors to kill cell-swap popping
-//   vec2 voronoi(vec2 x) {
-//     vec2 n = floor(x);
-//     vec2 f = fract(x);
-//     float md = 8.0;
-//     vec2 mr = vec2(8.0);
-//     for (int j = -1; j <= 1; j++) {
-//       for (int i = -1; i <= 1; i++) {
-//         vec2 g = vec2(float(i), float(j));
-//         vec2 o = hash(n + g) * vec2(0.5) + vec2(0.25);
-//         vec2 r = g + o - f;
-//         float d = dot(r, r);
-//         float h = smoothstep(-1.0, 1.0, (md - d) * 4.0);
-//         md = mix(md, d, h) - h * (1.0 - h) * 0.5;
-//         mr = mix(mr, r, h);
-//       }
-//     }
-//     return vec2(sqrt(max(md, 0.0)), hash(n + mr));
-//   }
-
-//   // Coarse 5-tap single noise for the secondary layer (replaces full 3x3 voronoi pass)
-//   float noise5(vec2 x) {
-//     vec2 n = floor(x);
-//     vec2 f = fract(x);
-//     float center = hash(n);
-//     float r = hash(n + vec2(1.0, 0.0));
-//     float l = hash(n + vec2(-1.0, 0.0));
-//     float u = hash(n + vec2(0.0, 1.0));
-//     float d = hash(n + vec2(0.0, -1.0));
-//     vec2 w = f * f * (3.0 - 2.0 * f);
-//     float h = mix(mix(l, center, w.x), mix(center, r, w.x), 0.5);
-//     float v = mix(mix(d, center, w.y), mix(center, u, w.y), 0.5);
-//     return mix(h, v, 0.5);
-//   }
-
-//   float organicWarp(vec2 p, float t) {
-//     float warp = sin(p.x * 3.5 + t * 0.8) * 0.25;
-//     warp += sin(p.y * 2.8 - t * 0.6) * 0.2;
-//     warp += sin((p.x + p.y) * 2.2 + t * 0.9) * 0.18;
-//     return warp;
-//   }
-
-//   void main() {
-//     vec2 st = gl_FragCoord.xy / u_res.y;
-//     float zoom = u_res.x < u_res.y ? 1.5 : 1.0;
-//     st *= zoom;
-//     st -= 0.5 * vec2(u_res.x / u_res.y * zoom, zoom);
-
-//     // Wrap time to prevent unbounded growth feeding sin()/hash() precision loss
-//     float t = mod(u_time, 1000.0) * 0.15;
-//     vec2 mouseWarp = (u_mouse - 0.5) * 0.12;
-//     float scrollDrift = u_scroll * 0.25;
-
-//     vec2 v1 = voronoi(st * 2.5 + t * 0.4 + mouseWarp);
-//     float v2 = noise5(st * 4.2 + t * 0.6 - mouseWarp * 0.5 + vec2(0.0, scrollDrift * 0.3));
-
-//     float warp = organicWarp(st + v1 * 0.5, t);
-//     float pattern = v1.x * 0.6 + v2 * 0.4;
-//     pattern += warp * 0.35;
-//     pattern = smoothstep(0.2, 0.8, pattern);
-
-//     vec3 colDark = mix(u_c1 * 0.7, u_c1 * 1.3, pattern) + u_c2 * pow(pattern, 2.5) * 0.55;
-//     float alphaDark = 0.35 * pattern + u_platform * 0.05;
-
-//     vec3 colLight = mix(u_c1 * 2.4, u_c1 * 3.2, pattern) + u_c2 * pow(pattern, 2.0) * 0.35;
-//     float alphaLight = 0.28 * mix(0.5, 1.0, pattern);
-
-//     vec3 col = mix(colLight, colDark, u_dark);
-//     float alpha = mix(alphaLight, alphaDark, u_dark);
-
-//     // Dither to break up 8-bit banding on low alpha gradients
-//     float dither = (hash(gl_FragCoord.xy) - 0.5) / 255.0;
-
-//     gl_FragColor = vec4(col * alpha + dither, alpha + dither);
-//   }
-// `;
-// Mobile shader: Voronoi cell noise
 const fragmentShaderMobile = `
   precision highp float;
   uniform vec2 u_res;
@@ -407,7 +800,6 @@ float hash(vec2 p) {
   }
 `;
 
-// Detect device and pick shader
 const isMobile = () => {
   return window.innerWidth < 768 || 
          typeof window.ontouchstart !== 'undefined' ||
@@ -422,7 +814,6 @@ function useThreeShaderBackground(
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    // Scene setup
     const scene = new THREE.Scene();
     const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 1000);
     camera.position.z = 1;
@@ -437,7 +828,6 @@ function useThreeShaderBackground(
     renderer.setClearColor(0x000000, 0);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-    // Resize handler
     const handleResize = () => {
       const width = canvas.clientWidth;
       const height = canvas.clientHeight;
@@ -446,15 +836,14 @@ function useThreeShaderBackground(
     handleResize();
     window.addEventListener("resize", handleResize);
 
-    // Shader material
     const uniforms = {
       u_res: { value: new THREE.Vector2(canvas.clientWidth, canvas.clientHeight) },
       u_mouse: { value: new THREE.Vector2(0.5, 0.5) },
       u_scroll: { value: 0.0 },
       u_time: { value: 0.0 },
       u_dark: { value: isDarkMode() ? 1.0 : 0.0 },
-      u_c1: { value: new THREE.Color(0x06b6d4) }, // teal default
-      u_c2: { value: new THREE.Color(0xf59e0b) }, // amber default
+      u_c1: { value: new THREE.Color(0x06b6d4) },
+      u_c2: { value: new THREE.Color(0xf59e0b) },
       u_platform: { value: 0.0 },
     };
 
@@ -470,57 +859,61 @@ function useThreeShaderBackground(
     const mesh = new THREE.Mesh(geometry, material);
     scene.add(mesh);
 
-    // Color updater
-    // const updateColors = () => {
-    //   const isDark = isDarkMode();
-    //   uniforms.u_dark.value = isDark ? 1.0 : 0.0;
-
-    //   const c1Var = isDark ? "--primary" : "--foreground";
-    //   const c2Var = isDark ? "--accent" : "--muted-foreground";
-
-    //   const rawC1 = getComputedStyle(document.documentElement)
-    //     .getPropertyValue(c1Var)
-    //     .trim();
-    //   const rawC2 = getComputedStyle(document.documentElement)
-    //     .getPropertyValue(c2Var)
-    //     .trim();
-
-    //   if (rawC1) {
-    //     const [r, g, b] = parseHsl(rawC1);
-    //     uniforms.u_c1.value.setRGB(r, g, b);
-    //   }
-    //   if (rawC2) {
-    //     const [r, g, b] = parseHsl(rawC2);
-    //     uniforms.u_c2.value.setRGB(r, g, b);
-    //   }
-    // };
-    
+    // Mobile + light mode reads --foreground/--muted-foreground (silver).
+    // Desktop, or dark mode on any device, reads --primary/--accent (teal/amber).
+    // isMobile() is the same check used above to pick the fragment shader,
+    // so the color source and shader choice can never disagree.
+    //
+    // Returns whether it actually got real values. getComputedStyle can
+    // return "" if this runs before your theme/CSS vars are fully applied
+    // to documentElement (e.g. a theme class or provider that mounts a
+    // tick later). parseHsl("") silently resolves to [0,0,0] -- if we
+    // committed that, u_c1/u_c2 would lock to pure black permanently,
+    // since nothing else re-triggers a color read unless dark mode
+    // toggles. That reads from the outside as "canvas exists, shader
+    // runs every frame, but shows nothing and never visibly animates" --
+    // a black shader is still animating, it's just multiplying color by
+    // zero. Returning false lets the caller retry next frame instead of
+    // freezing on that black value.
     const updateColors = () => {
       const isDark = isDarkMode();
       uniforms.u_dark.value = isDark ? 1.0 : 0.0;
 
-      // Always pull brand colors (teal primary, amber accent) — NOT --foreground.
-      // --foreground is a dark slate in light mode, which produced a muddy
-      // washed-out tint when multiplied up instead of a clean brand color.
+      const useBrand = !isMobile() || isDark;
+      const c1Var = useBrand ? "--primary" : "--foreground";
+      const c2Var = useBrand ? "--accent" : "--muted-foreground";
+
       const rawC1 = getComputedStyle(document.documentElement)
-        .getPropertyValue("--primary")
+        .getPropertyValue(c1Var)
         .trim();
       const rawC2 = getComputedStyle(document.documentElement)
-        .getPropertyValue("--accent")
+        .getPropertyValue(c2Var)
         .trim();
 
-      if (rawC1) {
-        const [r, g, b] = parseHsl(rawC1);
-        uniforms.u_c1.value.setRGB(r, g, b);
-      }
-      if (rawC2) {
-        const [r, g, b] = parseHsl(rawC2);
-        uniforms.u_c2.value.setRGB(r, g, b);
-      }
-    };
-    updateColors();
+      if (!rawC1 || !rawC2) return false;
 
-    // Mouse tracking
+      const [r1, g1, b1] = parseHsl(rawC1);
+      uniforms.u_c1.value.setRGB(r1, g1, b1);
+
+      const [r2, g2, b2] = parseHsl(rawC2);
+      uniforms.u_c2.value.setRGB(r2, g2, b2);
+
+      return true;
+    };
+
+    let colorsResolved = updateColors();
+    if (!colorsResolved) {
+      let attempts = 0;
+      const retryColors = () => {
+        attempts += 1;
+        colorsResolved = updateColors();
+        if (!colorsResolved && attempts < 30) {
+          requestAnimationFrame(retryColors);
+        }
+      };
+      requestAnimationFrame(retryColors);
+    }
+
     const mouseTarget = { x: 0.5, y: 0.5 };
     const mouseCurrent = { x: 0.5, y: 0.5 };
     const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
@@ -542,7 +935,6 @@ function useThreeShaderBackground(
     window.addEventListener("mousemove", onMouseMove, { passive: true });
     window.addEventListener("touchmove", onTouchMove, { passive: true });
 
-    // Animation loop
     let animationId: number;
     let startTime = performance.now();
 
@@ -557,10 +949,12 @@ function useThreeShaderBackground(
       uniforms.u_scroll.value = scrollProgressRef.current;
       uniforms.u_res.value.set(canvas.clientWidth, canvas.clientHeight);
 
-      // Update colors on dark mode toggle
       const isDark = isDarkMode();
       if (uniforms.u_dark.value !== (isDark ? 1.0 : 0.0)) {
-        updateColors();
+        uniforms.u_dark.value = isDark ? 1.0 : 0.0;
+      }
+      if (!colorsResolved) {
+        colorsResolved = updateColors();
       }
 
       renderer.render(scene, camera);
@@ -569,7 +963,6 @@ function useThreeShaderBackground(
 
     animationId = requestAnimationFrame(animate);
 
-    // Cleanup
     return () => {
       cancelAnimationFrame(animationId);
       window.removeEventListener("resize", handleResize);
