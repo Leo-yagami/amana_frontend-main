@@ -102,7 +102,7 @@ const fragmentShaderDesktop = `
     st *= zoom;
     st -= 0.5 * vec2(u_res.x / u_res.y * zoom, zoom);
 
-    float t = mod(u_time, 1000.0) * 0.15;
+    float t = u_time * 0.04;
     vec2 mouseWarp = (u_mouse - 0.5) * 0.12;
     float scrollDrift = u_scroll * 0.22;
 
