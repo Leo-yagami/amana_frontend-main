@@ -25,21 +25,33 @@ const AuthCallback = () => {
         const { token, user } = res.data;
 
         if (token && user) {
+          // IMPORTANT: Save token to localStorage FIRST so the axios
+          // interceptor can attach it as a Bearer header on subsequent
+          // requests. Previously this was done after /me, but on mobile
+          // browsers the HttpOnly cookie from the exchange response is
+          // often dropped by the Vercel proxy, causing /me to fail.
+          setAuthSession(token, user);
+
           (window as any).__isTransitioning = true;
           const redirectTo = localStorage.getItem('redirectTo') || '/dashboard';
           localStorage.removeItem('redirectTo');
-          // Verify it works by hitting /me
-          const meRes = await authApi.getCurrentUser();
-          if (meRes.data) {
-            setAuthSession(token, user);
-            if ((window as any).__animateRouteTransition) {
-              (window as any).__animateRouteTransition(redirectTo);
-            } else {
-              navigate(redirectTo, { replace: true });
-            }
-          } else {
+
+          // Verify the session is valid by hitting /me
+          try {
+            await authApi.getCurrentUser();
+          } catch {
+            // /me failed — clear auth and bail
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
             (window as any).__isTransitioning = false;
             navigate("/login?error=google_callback_failed", { replace: true });
+            return;
+          }
+
+          if ((window as any).__animateRouteTransition) {
+            (window as any).__animateRouteTransition(redirectTo);
+          } else {
+            navigate(redirectTo, { replace: true });
           }
         } else {
           (window as any).__isTransitioning = false;
