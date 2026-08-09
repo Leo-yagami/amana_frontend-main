@@ -1337,7 +1337,7 @@ function PartnerRow({ partner, index }: { partner: Partner; index: number }) {
   ref={rowRef}
   data-reveal="up"
   data-reveal-delay={String(Math.min(index * 0.06, 0.36))}
-  className="group relative grid grid-cols-[32px_1fr_auto] sm:grid-cols-[48px_1fr_auto_140px_20px] items-center gap-3 sm:gap-6 py-6 sm:py-8 border-b border-border first:border-t border-t-border cursor-pointer"
+  className="group relative grid grid-cols-[32px_1fr_auto] sm:grid-cols-[48px_1fr_auto_140px_20px] items-center gap-3 sm:gap-6 py-6 sm:py-8 border-b border-border first:border-t border-t-border cursor-pointer select-none"
 >
   <span
     aria-hidden="true"
