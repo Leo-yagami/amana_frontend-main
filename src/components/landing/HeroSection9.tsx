@@ -349,8 +349,11 @@ function useThreeShaderBackground(
 
     let animationId: number;
     let startTime = performance.now();
+    let isVisible = true;
+    let lastPauseTime = 0;
 
     const animate = (now: number) => {
+      if (!isVisible) return;
       const elapsed = (now - startTime) / 1000;
 
       mouseCurrent.x = lerp(mouseCurrent.x, mouseTarget.x, 0.018);
@@ -373,9 +376,31 @@ function useThreeShaderBackground(
       animationId = requestAnimationFrame(animate);
     };
 
+    const observer = new IntersectionObserver((entries) => {
+      const entry = entries[0];
+      if (entry.isIntersecting) {
+        if (!isVisible) {
+          isVisible = true;
+          // Compensate for time spent paused so shader doesn't jump
+          if (lastPauseTime > 0) {
+            startTime += performance.now() - lastPauseTime;
+          }
+          animationId = requestAnimationFrame(animate);
+        }
+      } else {
+        if (isVisible) {
+          isVisible = false;
+          lastPauseTime = performance.now();
+          cancelAnimationFrame(animationId);
+        }
+      }
+    });
+    observer.observe(canvas);
+
     animationId = requestAnimationFrame(animate);
 
     return () => {
+      observer.disconnect();
       cancelAnimationFrame(animationId);
       window.removeEventListener("resize", handleResize);
       window.removeEventListener("mousemove", onMouseMove);
@@ -383,6 +408,7 @@ function useThreeShaderBackground(
       geometry.dispose();
       material.dispose();
       renderer.dispose();
+      renderer.forceContextLoss();
     };
   }, [canvasRef, scrollProgressRef]);
 }
@@ -503,8 +529,11 @@ function useRawShaderBackground(
     updateColors();
 
     let rafId: number;
+    let isVisible = true;
 
     const render = (now: number) => {
+      if (!isVisible) return;
+      
       const expectedW = Math.floor(canvas.clientWidth * getScale());
       const expectedH = Math.floor(canvas.clientHeight * getScale());
       if (canvas.width !== expectedW || canvas.height !== expectedH) {
@@ -536,14 +565,33 @@ function useRawShaderBackground(
       rafId = requestAnimationFrame(render);
     };
 
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) {
+        if (!isVisible) {
+          isVisible = true;
+          rafId = requestAnimationFrame(render);
+        }
+      } else {
+        if (isVisible) {
+          isVisible = false;
+          cancelAnimationFrame(rafId);
+        }
+      }
+    });
+    observer.observe(canvas);
+
     rafId = requestAnimationFrame(render);
 
     return () => {
+      observer.disconnect();
       cancelAnimationFrame(rafId);
       window.removeEventListener("mousemove", onMouseMove);
       ro.disconnect();
       gl.deleteProgram(prog);
       gl.deleteBuffer(buf);
+      
+      const ext = gl.getExtension("WEBGL_lose_context");
+      if (ext) ext.loseContext();
     };
   }, [canvasRef, scrollProgressRef]);
 }
