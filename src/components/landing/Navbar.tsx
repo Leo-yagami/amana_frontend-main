@@ -1278,19 +1278,33 @@ const Navbar = () => {
       .timeline({ paused: true })
       .to(mobileMenuRef.current, {
         clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)",
-        duration: 0.75,
-        ease: "power3.inOut",
+        duration: 1.0,
+        ease: "expo.inOut",
         force3D: true,
       })
       .from(
         ".menu-link-inner",
-        { yPercent: 100, opacity: 0, duration: 0.65, stagger: 0.06, ease: "power3.out" },
-        "-=0.45"
+        {
+          y: 60,
+          opacity: 0,
+          duration: 0.85,
+          stagger: 0.08,
+          ease: "power4.out",
+          force3D: true,
+        },
+        "-=0.6"
       )
       .from(
         ".menu-footer > *",
-        { y: 15, opacity: 0, duration: 0.5, stagger: 0.04, ease: "power3.out" },
-        "-=0.45"
+        {
+          y: 20,
+          opacity: 0,
+          duration: 0.6,
+          stagger: 0.05,
+          ease: "power3.out",
+          force3D: true,
+        },
+        "-=0.6"
       );
   }, { scope: mobileMenuRef });
 
