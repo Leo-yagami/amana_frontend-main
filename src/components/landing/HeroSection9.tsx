@@ -1032,19 +1032,49 @@ export default function HeroSection() {
 
     let rafId: number;
     let cancelled = false;
-    let cloneEl: HTMLElement | null = null;
+    let cloneEls: HTMLElement[] = [];
     let lastTime = performance.now();
-    const pxPerSec = 33;
+    const pxPerSec = 38;
 
     const init = () => {
       if (cancelled) return;
+      const inner = tickerInnerRef.current;
+      const outer = tickerRef.current;
+      const wrap = tickerWrapperRef.current;
+      if (!inner || !outer || !wrap) return;
 
-      const clone = ticker.cloneNode(true) as HTMLElement;
-      clone.setAttribute("aria-hidden", "true");
-      cloneEl = clone;
-      tickerRef.current?.appendChild(clone);
+      // Clean up previous clones if any
+      cloneEls.forEach((el) => el.remove());
+      cloneEls = [];
 
-      const totalWidth = ticker.scrollWidth;
+      const singleWidth = inner.scrollWidth;
+      if (singleWidth <= 0) return;
+
+      const wrapWidth = wrap.clientWidth || window.innerWidth;
+      // Guarantee enough duplicates so the track extends past screen width + singleWidth
+      const neededCopies = Math.max(2, Math.ceil((wrapWidth + singleWidth) / singleWidth) + 1);
+
+      for (let i = 1; i < neededCopies; i++) {
+        const clone = inner.cloneNode(true) as HTMLElement;
+        clone.setAttribute("aria-hidden", "true");
+
+        // Remove ref attributes from clone items to prevent GSAP ref collision
+        const cloneItems = clone.querySelectorAll<HTMLElement>("[ref]");
+        cloneItems.forEach((item) => item.removeAttribute("ref"));
+
+        outer.appendChild(clone);
+        cloneEls.push(clone);
+      }
+
+      // If reveal already happened before clones were created, ensure clone spans are visible
+      if (tickerRevealedRef.current) {
+        const spans = outer.querySelectorAll<HTMLElement>(".ticker-item-span");
+        spans.forEach((span) => {
+          span.style.opacity = "1";
+          span.style.transform = "none";
+        });
+      }
+
       let x = 0;
 
       const animate = (now: number) => {
@@ -1058,9 +1088,14 @@ export default function HeroSection() {
         const dt = Math.min((now - lastTime) / 1000, 0.1);
         lastTime = now;
         x -= pxPerSec * dt;
-        if (Math.abs(x) >= totalWidth) x = 0;
+
+        // Seamless wrap around: when x scrolls past 1 full singleWidth set, reset x back by singleWidth
+        if (x <= -singleWidth) {
+          x += singleWidth;
+        }
+
         if (tickerRef.current) {
-          tickerRef.current.style.transform = `translateX(${x}px)`;
+          tickerRef.current.style.transform = `translate3d(${x}px, 0, 0)`;
         }
         rafId = requestAnimationFrame(animate);
       };
@@ -1070,14 +1105,18 @@ export default function HeroSection() {
 
     document.fonts.ready.then(init);
 
+    const handleResize = () => {
+      init();
+    };
+    window.addEventListener("resize", handleResize);
+
     return () => {
       cancelled = true;
       cancelAnimationFrame(rafId);
-      if (cloneEl && cloneEl.parentNode) {
-        cloneEl.parentNode.removeChild(cloneEl);
-      }
+      window.removeEventListener("resize", handleResize);
+      cloneEls.forEach((el) => el.remove());
     };
-  }, []);
+  }, [TICKER_ITEMS]);
   
 
 const runAnimation = (mode: AnimationMode, payload?: HeroStats | null) => {
@@ -1171,9 +1210,13 @@ const runAnimation = (mode: AnimationMode, payload?: HeroStats | null) => {
     const itemDuration = isReveal ? 0.45 : 0.3;
     const itemStagger = isReveal ? 0.028 : 0.018;
 
-    if (tickerItemRefs.current.length > 0) {
+    const tickerSpans = tickerRef.current
+      ? Array.from(tickerRef.current.querySelectorAll<HTMLElement>(".ticker-item-span"))
+      : tickerItemRefs.current;
+
+    if (tickerSpans.length > 0) {
       tl.to(
-        tickerItemRefs.current,
+        tickerSpans,
         {
           yPercent: 0,
           opacity: 1,
@@ -1186,7 +1229,7 @@ const runAnimation = (mode: AnimationMode, payload?: HeroStats | null) => {
     }
 
     const itemRevealSpan =
-      Math.max(0, tickerItemRefs.current.length - 1) * itemStagger + itemDuration;
+      Math.max(0, tickerSpans.length - 1) * itemStagger + itemDuration;
     const tickerScrollStart = tickerRevealAt + itemRevealSpan + 0.1;
     tl.call(() => {
       tickerRevealedRef.current = true;
@@ -1204,7 +1247,10 @@ const runAnimation = (mode: AnimationMode, payload?: HeroStats | null) => {
       yPercent: 115,
     });
 
-    if (tickerItemRefs.current.length > 0) {
+    const spans = tickerRef.current?.querySelectorAll(".ticker-item-span");
+    if (spans && spans.length > 0) {
+      gsap.set(spans, { yPercent: 100, opacity: 0 });
+    } else if (tickerItemRefs.current.length > 0) {
       gsap.set(tickerItemRefs.current, { yPercent: 100, opacity: 0 });
     }
 
@@ -1404,7 +1450,7 @@ const runAnimation = (mode: AnimationMode, payload?: HeroStats | null) => {
                 }}
                 className="flex items-center shrink-0 overflow-hidden"
               >
-                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground/50 whitespace-nowrap px-4 inline-block will-change-transform">
+                <span className="ticker-item-span font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground/50 whitespace-nowrap px-4 inline-block will-change-transform">
                   {item}
                 </span>
                 <span className="text-muted-foreground/20 text-xs">◆</span>
