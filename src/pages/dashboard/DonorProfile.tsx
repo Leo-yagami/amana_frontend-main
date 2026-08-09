@@ -556,7 +556,7 @@ const DonorProfile = () => {
                           <ChevronDown className="h-3.5 w-3.5 opacity-50" />
                         </button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-3" align="start" sideOffset={8}>
+                      <PopoverContent className="w-auto p-3" align="center" sideOffset={8}>
                         <div className="mb-3 flex flex-wrap gap-1.5">
                           {presets.map((preset) => (
                             <button
@@ -574,20 +574,22 @@ const DonorProfile = () => {
                             </button>
                           ))}
                         </div>
-                        <Calendar
-                          mode="range"
-                          selected={dateRange}
-                          onSelect={(range) => {
-                            if (range?.from && range?.to) {
-                              setDateRange({ from: range.from, to: range.to });
-                              setRangeOpen(false);
-                            } else {
-                              setDateRange(range ?? undefined);
-                            }
-                          }}
-                          numberOfMonths={isDesktop ? 2 : 1}
-                          className="rounded-lg border p-2"
-                        />
+                        <div className="relative max-h-[70vh] overflow-y-auto">
+                          <Calendar
+                            mode="range"
+                            selected={dateRange}
+                            onSelect={(range) => {
+                              if (range?.from && range?.to) {
+                                setDateRange({ from: range.from, to: range.to });
+                                setRangeOpen(false);
+                              } else {
+                                setDateRange(range ?? undefined);
+                              }
+                            }}
+                            numberOfMonths={isDesktop ? 2 : 1}
+                            className="rounded-lg border p-2 w-full"
+                          />
+                        </div>
                       </PopoverContent>
                     </Popover>
                   </div>

@@ -1279,7 +1279,7 @@ const { data: trendData, isLoading: trendLoading } = useQuery({
               <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
             </button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-3" align="start" sideOffset={8}>
+          <PopoverContent className="w-auto p-3" align="center" sideOffset={8}>
             <div className="mb-3 flex flex-wrap gap-1.5">
               {presets.map((preset) => (
                 <button
@@ -1297,21 +1297,23 @@ const { data: trendData, isLoading: trendLoading } = useQuery({
                 </button>
               ))}
             </div>
-            <CalendarPicker
-              mode="range"
-              selected={dateRange}
-              onSelect={(range) => {
-                if (range?.from && range?.to) {
-                  setDateRange({ from: range.from, to: range.to });
-                  setRangeOpen(false);
-                  setPage(1);
-                } else {
-                  setDateRange(range ?? undefined);
-                }
-              }}
-              numberOfMonths={isDesktop ? 2 : 1}
-              className="rounded-lg border p-2"
-            />
+            <div className="relative max-h-[70vh] overflow-y-auto">
+              <CalendarPicker
+                mode="range"
+                selected={dateRange}
+                onSelect={(range) => {
+                  if (range?.from && range?.to) {
+                    setDateRange({ from: range.from, to: range.to });
+                    setRangeOpen(false);
+                    setPage(1);
+                  } else {
+                    setDateRange(range ?? undefined);
+                  }
+                }}
+                numberOfMonths={isDesktop ? 2 : 1}
+                className="rounded-lg border p-2 w-full"
+              />
+            </div>
           </PopoverContent>
         </Popover>
       </div>
