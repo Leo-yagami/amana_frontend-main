@@ -1240,17 +1240,25 @@ const Navbar = () => {
 
   // V2 — skips the hide/show when mobile menu is open so the top bar stays put
   useEffect(() => {
+    let ticking = false;
     const onScroll = () => {
       if (mobileOpenRef.current) return;
-      const currentY = window.scrollY;
-      const delta = currentY - lastScrollY.current;
-      setIsSticky(currentY > 80);
-      if (currentY > 80 && delta > 5) {
-        setIsNavVisible(false);
-      } else if (delta < -5 || currentY <= 80) {
-        setIsNavVisible(true);
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const currentY = window.scrollY;
+          const delta = currentY - lastScrollY.current;
+          const sticky = currentY > 80;
+          setIsSticky((prev) => (prev !== sticky ? sticky : prev));
+          if (currentY > 80 && delta > 5) {
+            setIsNavVisible((prev) => (prev ? false : prev));
+          } else if (delta < -5 || currentY <= 80) {
+            setIsNavVisible((prev) => (!prev ? true : prev));
+          }
+          lastScrollY.current = currentY;
+          ticking = false;
+        });
+        ticking = true;
       }
-      lastScrollY.current = currentY;
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     onScroll();
@@ -1270,19 +1278,19 @@ const Navbar = () => {
       .timeline({ paused: true })
       .to(mobileMenuRef.current, {
         clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)",
-        duration: 1.2,
-        ease: "expo.inOut",
+        duration: 0.75,
+        ease: "power3.inOut",
         force3D: true,
       })
       .from(
         ".menu-link-inner",
-        { yPercent: 110, duration: 1.1, stagger: 0.1, ease: "expo.out" },
-        "-=0.5"
+        { yPercent: 100, opacity: 0, duration: 0.65, stagger: 0.06, ease: "power3.out" },
+        "-=0.45"
       )
       .from(
         ".menu-footer > *",
-        { y: 20, opacity: 0, duration: 0.8, stagger: 0.05, ease: "power3.out" },
-        "-=0.8"
+        { y: 15, opacity: 0, duration: 0.5, stagger: 0.04, ease: "power3.out" },
+        "-=0.45"
       );
   }, { scope: mobileMenuRef });
 
@@ -1435,7 +1443,7 @@ const Navbar = () => {
       {/* ── Mobile overlay ───────────────────────────────────────────────── */}
       <div
         ref={mobileMenuRef}
-        className={`fixed inset-0 z-40 bg-background flex flex-col lg:hidden will-change-transform ${
+        className={`fixed inset-0 z-40 bg-background flex flex-col lg:hidden [transform:translateZ(0)] [backface-visibility:hidden] ${
           mobileOpen ? "pointer-events-auto" : "pointer-events-none"
         }`}
         style={{ clipPath: "polygon(0% 0%, 100% 0%, 100% 0%, 0% 0%)" }}
