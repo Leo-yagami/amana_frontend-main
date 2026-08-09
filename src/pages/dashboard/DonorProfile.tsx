@@ -428,10 +428,16 @@ const DonorProfile = () => {
                     <span>{[donor.city, donor.country].filter(Boolean).join(", ")}</span>
                   </div>
                 )}
-                <div className="flex items-center gap-2 text-muted-foreground">
+                {/* <div className="flex items-center gap-2 text-muted-foreground">
                   <Calendar className="w-4 h-4 flex-shrink-0" />
                   <span>{t(`${NS}.joined`)} {formatDate(donor.registeredAt)}</span>
-                </div>
+                </div> */}
+                {/* FIIIIIIIIIIIIIIIX */}
+                {/* ✅ Change it to CalendarIcon: */}
+<div className="flex items-center gap-2 text-muted-foreground">
+  <CalendarIcon className="w-4 h-4 flex-shrink-0" />
+  <span>{t(`${NS}.joined`)} {formatDate(donor.registeredAt)}</span>
+</div>
               </div>
             </div>
           </div>
