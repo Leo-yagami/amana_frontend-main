@@ -531,12 +531,17 @@ const ready = Promise.all([
           <span
             ref={wordRef}
             className="block font-display font-black text-[clamp(2.25rem,8vw,5rem)] leading-none tracking-[-0.03em] text-foreground will-change-transform"
+            style={{ opacity: 0 }}
           >
             {t("brand.amana", "Amana")}
           </span>
         </div>
         <div className="w-[120px] h-px bg-border/60 overflow-hidden mt-6">
-          <div ref={ruleRef} className="w-full h-full bg-foreground will-change-transform" />
+          <div
+            ref={ruleRef}
+            className="w-full h-full bg-foreground will-change-transform"
+            style={{ transform: "scaleX(0)", transformOrigin: "left center" }}
+          />
         </div>
       </div>
     </div>
