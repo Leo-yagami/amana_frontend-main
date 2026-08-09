@@ -355,19 +355,41 @@ function useThreeShaderBackground(
     let lastPauseTime = 0;
     let menuOpen = false;
 
+    // const onMenuToggle = (e: Event) => {
+    //   const open = (e as CustomEvent).detail?.open;
+    //   menuOpen = !!open;
+    //   if (menuOpen) {
+    //     // Pause rendering so GPU is free for menu animation
+    //     cancelAnimationFrame(animationId);
+    //   } else if (isVisible) {
+    //     // Resume rendering
+    //     animationId = requestAnimationFrame(animate);
+    //   }
+    // };
+    // window.addEventListener("navmenu:toggle", onMenuToggle);
+
+    // Diff 7
     const onMenuToggle = (e: Event) => {
       const open = (e as CustomEvent).detail?.open;
       menuOpen = !!open;
       if (menuOpen) {
         // Pause rendering so GPU is free for menu animation
         cancelAnimationFrame(animationId);
-      } else if (isVisible) {
-        // Resume rendering
-        animationId = requestAnimationFrame(animate);
+        // Drop the backing-store resolution while the canvas isn't the
+        // interactive focus anyway. A stale 2-3x DPR framebuffer still
+        // occupies GPU memory bandwidth even while paused, and that
+        // bandwidth contention is what causes dropped frames on the
+        // clip-path wipe on mobile GPUs (Adreno/Mali especially).
+        renderer.setPixelRatio(1);
+      } else {
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        if (isVisible) {
+          // Resume rendering
+          animationId = requestAnimationFrame(animate);
+        }
       }
     };
     window.addEventListener("navmenu:toggle", onMenuToggle);
-
     const animate = (now: number) => {
       if (!isVisible || menuOpen) return;
       const elapsed = (now - startTime) / 1000;
@@ -487,13 +509,38 @@ function useRawShaderBackground(
     const uC1 = gl.getUniformLocation(prog, "u_c1");
     const uC2 = gl.getUniformLocation(prog, "u_c2");
 
+    // const getScale = () => {
+    //   const dpr = window.devicePixelRatio || 1;
+    //   const width = window.screen.width;
+    //   if (dpr >= 3 || width > 1200) return 0.5;
+    //   if (dpr >= 2) return 0.35;
+    //   return 0.25;
+    // };
+    
+    //Diff 8
     const getScale = () => {
+      // While the mobile/desktop menu overlay is animating, drop to the
+      // lowest tier regardless of DPR — same rationale as the Three.js
+      // pixelRatio drop above: less backing-store memory bandwidth
+      // contending with the compositor during the clip-path wipe.
+      if (menuOpenForScale) return 0.15;
       const dpr = window.devicePixelRatio || 1;
       const width = window.screen.width;
       if (dpr >= 3 || width > 1200) return 0.5;
       if (dpr >= 2) return 0.35;
       return 0.25;
-    };
+    }; 
+
+    // const resize = () => {
+    //   if (!canvas) return;
+    //   const SCALE = getScale();
+    //   canvas.width = Math.floor(canvas.clientWidth * SCALE);
+    //   canvas.height = Math.floor(canvas.clientHeight * SCALE);
+    //   gl.viewport(0, 0, canvas.width, canvas.height);
+    // };
+
+    // Diff 8
+    let menuOpenForScale = false;
 
     const resize = () => {
       if (!canvas) return;
@@ -553,13 +600,30 @@ function useRawShaderBackground(
     let isVisible = true;
     let menuOpen = false;
 
+    // const onMenuToggle = (e: Event) => {
+    //   const open = (e as CustomEvent).detail?.open;
+    //   menuOpen = !!open;
+    //   if (menuOpen) {
+    //     cancelAnimationFrame(rafId);
+    //   } else if (isVisible) {
+    //     rafId = requestAnimationFrame(render);
+    //   }
+    // };
+    // window.addEventListener("navmenu:toggle", onMenuToggle);
+
+    // Diff 8
     const onMenuToggle = (e: Event) => {
       const open = (e as CustomEvent).detail?.open;
       menuOpen = !!open;
+      menuOpenForScale = menuOpen;
       if (menuOpen) {
         cancelAnimationFrame(rafId);
-      } else if (isVisible) {
-        rafId = requestAnimationFrame(render);
+        resize(); // apply the low-scale tier immediately, even while paused
+      } else {
+        resize(); // restore full scale on close
+        if (isVisible) {
+          rafId = requestAnimationFrame(render);
+        }
       }
     };
     window.addEventListener("navmenu:toggle", onMenuToggle);

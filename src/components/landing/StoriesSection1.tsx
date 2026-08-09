@@ -75,6 +75,8 @@ export default function StoriesSection() {
       });
       gsap.set(cards[0], { yPercent: 0, scale: 1, opacity: 1, zIndex: total });
 
+      let lastIdx = -1;
+
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: sectionRef.current,
@@ -83,13 +85,17 @@ export default function StoriesSection() {
             const stickyHeight = stickyRef.current?.clientHeight || window.innerHeight;
             return `+=${total * SCROLL_PER_CARD - stickyHeight}`;
           },
-          scrub: 1.2,
+          scrub: 0.1,
+          fastScrollEnd: true,
+          preventOverlaps: true,
           invalidateOnRefresh: true,
           onUpdate: (self) => {
             const idx = Math.min(
               Math.floor(self.progress * (total - 1) + 0.5),
               total - 1
             );
+            if (idx === lastIdx) return;
+            lastIdx = idx;
             dotRefs.current.forEach((dot, i) => {
               if (!dot) return;
               dot.style.width = i === idx ? "2rem" : "0.375rem";
@@ -111,11 +117,12 @@ export default function StoriesSection() {
             opacity: 0,
             zIndex: 1,
             duration: 1,
+            force3D: true,
+            ease: "none",
           },
           i
         );
-        // Incoming: slides up from below, settles to natural size. Same
-        // timeline position as the outgoing tween above, so they run together.
+        // Incoming: slides up from below, settles to natural size.
         tl.to(
           cards[i + 1],
           {
@@ -124,6 +131,8 @@ export default function StoriesSection() {
             opacity: 1,
             zIndex: total - i,
             duration: 1,
+            force3D: true,
+            ease: "none",
           },
           i
         );
@@ -173,7 +182,7 @@ export default function StoriesSection() {
                 ref={(el) => {
                   cardRefs.current[i] = el;
                 }}
-                className="absolute inset-0 flex flex-col justify-between rounded-2xl sm:rounded-3xl bg-card p-5 xs:p-6 sm:p-8 lg:p-10 will-change-transform"
+                className="absolute inset-0 flex flex-col justify-between rounded-2xl sm:rounded-3xl bg-card p-5 xs:p-6 sm:p-8 lg:p-10 will-change-transform [transform:translateZ(0)]"
                 style={{
                   border: "1px solid hsl(var(--border))",
                   boxShadow: `
@@ -219,7 +228,7 @@ export default function StoriesSection() {
               ref={(el) => {
                 dotRefs.current[i] = el;
               }}
-              className="h-1.5 rounded-full bg-primary/20 transition-all duration-500"
+              className="h-1.5 rounded-full bg-primary/20 transition-[width,background-color] duration-300 ease-out"
               style={{ width: i === 0 ? "2rem" : "0.375rem" }}
             />
           ))}

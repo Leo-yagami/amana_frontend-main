@@ -1308,14 +1308,43 @@ const Navbar = () => {
       );
   }, { scope: mobileMenuRef });
 
+  // useEffect(() => {
+  //   if (!mobileTlRef.current) return;
+  //   // Tell the shader to pause/resume so the GPU is free for the menu animation
+  //   window.dispatchEvent(new CustomEvent("navmenu:toggle", { detail: { open: mobileOpen } }));
+  //   mobileOpen ? mobileTlRef.current.play() : mobileTlRef.current.reverse();
+  // }, [mobileOpen]);
+
+  // const closeDesktop = useCallback(() => setDesktopOpen(false), []);
+  
+  // Diff 1
   useEffect(() => {
     if (!mobileTlRef.current) return;
-    // Tell the shader to pause/resume so the GPU is free for the menu animation
-    window.dispatchEvent(new CustomEvent("navmenu:toggle", { detail: { open: mobileOpen } }));
     mobileOpen ? mobileTlRef.current.play() : mobileTlRef.current.reverse();
   }, [mobileOpen]);
 
+  // Dispatch happens INSIDE the setState updater, synchronously, in the same
+  // event-handler tick as the click. This guarantees the shader's
+  // cancelAnimationFrame fires before React even schedules a re-render,
+  // let alone before GSAP's timeline starts — no race window.
+  const toggleMobileMenu = useCallback(() => {
+    setMobileOpen((prev) => {
+      const next = !prev;
+      window.dispatchEvent(new CustomEvent("navmenu:toggle", { detail: { open: next } }));
+      return next;
+    });
+  }, []);
+
+  const closeMobileMenu = useCallback(() => {
+    setMobileOpen((prev) => {
+      if (!prev) return prev;
+      window.dispatchEvent(new CustomEvent("navmenu:toggle", { detail: { open: false } }));
+      return false;
+    });
+  }, []);
+
   const closeDesktop = useCallback(() => setDesktopOpen(false), []);
+
 
   // Drives the floating glass-pill look on the desktop menu cluster.
   const showStickyChrome = isSticky && !mobileOpen && !desktopOpen;
@@ -1337,10 +1366,15 @@ const Navbar = () => {
           <div className="flex items-center justify-between h-16 lg:h-20">
 
             {/* Logo — icon + title, gets floating pill on desktop when scrolled */}
-            {mobileOpen || desktopOpen ? (
+            {/* {mobileOpen || desktopOpen ? (
               <Link
                 to="/"
-                onClick={() => { setMobileOpen(false); setDesktopOpen(false); }}
+                onClick={() => { setMobileOpen(false); setDesktopOpen(false); }} */}
+                {/* Diff 5 */}
+                {mobileOpen || desktopOpen ? (
+              <Link
+                to="/"
+                onClick={() => { closeMobileMenu(); setDesktopOpen(false); }}
                 className={`flex items-center gap-2 group relative z-50 lg:rounded-full lg:pl-2 lg:pr-4 lg:py-2 lg:border transition-all duration-500 ${
                   showStickyChrome
                     ? "lg:bg-card/90 lg:backdrop-blur-md lg:border-border lg:shadow-sm"
@@ -1355,9 +1389,13 @@ const Navbar = () => {
                 </span>
               </Link>
             ) : (
+              // <TransitionLink
+              //   to="/"
+              //   onTransitionStart={() => { setMobileOpen(false); setDesktopOpen(false); }}
+              // Diff 5
               <TransitionLink
                 to="/"
-                onTransitionStart={() => { setMobileOpen(false); setDesktopOpen(false); }}
+                onTransitionStart={() => { closeMobileMenu(); setDesktopOpen(false); }}
                 className={`flex items-center gap-2 group relative z-50 lg:rounded-full lg:pl-2 lg:pr-4 lg:py-2 lg:border transition-all duration-500 ${
                   showStickyChrome
                     ? "lg:bg-card/90 lg:backdrop-blur-md lg:border-border lg:shadow-sm"
@@ -1421,9 +1459,15 @@ const Navbar = () => {
                   isSticky ? "max-w-0 opacity-0 scale-90 " : "max-w-[220px] opacity-100 scale-100 "
                 }`}
               >
-                <Link
+                {/* <Link
               to="/Payment"
               onClick={() => setMobileOpen(false)}
+              className="group relative flex items-center gap-2 bg-primary/80 text-primary-foreground rounded-full px-5 py-2.5 text-sm font-semibold transition-all duration-300 hover:bg-primary hover:shadow-lg whitespace-nowrap hover:scale-[1.05]"
+            > */}
+            {/* Diff 6 */}
+            <Link
+              to="/Payment"
+              onClick={closeMobileMenu}
               className="group relative flex items-center gap-2 bg-primary/80 text-primary-foreground rounded-full px-5 py-2.5 text-sm font-semibold transition-all duration-300 hover:bg-primary hover:shadow-lg whitespace-nowrap hover:scale-[1.05]"
             >
                   <span className="text-sm font-semibold uppercase tracking-wider">
@@ -1438,8 +1482,18 @@ const Navbar = () => {
             </div>
 
             {/* ── Mobile: hamburger ── */}
-            <button
+            {/* <button
               onClick={() => setMobileOpen((prev) => !prev)}
+              className="group lg:hidden p-2.5 text-foreground relative z-50"
+              type="button"
+              aria-label={t("navbar.toggleMenu", "Toggle Menu")}
+              aria-expanded={mobileOpen}
+            >
+              <MenuIcon isOpen={mobileOpen} />
+            </button> */}
+            {/* Diff 2 */}
+            <button
+              onClick={toggleMobileMenu}
               className="group lg:hidden p-2.5 text-foreground relative z-50"
               type="button"
               aria-label={t("navbar.toggleMenu", "Toggle Menu")}
@@ -1455,19 +1509,42 @@ const Navbar = () => {
       <DesktopOverlay isOpen={desktopOpen} onClose={closeDesktop} />
 
       {/* ── Mobile overlay ───────────────────────────────────────────────── */}
-      <div
+      {/* <div
         ref={mobileMenuRef}
         className={`fixed inset-0 z-40 bg-background flex flex-col lg:hidden [transform:translateZ(0)] [backface-visibility:hidden] ${
           mobileOpen ? "pointer-events-auto" : "pointer-events-none"
         }`}
         style={{ clipPath: "polygon(0% 0%, 100% 0%, 100% 0%, 0% 0%)" }}
+      > */}
+      {/* Diff 3 */}
+      <div
+        ref={mobileMenuRef}
+        className={`fixed inset-0 z-40 bg-background flex flex-col lg:hidden [backface-visibility:hidden] ${
+          mobileOpen ? "pointer-events-auto" : "pointer-events-none"
+        }`}
+        style={{
+          clipPath: "polygon(0% 0%, 100% 0%, 100% 0%, 0% 0%)",
+          // will-change must name the property actually being animated.
+          // GSAP tweens clipPath here — declaring "transform" (the old
+          // Tailwind class) told the browser to promote the wrong property,
+          // so clip-path animation fell back to per-frame style recalc on
+          // mobile GPUs. This is the single biggest fix in this pass.
+          willChange: "clip-path",
+          transform: "translateZ(0)",
+        }}
       >
         <div className="flex-1 flex flex-col justify-center gap-4 px-6 sm:px-10 mt-20">
           {navLinks.map((link) => (
             <div key={link.labelKey} className="overflow-hidden pb-2">
-              <Link
+              {/* <Link
                 to={link.to}
                 onClick={() => setMobileOpen(false)}
+                className="menu-link-inner flex items-baseline gap-4 text-5xl sm:text-6xl font-black uppercase tracking-tighter text-foreground group w-fit [backface-visibility:hidden] [transform:translateZ(0)]"
+              > */}
+              {/* Diff 4 */}
+              <Link
+                to={link.to}
+                onClick={closeMobileMenu}
                 className="menu-link-inner flex items-baseline gap-4 text-5xl sm:text-6xl font-black uppercase tracking-tighter text-foreground group w-fit [backface-visibility:hidden] [transform:translateZ(0)]"
               >
                 <span className="text-sm sm:text-base font-medium text-muted-foreground tracking-normal transition-colors">
@@ -1488,9 +1565,15 @@ const Navbar = () => {
               <ThemeToggle />
               <LanguageSwitcher />
             </div>
-            <Link
+            {/* <Link
               to="/dashboard"
               onClick={() => setMobileOpen(false)}
+              className="group flex items-center gap-2"
+            > */}
+            {/* Diff 4 */}
+            <Link
+              to="/dashboard"
+              onClick={closeMobileMenu}
               className="group flex items-center gap-2"
             >
               <span className="text-sm font-semibold uppercase tracking-wider transition-colors duration-300 group-hover:text-primary">
@@ -1502,9 +1585,19 @@ const Navbar = () => {
               </div>
             </Link>
           </div>
-          <Link
+          {/* <Link
             to="/payment"
             onClick={() => setMobileOpen(false)}
+            className="w-full"
+          >
+            <SweepFillButton className="w-full h-14 rounded-xl text-lg shadow-sm">
+              {t("navbar.donateNow", "Donate Now")}
+            </SweepFillButton>
+          </Link> */}
+          {/* Diff 4 */}
+          <Link
+            to="/payment"
+            onClick={closeMobileMenu}
             className="w-full"
           >
             <SweepFillButton className="w-full h-14 rounded-xl text-lg shadow-sm">

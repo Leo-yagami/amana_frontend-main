@@ -107,7 +107,9 @@ export default function StatsSection() {
         end: () => `+=${getDistance()}`,
         pin: true,
         pinSpacing: true,
-        scrub: 0.3,
+        scrub: 0.1,
+        fastScrollEnd: true,
+        preventOverlaps: true,
         invalidateOnRefresh: true,
         onUpdate: (self) => {
           const idx = Math.min(
