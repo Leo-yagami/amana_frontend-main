@@ -28,9 +28,12 @@ const Login = () => {
     try {
       (window as any).__isTransitioning = true;
       await login({ email, password });
-      if (window.__animateRouteTransition) {
-        window.__animateRouteTransition(redirectTo);
+      const hasPlayed = sessionStorage.getItem("amana-auth-transition-played");
+      if (!hasPlayed && (window as any).__animateRouteTransition) {
+        sessionStorage.setItem("amana-auth-transition-played", "1");
+        (window as any).__animateRouteTransition(redirectTo);
       } else {
+        (window as any).__isTransitioning = false;
         navigate(redirectTo);
       }
     } catch (err: any) {

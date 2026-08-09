@@ -48,9 +48,12 @@ const AuthCallback = () => {
             return;
           }
 
-          if ((window as any).__animateRouteTransition) {
+          const hasPlayed = sessionStorage.getItem("amana-auth-transition-played");
+          if (!hasPlayed && (window as any).__animateRouteTransition) {
+            sessionStorage.setItem("amana-auth-transition-played", "1");
             (window as any).__animateRouteTransition(redirectTo);
           } else {
+            (window as any).__isTransitioning = false;
             navigate(redirectTo, { replace: true });
           }
         } else {
