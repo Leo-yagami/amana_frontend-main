@@ -27,9 +27,9 @@ export const TransitionSkeleton = ({ children }) => {
       let blockCount = 12; // default for large screens
       
       if (screenWidth < 640) {
-        blockCount = 5; // Mobile
+        blockCount = 6; // Mobile
       } else if (screenWidth < 1024) {
-        blockCount = 7; // Tablet
+        blockCount = 8; // Tablet
       } else if (screenWidth < 1440) {
         blockCount = 10; // Small desktop / Laptop
       } else {
