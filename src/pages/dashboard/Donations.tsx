@@ -557,12 +557,17 @@
 
 
 //CLAUDE DEBUT!!!!!!!!
-import { useState } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Filter, Eye, Edit, Trash2, DollarSign, Calendar, User, ArrowUpDown, Clock, Download } from "lucide-react";
+import { Plus, Search, Filter, Eye, Edit, Trash2, DollarSign, Calendar, CalendarIcon, ChevronDown, User, ArrowUpDown, Clock, Download } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Calendar as CalendarPicker } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { format, isSameDay, startOfYear, subMonths } from "date-fns";
+import type { DateRange } from "react-day-picker";
 import FamilyClassificationBadge from "@/components/FamilyClassificationBadge";
 import {
   Table,
@@ -601,9 +606,19 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { exportDonationsPdf } from "@/lib/exportDonationPdf";
 import  DonationTrendsChart  from "@/pages/dashboard/reports/monthlyDonations";
+
+const useMediaQuery = (query: string) =>
+  useSyncExternalStore(
+    (onChange) => {
+      const mql = window.matchMedia(query);
+      mql.addEventListener("change", onChange);
+      return () => mql.removeEventListener("change", onChange);
+    },
+    () => window.matchMedia(query).matches,
+    () => false,
+  );
 
 const Donations = () => {
   const { t } = useTranslation();
@@ -616,15 +631,58 @@ const Donations = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [donationToDelete, setDonationToDelete] = useState<any>(null);
   const [trendRange, setTrendRange] = useState<"month" | "3m" | "6m" | "1y">("6m");
-  const [startDate, setStartDate] = useState<string>("");
-  const [endDate, setEndDate] = useState<string>("");
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [rangeOpen, setRangeOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+
+  const isDesktop = useMediaQuery("(min-width: 768px)");
+
+  const startDate = dateRange?.from ? format(dateRange.from, "yyyy-MM-dd") : "";
+  const endDate = dateRange?.to ? format(dateRange.to, "yyyy-MM-dd") : "";
+
+  const presets = useMemo(() => {
+    const today = new Date();
+    return [
+      { key: "all", label: t("dashboard.donationsPage.allTime"), from: undefined, to: undefined },
+      { key: "year", label: t("dashboard.donationsPage.thisYear"), from: startOfYear(today), to: today },
+      { key: "3m", label: t("dashboard.donationsPage.last3Months"), from: subMonths(today, 3), to: today },
+      { key: "12m", label: t("dashboard.donationsPage.last12Months"), from: subMonths(today, 12), to: today },
+    ];
+  }, [t]);
+
+  const formatRangeLabel = (range: DateRange | undefined) => {
+    if (!range?.from) return t("dashboard.donationsPage.allTime");
+    const withYear = !!range.to && range.from.getFullYear() !== range.to.getFullYear();
+    const start = range.from.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      ...(withYear ? { year: "numeric" } : {}),
+    });
+    if (!range.to) return start;
+    const end = range.to.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      ...(withYear ? { year: "numeric" } : {}),
+    });
+    return `${start} – ${end}`;
+  };
+
+  const isPresetActive = (from?: Date, to?: Date) =>
+    from && to
+      ? !!dateRange?.from && !!dateRange?.to && isSameDay(from, dateRange.from) && isSameDay(to, dateRange.to)
+      : !dateRange;
+
+  const applyPreset = (from?: Date, to?: Date) => {
+    setDateRange(from && to ? { from, to } : undefined);
+    setRangeOpen(false);
+    setPage(1);
+  };
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
   const { data: donationsData, isLoading, error } = useQuery({
-    queryKey: ['donations', { search: searchQuery, page, limit, status: statusFilter, type: typeFilter }],
+    queryKey: ['donations', { search: searchQuery, page, limit, status: statusFilter, type: typeFilter, startDate, endDate }],
     queryFn: async () => {
       const params: any = { page, limit };
       if (searchQuery) params.search = searchQuery;
@@ -1204,31 +1262,58 @@ const { data: trendData, isLoading: trendLoading } = useQuery({
           </Select>
         </div>
         {/* Date range */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-          <Input
-            type="date"
-            value={startDate}
-            onChange={(e) => {
-              setStartDate(e.target.value);
-              setPage(1);
-            }}
-            className="text-xs sm:text-sm h-8 sm:h-9 w-full sm:w-auto sm:flex-1 min-w-0"
-            aria-label={t("dashboard.donationsPage.fromDate")}
-          />
-          <span className="text-xs text-muted-foreground text-center sm:px-1">
-            {t("dashboard.donationsPage.toDateLabel")}
-          </span>
-          <Input
-            type="date"
-            value={endDate}
-            onChange={(e) => {
-              setEndDate(e.target.value);
-              setPage(1);
-            }}
-            className="text-xs sm:text-sm h-8 sm:h-9 w-full sm:w-auto sm:flex-1 min-w-0"
-            aria-label={t("dashboard.donationsPage.toDate")}
-          />
-        </div>
+        <Popover open={rangeOpen} onOpenChange={setRangeOpen}>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              aria-haspopup="dialog"
+              className={cn(
+                "inline-flex h-10 w-full items-center gap-1.5 rounded-full border px-4 text-[13px] font-medium transition-colors duration-200 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transition-none motion-reduce:active:scale-100 sm:w-auto",
+                dateRange
+                  ? "border-primary/30 bg-primary/10 text-primary hover:bg-primary/15"
+                  : "border-border/80 bg-background/60 text-muted-foreground hover:border-border hover:bg-background hover:text-foreground",
+              )}
+            >
+              <CalendarIcon className="h-4 w-4 shrink-0" />
+              <span className="flex-1 truncate text-left">{formatRangeLabel(dateRange)}</span>
+              <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-3" align="start" sideOffset={8}>
+            <div className="mb-3 flex flex-wrap gap-1.5">
+              {presets.map((preset) => (
+                <button
+                  key={preset.key}
+                  type="button"
+                  onClick={() => applyPreset(preset.from, preset.to)}
+                  className={cn(
+                    "inline-flex h-8 items-center rounded-full px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none",
+                    isPresetActive(preset.from, preset.to)
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground hover:bg-secondary hover:text-foreground",
+                  )}
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+            <CalendarPicker
+              mode="range"
+              selected={dateRange}
+              onSelect={(range) => {
+                if (range?.from && range?.to) {
+                  setDateRange({ from: range.from, to: range.to });
+                  setRangeOpen(false);
+                  setPage(1);
+                } else {
+                  setDateRange(range ?? undefined);
+                }
+              }}
+              numberOfMonths={isDesktop ? 2 : 1}
+              className="rounded-lg border p-2"
+            />
+          </PopoverContent>
+        </Popover>
       </div>
 
       {/* ── Donation List ───────────────────────────────────────────────────── */}

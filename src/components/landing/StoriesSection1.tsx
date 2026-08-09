@@ -160,7 +160,7 @@ export default function StoriesSection() {
       {/* Sticky wrapper — CSS sticky top-0, sized responsively to 100svh */}
       <div
         ref={stickyRef}
-        className="sticky top-0 flex flex-col items-center justify-center py-6 sm:py-10 lg:py-16 overflow-hidden box-border"
+        className="sticky top-0 flex flex-col items-center justify-center py-6 sm:py-8 lg:py-12 overflow-hidden box-border"
         style={{ height: "100svh" }}
       >
         <div className="container mx-auto px-4 flex flex-col items-center justify-center flex-1 min-h-0">
@@ -171,11 +171,11 @@ export default function StoriesSection() {
               "stories.title",
               "Stories from the other end of a donation"
             )}
-            className="mx-auto mb-4 sm:mb-8 lg:mb-14 mt-2 sm:mt-4 lg:mt-6 shrink-0"
+            className="mx-auto mb-3 sm:mb-6 lg:mb-8 mt-1 sm:mt-2 shrink-0"
           />
 
           {/* Card container with responsive height so it never overflows small screens */}
-          <div className="relative w-full max-w-2xl h-[360px] xs:h-[400px] sm:h-[480px] md:h-[520px] lg:h-[550px] mx-auto overflow-hidden rounded-2xl sm:rounded-3xl shrink-0">
+          <div className="relative w-full max-w-2xl h-[340px] xs:h-[370px] sm:h-[420px] md:h-[450px] lg:h-[460px] mx-auto overflow-hidden rounded-2xl sm:rounded-3xl shrink-0">
             {STORIES.map((story, i) => (
               <figure
                 key={story.name}
@@ -194,7 +194,7 @@ export default function StoriesSection() {
                 }}
               >
                 <div>
-                  <span className="font-display text-4xl sm:text-5xl lg:text-6xl text-primary/20 mb-1 sm:mb-2 block leading-none">
+                  <span className="font-display text-3xl sm:text-4xl lg:text-5xl text-primary/20 mb-1 sm:mb-2 block leading-none">
                     &ldquo;
                   </span>
                   <blockquote className="text-base xs:text-lg sm:text-xl lg:text-2xl leading-snug sm:leading-relaxed font-medium pb-2 sm:pb-4">
@@ -218,20 +218,20 @@ export default function StoriesSection() {
               </figure>
             ))}
           </div>
-        </div>
 
-        {/* Scroll progress dots */}
-        <div className="flex items-center justify-center gap-2 mt-4 sm:mt-6 lg:mt-8 shrink-0">
-          {STORIES.map((_, i) => (
-            <div
-              key={i}
-              ref={(el) => {
-                dotRefs.current[i] = el;
-              }}
-              className="h-1.5 rounded-full bg-primary/20 transition-[width,background-color] duration-300 ease-out"
-              style={{ width: i === 0 ? "2rem" : "0.375rem" }}
-            />
-          ))}
+          {/* Scroll progress dots */}
+          <div className="flex items-center justify-center gap-2.5 mt-6 sm:mt-8 lg:mt-10 shrink-0">
+            {STORIES.map((_, i) => (
+              <div
+                key={i}
+                ref={(el) => {
+                  dotRefs.current[i] = el;
+                }}
+                className="h-1.5 rounded-full bg-primary/20 transition-[width,background-color] duration-300 ease-out"
+                style={{ width: i === 0 ? "2rem" : "0.375rem" }}
+              />
+            ))}
+          </div>
         </div>
       </div>
     </section>

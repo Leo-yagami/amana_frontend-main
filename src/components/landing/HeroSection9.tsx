@@ -206,8 +206,8 @@ void main() {
   float f = fbm(st + 0.7 * q + vec2(0.0, scrollDrift * 0.5) + t * 0.6);
   float fc = smoothstep(0.30, 0.70, f);
 
-  vec3 colDark = mix(u_c1 * 0.55, u_c1 * 1.05, f) + u_c2 * pow(f, 4.0) * 0.35;
-  float alphaDark = 0.18 * f + u_platform * 0.04;
+  vec3 colDark = mix(u_c1 * 0.62, u_c1 * 1.18, f) + u_c2 * pow(f, 3.0) * 0.48;
+  float alphaDark = 0.26 * f + u_platform * 0.045;
 
   // Softer desktop light‑mode coloration – keep detail but lower contrast
   vec3 colLight = mix(u_c1 * 0.4, u_c1 * 0.9, fc) + u_c2 * pow(fc, 3.0) * 0.4;

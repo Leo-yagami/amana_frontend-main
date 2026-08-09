@@ -93,7 +93,7 @@ const SegmentedPills = ({
           aria-pressed={active}
           onClick={() => onChange(option.value)}
           className={cn(
-            "inline-flex h-9 items-center rounded-full border px-4 text-[13px] font-medium transition-colors duration-200 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transition-none motion-reduce:active:scale-100",
+            "inline-flex h-10 items-center rounded-full border px-4 text-[13px] font-medium transition-colors duration-200 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transition-none motion-reduce:active:scale-100",
             active
               ? "border-transparent bg-primary text-primary-foreground shadow-sm"
               : "border-border/80 bg-background/60 text-muted-foreground hover:border-border hover:bg-background hover:text-foreground",
@@ -545,7 +545,7 @@ const DonorProfile = () => {
                           type="button"
                           aria-haspopup="dialog"
                           className={cn(
-                            "inline-flex h-9 items-center gap-1.5 rounded-full border px-4 text-[13px] font-medium transition-colors duration-200 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transition-none motion-reduce:active:scale-100",
+                            "inline-flex h-10 items-center gap-1.5 rounded-full border px-4 text-[13px] font-medium transition-colors duration-200 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transition-none motion-reduce:active:scale-100",
                             dateRange
                               ? "border-primary/30 bg-primary/10 text-primary hover:bg-primary/15"
                               : "border-border/80 bg-background/60 text-muted-foreground hover:border-border hover:bg-background hover:text-foreground",
@@ -564,7 +564,7 @@ const DonorProfile = () => {
                               type="button"
                               onClick={() => applyPreset(preset.from, preset.to)}
                               className={cn(
-                                "inline-flex h-7 items-center rounded-full px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none",
+                                "inline-flex h-8 items-center rounded-full px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none",
                                 isPresetActive(preset.from, preset.to)
                                   ? "bg-primary text-primary-foreground"
                                   : "bg-muted text-muted-foreground hover:bg-secondary hover:text-foreground",
@@ -593,11 +593,11 @@ const DonorProfile = () => {
                   </div>
 
                   {activeFilterCount > 0 && (
-                    <div className="ml-auto flex items-start pt-[22px]">
+                    <div className="ml-auto flex items-start pt-6">
                       <button
                         type="button"
                         onClick={clearAllFilters}
-                        className="inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-background hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        className="inline-flex h-10 items-center gap-1.5 rounded-full px-3 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-background hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                       >
                         <X className="h-3.5 w-3.5" />
                         {t(`${NS}.clearFilters`)}

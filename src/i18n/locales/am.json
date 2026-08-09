@@ -418,7 +418,11 @@
       "toastDeleteErrDesc": "ልገሳን መሰረዝ አልተሳካም",
       "viewDetailsTitle": "ዝርዝሮችን ይመልከቱ",
       "editTitle": "አርትዕ",
-      "deleteTitleAction": "ሰርዝ"
+      "deleteTitleAction": "ሰርዝ",
+      "allTime": "ሁሉም ጊዜ",
+      "thisYear": "ዘንድሮ",
+      "last3Months": "ያለፉት 3 ወራት",
+      "last12Months": "ያለፉት 12 ወራት"
     },
     "recordSupport": {
       "title": "ድጋፍ ይመዝግቡ",

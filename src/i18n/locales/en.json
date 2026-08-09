@@ -425,7 +425,11 @@
       "exportErrDesc": "Failed to export PDF",
       "fromDate": "From date",
       "toDate": "To date",
-      "toDateLabel": "to"
+      "toDateLabel": "to",
+      "allTime": "All time",
+      "thisYear": "This year",
+      "last3Months": "Last 3 months",
+      "last12Months": "Last 12 months"
     },
     "recordSupport": {
       "title": "Record Support",

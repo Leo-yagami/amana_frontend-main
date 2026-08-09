@@ -418,7 +418,11 @@
       "toastDeleteErrDesc": "فشل في حذف التبرع",
       "viewDetailsTitle": "عرض التفاصيل",
       "editTitle": "تعديل",
-      "deleteTitleAction": "حذف"
+      "deleteTitleAction": "حذف",
+      "allTime": "كل الفترات",
+      "thisYear": "هذه السنة",
+      "last3Months": "آخر ٣ أشهر",
+      "last12Months": "آخر ١٢ شهرًا"
     },
     "recordSupport": {
       "title": "تسجيل الدعم",
