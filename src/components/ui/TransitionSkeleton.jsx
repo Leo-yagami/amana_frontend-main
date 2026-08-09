@@ -3,8 +3,6 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { gsap } from 'gsap';
 import './TransitionSkeleton.css';
 
-const BLOCK_COUNT = 12; // Fewer, wider columns for a more premium feel
-
 // ─────────────────────────────────────────────────────────────────────────────
 // TransitionSkeleton — Awwwards-grade transition layer
 // ─────────────────────────────────────────────────────────────────────────────
@@ -23,7 +21,22 @@ export const TransitionSkeleton = ({ children }) => {
   useEffect(() => {
     if (blocksOverlayRef.current) {
       blocksOverlayRef.current.innerHTML = '';
-      for (let i = 0; i < BLOCK_COUNT; i++) {
+      
+      // Adjust block count based on screen size for a better feel across devices
+      const screenWidth = window.innerWidth;
+      let blockCount = 12; // default for large screens
+      
+      if (screenWidth < 640) {
+        blockCount = 5; // Mobile
+      } else if (screenWidth < 1024) {
+        blockCount = 7; // Tablet
+      } else if (screenWidth < 1440) {
+        blockCount = 10; // Small desktop / Laptop
+      } else {
+        blockCount = 12; // Large desktop
+      }
+
+      for (let i = 0; i < blockCount; i++) {
         const block = document.createElement('div');
         block.classList.add('tx-block');
         blocksOverlayRef.current.appendChild(block);
