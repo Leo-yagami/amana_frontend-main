@@ -727,52 +727,73 @@ interface DesktopOverlayProps {
 
 const AnimatedLabel = ({ text, isActive }: { text: string; isActive: boolean }) => {
   const charsRef = useRef<(HTMLSpanElement | null)[]>([]);
-  const tlRef = useRef<gsap.core.Timeline | null>(null);
+  const tweenRef = useRef<gsap.core.Tween | null>(null);
   const isActiveRef = useRef(isActive);
 
   useEffect(() => {
     isActiveRef.current = isActive;
   }, [isActive]);
 
+  // When isActive changes, kill any running tween and let CSS take over
   useEffect(() => {
-    tlRef.current = gsap.timeline({ paused: true })
-      .to(charsRef.current.filter(Boolean), {
-        color: "var(--color-primary, hsl(var(--primary)))",
-        duration: 0.3,
-        stagger: 0.025,
-        ease: "power2.out",
-      });
+    tweenRef.current?.kill();
+    tweenRef.current = null;
     charsRef.current.filter(Boolean).forEach((el) => { el.style.color = ""; });
-    return () => { tlRef.current?.kill(); };
-  }, []);
-
-  // Whenever isActive changes, snap immediately to the correct state —
-  // no tween, no race. This is the single source of truth.
-  useEffect(() => {
-    tlRef.current?.pause();
-    // Always clear inline color — let the CSS class (text-primary / text-foreground)
-    // handle the base state so it stays correct across theme switches.
-    charsRef.current.filter(Boolean).forEach((el) => { el.style.color = ""; });
-    // tlRef.current?.invalidate();
-    // tlRef.current?.progress(0);
   }, [isActive]);
 
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => { tweenRef.current?.kill(); };
+  }, []);
+
   const play = () => {
-    if (isActiveRef.current) return; // already primary, nothing to animate
-    // Invalidate before play so the tween recaptures the current CSS-driven
-    // color as start value — essential after a theme switch.
-    tlRef.current?.invalidate();
-    tlRef.current?.restart();
+    if (isActiveRef.current) return;
+    tweenRef.current?.kill();
+
+    // Read the actual computed primary color from the CSS class
+    const chars = charsRef.current.filter(Boolean);
+    if (chars.length === 0) return;
+    const probe = chars[0]!;
+    const savedClass = probe.className;
+    probe.className = savedClass.replace("text-foreground", "text-primary");
+    const saved = probe.style.color;
+    probe.style.color = "";
+    const primaryColor = getComputedStyle(probe).color;
+    probe.style.color = saved;
+    probe.className = savedClass;
+
+    tweenRef.current = gsap.to(chars, {
+      color: primaryColor,
+      duration: 0.3,
+      stagger: 0.025,
+      ease: "power2.out",
+    });
   };
 
   const reverse = () => {
-    if (isActiveRef.current) return; // stays primary while active, no hover-out
-    // Kill any in-flight tween and snap straight to the class-driven state
-    // instead of trusting a reverse() tween to land correctly.
-    tlRef.current?.pause();
-    charsRef.current.filter(Boolean).forEach((el) => { el.style.color = ""; });
-    tlRef.current?.invalidate();
-    // tlRef.current?.progress(0);
+    if (isActiveRef.current) return;
+    tweenRef.current?.kill();
+
+    // Read the actual class-driven foreground color so we always
+    // tween back to the correct value regardless of theme.
+    const chars = charsRef.current.filter(Boolean);
+    if (chars.length === 0) return;
+    const probe = chars[0]!;
+    const saved = probe.style.color;
+    probe.style.color = "";
+    const targetColor = getComputedStyle(probe).color;
+    probe.style.color = saved;
+
+    tweenRef.current = gsap.to(chars, {
+      color: targetColor,
+      duration: 0.25,
+      stagger: { each: 0.02, from: "end" },
+      ease: "power2.inOut",
+      onComplete: () => {
+        // Clear inline styles so CSS classes take full control again
+        chars.forEach((el) => { el.style.color = ""; });
+      },
+    });
   };
 
   return (
@@ -817,21 +838,24 @@ const activeIdx = navLinks.findIndex((l) => l.to === location.pathname);
 const rowRefs = useRef<(HTMLDivElement | null)[]>([]);
 const snapBackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+// Use a fixed arrow size (24px = w-6 h-6) instead of reading
+// getBoundingClientRect on the arrow itself, which shifts due to
+// its own GSAP transforms and creates a feedback loop.
+const ARROW_SIZE = 24;
+
 const getArrowY = useCallback((idx: number): number | null => {
   const link = linkRefs.current[idx];
   const nav = navRef.current;
-  const arrow = arrowRef.current;
-  if (!link || !nav || !arrow) return null;
+  if (!link || !nav) return null;
   const linkRect = link.getBoundingClientRect();
   const navRect = nav.getBoundingClientRect();
-  return linkRect.top - navRect.top + linkRect.height / 2 - arrow.getBoundingClientRect().height / 2;
+  return linkRect.top - navRect.top + linkRect.height / 2 - ARROW_SIZE / 2;
 }, []);
 
 const getArrowX = useCallback((idx: number): number | null => {
   const link = linkRefs.current[idx];
   const nav = navRef.current;
-  const arrow = arrowRef.current;
-  if (!link || !nav || !arrow) return null;
+  if (!link || !nav) return null;
   const linkRect = link.getBoundingClientRect();
   const navRect = nav.getBoundingClientRect();
   return linkRect.right - navRect.left + 8;
@@ -846,7 +870,7 @@ const moveArrowTo = useCallback((idx: number, snap = false) => {
   } else {
     gsap.to(arrowRef.current, { x, y, opacity: 1, duration: 0.4, ease: "power3.out" });
   }
-}, [getArrowY, getArrowX, location.pathname]);
+}, [getArrowY, getArrowX]);
 
 // Snap arrow to the active link on open (fresh activeIdx each time).
 const snapArrowToActive = useCallback(() => {
@@ -889,20 +913,15 @@ snapArrowRef.current = snapArrowToActive;
     yTo.current = gsap.quickTo(imgWrapRef.current, "y", { duration: 0.9, ease: "power3.out" });
   }, { scope: overlayRef});
 
-  // Hide arrow when overlay closes
-useEffect(() => {
-  if (!isOpen) {
-    gsap.set(arrowRef.current, { opacity: 0 });
-    // snapArrowRef.current(); // re-park at the current active link, invisibly
-    // when we fade back in next time, there's no stale-position flash.
-    const target = activeIdx >= 0 ? activeIdx : 0;
-    const y = getArrowY(target);
-    const x = getArrowX(target);
-    if (y !== null && x !== null) {
-      gsap.set(arrowRef.current, { x, y });
+  // Hide arrow immediately when overlay closes — do NOT reposition it
+  // during the close animation, because getBoundingClientRect reads are
+  // unreliable while clipPath is animating.  The timeline's .call() at
+  // the end of the open animation handles correct positioning on re-open.
+  useEffect(() => {
+    if (!isOpen) {
+      gsap.set(arrowRef.current, { opacity: 0 });
     }
-  }
-}, [isOpen, activeIdx, getArrowX, getArrowY]);
+  }, [isOpen]);
 
   useEffect(() => {
     if (!tlRef.current) return;
@@ -1269,6 +1288,8 @@ const Navbar = () => {
 
   useEffect(() => {
     if (!mobileTlRef.current) return;
+    // Tell the shader to pause/resume so the GPU is free for the menu animation
+    window.dispatchEvent(new CustomEvent("navmenu:toggle", { detail: { open: mobileOpen } }));
     mobileOpen ? mobileTlRef.current.play() : mobileTlRef.current.reverse();
   }, [mobileOpen]);
 

@@ -479,13 +479,14 @@ export default function StoriesSection() {
                 className="absolute inset-0 flex flex-col justify-between rounded-3xl bg-card p-10 will-change-transform"
                 style={{
                   border: "1px solid hsl(var(--border))",
+                  // Simplified shadow and backface-visibility prevents massive repaints on mobile
+                  // during scale/rotation GSAP transforms.
                   boxShadow: `
                     0 0 0 1px hsl(var(--border) / 0.5),
-                    0 4px 6px hsl(var(--foreground) / 0.04),
-                    0 12px 24px hsl(var(--foreground) / 0.08),
-                    0 40px 80px hsl(var(--foreground) / 0.12)
+                    0 12px 24px hsl(var(--foreground) / 0.08)
                   `,
                   transformOrigin: "center top",
+                  backfaceVisibility: "hidden",
                 }}
               >
                 <div>

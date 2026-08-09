@@ -117,8 +117,9 @@ float hash(vec2 p) {
     vec3 colDark = mix(u_c1 * 0.7, u_c1 * 1.3, pattern) + u_c2 * pow(pattern, 2.5) * 0.55;
     float alphaDark = 0.35 * pattern + u_platform * 0.05;
 
-    vec3 colLight = mix(u_c1 * 2.4, u_c1 * 3.2, pattern) + u_c2 * pow(pattern, 2.0) * 0.35;
-    float alphaLight = 0.28 * mix(0.5, 1.0, pattern);
+    // Softer light‑mode colors – lower the multipliers and reduce opacity for a subtle overlay
+    vec3 colLight = mix(u_c1 * 0.5, u_c1 * 1.0, pattern) + u_c2 * pow(pattern, 2.0) * 0.3;
+    float alphaLight = 0.18 * mix(0.4, 0.8, pattern);
 
     vec3 col = mix(colLight, colDark, u_dark);
     float alpha = mix(alphaLight, alphaDark, u_dark);
@@ -208,8 +209,9 @@ void main() {
   vec3 colDark = mix(u_c1 * 0.55, u_c1 * 1.05, f) + u_c2 * pow(f, 4.0) * 0.35;
   float alphaDark = 0.18 * f + u_platform * 0.04;
 
-  vec3 colLight = mix(u_c1 * 2.6, u_c1 * 3.1, fc) + u_c2 * pow(fc, 3.0) * 0.45;
-  float alphaLight = 0.25 * mix(0.4, 1.0, fc);
+  // Softer desktop light‑mode coloration – keep detail but lower contrast
+  vec3 colLight = mix(u_c1 * 0.4, u_c1 * 0.9, fc) + u_c2 * pow(fc, 3.0) * 0.4;
+  float alphaLight = 0.18 * mix(0.3, 0.8, fc);
 
   vec3 col = mix(colLight, colDark, u_dark);
   float alpha = mix(alphaLight, alphaDark, u_dark);
@@ -351,9 +353,23 @@ function useThreeShaderBackground(
     let startTime = performance.now();
     let isVisible = true;
     let lastPauseTime = 0;
+    let menuOpen = false;
+
+    const onMenuToggle = (e: Event) => {
+      const open = (e as CustomEvent).detail?.open;
+      menuOpen = !!open;
+      if (menuOpen) {
+        // Pause rendering so GPU is free for menu animation
+        cancelAnimationFrame(animationId);
+      } else if (isVisible) {
+        // Resume rendering
+        animationId = requestAnimationFrame(animate);
+      }
+    };
+    window.addEventListener("navmenu:toggle", onMenuToggle);
 
     const animate = (now: number) => {
-      if (!isVisible) return;
+      if (!isVisible || menuOpen) return;
       const elapsed = (now - startTime) / 1000;
 
       mouseCurrent.x = lerp(mouseCurrent.x, mouseTarget.x, 0.018);
@@ -367,6 +383,7 @@ function useThreeShaderBackground(
       const isDark = isDarkMode();
       if (uniforms.u_dark.value !== (isDark ? 1.0 : 0.0)) {
         uniforms.u_dark.value = isDark ? 1.0 : 0.0;
+        updateColors();
       }
       if (!colorsResolved) {
         colorsResolved = updateColors();
@@ -405,6 +422,7 @@ function useThreeShaderBackground(
       window.removeEventListener("resize", handleResize);
       window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("navmenu:toggle", onMenuToggle);
       geometry.dispose();
       material.dispose();
       renderer.dispose();
@@ -514,8 +532,11 @@ function useRawShaderBackground(
 
     const updateColors = () => {
       cachedDark = isDarkMode();
-      const c1Var = cachedDark ? "--primary" : "--foreground";
-      const c2Var = cachedDark ? "--accent" : "--muted-foreground";
+      // For desktop dark mode, we keep the vibrant Green/Amber (--primary/--accent).
+      // For desktop light mode, let's try a fresh Blue/Teal mix (--info/--primary)
+      // that looks beautiful and highly visible against the warm cream background.
+      const c1Var = cachedDark ? "--primary" : "--info";
+      const c2Var = cachedDark ? "--accent" : "--primary";
       const rawC1 = getComputedStyle(document.documentElement).getPropertyValue(c1Var).trim();
       const rawC2 = getComputedStyle(document.documentElement).getPropertyValue(c2Var).trim();
 
@@ -530,9 +551,21 @@ function useRawShaderBackground(
 
     let rafId: number;
     let isVisible = true;
+    let menuOpen = false;
+
+    const onMenuToggle = (e: Event) => {
+      const open = (e as CustomEvent).detail?.open;
+      menuOpen = !!open;
+      if (menuOpen) {
+        cancelAnimationFrame(rafId);
+      } else if (isVisible) {
+        rafId = requestAnimationFrame(render);
+      }
+    };
+    window.addEventListener("navmenu:toggle", onMenuToggle);
 
     const render = (now: number) => {
-      if (!isVisible) return;
+      if (!isVisible || menuOpen) return;
       
       const expectedW = Math.floor(canvas.clientWidth * getScale());
       const expectedH = Math.floor(canvas.clientHeight * getScale());
@@ -586,6 +619,7 @@ function useRawShaderBackground(
       observer.disconnect();
       cancelAnimationFrame(rafId);
       window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("navmenu:toggle", onMenuToggle);
       ro.disconnect();
       gl.deleteProgram(prog);
       gl.deleteBuffer(buf);
@@ -1115,7 +1149,7 @@ const runAnimation = (mode: AnimationMode, payload?: HeroStats | null) => {
   }, [registerAnimation]);
 
   return (
-    <section ref={sectionRef} className="relative h-svh flex flex-col overflow-hidden bg-background">
+    <section ref={sectionRef} className="relative h-svh flex flex-col overflow-hidden bg-background select-none">
       {/* Background layer */}
       {isMobileDevice ? (
         <MobileBackground scrollProgressRef={scrollProgressRef} />
