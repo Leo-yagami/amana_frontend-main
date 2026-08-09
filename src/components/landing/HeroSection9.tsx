@@ -118,7 +118,7 @@ float hash(vec2 p) {
     float alphaDark = 0.35 * pattern + u_platform * 0.05;
 
     // Softer light‑mode colors – lower the multipliers and reduce opacity for a subtle overlay
-    vec3 colLight = mix(u_c1 * 0.5, u_c1 * 1.0, pattern) + u_c2 * pow(pattern, 2.0) * 0.3;
+    vec3 colLight = mix(u_c2 * 0.5, u_c2 * 1.0, pattern) + u_c1 * pow(pattern, 2.0) * 0.3;
     float alphaLight = 0.18 * mix(0.4, 0.8, pattern);
 
     vec3 col = mix(colLight, colDark, u_dark);
