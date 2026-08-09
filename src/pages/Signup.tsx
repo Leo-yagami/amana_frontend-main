@@ -113,30 +113,30 @@ const Signup = () => {
   };
 
   return (
-    <div className="min-h-svh flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent/5 p-4 pr-16 pl-16">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1 pt-16">
-          <CardTitle className="text-2xl font-bold text-center">{t("auth.googleTitle")}</CardTitle>
-          <CardDescription className="text-center">
-            {t("auth.googleSubtitle")}
+    <div className="min-h-svh w-full flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent/5 p-4 sm:p-6 md:p-8 py-8">
+      <Card className="w-full max-w-md shadow-lg border-border/60">
+        <CardHeader className="space-y-1.5 p-6 sm:p-8 pb-4 sm:pb-4">
+          <CardTitle className="text-2xl font-bold text-center">{t("auth.googleTitle", "Create Account")}</CardTitle>
+          <CardDescription className="text-center text-sm text-muted-foreground">
+            {t("auth.googleSubtitle", "Join Amana Charity to start supporting families in need")}
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4 pb-16">
+        <CardContent className="p-6 sm:p-8 pt-0 sm:pt-0 space-y-4">
           {/* inserting google sign in button */}
           <Button
             type="button"
             variant="outline"
-            className="w-full border-border bg-background text-foreground hover:bg-muted/80"
+            className="w-full h-11 border-border bg-background text-foreground hover:bg-muted/80 flex items-center justify-center gap-2 font-medium"
             onClick={handleGoogleSignup}
             disabled={isLoading}
           >
             <GoogleIcon className="h-5 w-5 shrink-0" />
-            {t("auth.continueGoogle")}
+            {t("auth.continueGoogle", "Continue with Google")}
           </Button>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 my-2">
             <Separator className="flex-1" />
-            <span className="text-xs text-muted-foreground whitespace-nowrap">
-              or sign up with email
+            <span className="text-xs text-muted-foreground whitespace-nowrap uppercase tracking-wider">
+              {t("auth.orSignUpEmail", "or sign up with email")}
             </span>
             <Separator className="flex-1" />
           </div> 
@@ -159,6 +159,7 @@ const Signup = () => {
                 onChange={(e) => setFullName(e.target.value)}
                 required
                 disabled={isLoading}
+                className="h-11"
               />
             </div>
 
@@ -172,6 +173,7 @@ const Signup = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 disabled={isLoading}
+                className="h-11"
               />
             </div>
 
@@ -185,9 +187,10 @@ const Signup = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 disabled={isLoading}
+                className="h-11"
               />
               <p className="text-xs text-muted-foreground">
-                Must be at least 6 characters long
+                Must contain uppercase, lowercase, and a number
               </p>
             </div>
 
@@ -201,10 +204,11 @@ const Signup = () => {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 disabled={isLoading}
+                className="h-11"
               />
             </div>
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button type="submit" className="w-full h-11 text-base font-semibold" disabled={isLoading}>
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -215,7 +219,7 @@ const Signup = () => {
               )}
             </Button>
 
-            <div className="text-center text-sm text-muted-foreground">
+            <div className="text-center text-sm text-muted-foreground pt-2">
               Already have an account?{" "}
               <Link to={`/login?redirectTo=${encodeURIComponent(redirectTo)}`} className="text-primary hover:underline font-medium">
                 Sign in
