@@ -255,6 +255,18 @@ function useThreeShaderBackground(
       powerPreference: "high-performance",
     });
 
+    // renderer.setClearColor(0x000000, 0);
+    // renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    // const handleResize = () => {
+    //   const width = canvas.clientWidth;
+    //   const height = canvas.clientHeight;
+    //   renderer.setSize(width, height);
+    // };
+    // handleResize();
+    // window.addEventListener("resize", handleResize);
+
+    // shader render login/signup fix: diff 1
     renderer.setClearColor(0x000000, 0);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
@@ -264,7 +276,25 @@ function useThreeShaderBackground(
       renderer.setSize(width, height);
     };
     handleResize();
-    window.addEventListener("resize", handleResize);
+
+    // ResizeObserver instead of window "resize" — this is what the desktop
+    // hook already uses, and it's the correct tool here. A native window
+    // resize event only fires on actual viewport dimension changes; it does
+    // NOT fire when a CSS transition, GSAP timeline, or a parent toggling
+    // visibility (e.g. the preloader finishing and revealing the hero)
+    // changes THIS element's layout box size. On a cold page load — no
+    // prior layout to fall back on, unlike a reload — the canvas's
+    // clientWidth/clientHeight can be read here before the hero section's
+    // true height has settled (e.g. if it mounts underneath a still-
+    // animating preloader), and since handleResize only ever runs once at
+    // mount, that wrong size sticks permanently: the classic "half the
+    // page, fixed by reload" signature. ResizeObserver catches every real
+    // layout-box change regardless of what caused it, so it self-corrects
+    // once the preloader's animation finishes and the hero settles into
+    // its final size — no reload needed.
+    const ro = new ResizeObserver(handleResize);
+    ro.observe(canvas);
+
 
     const uniforms = {
       u_res: { value: new THREE.Vector2(canvas.clientWidth, canvas.clientHeight) },
@@ -465,10 +495,24 @@ function useThreeShaderBackground(
 
     animationId = requestAnimationFrame(animate);
 
+    // return () => {
+    //   observer.disconnect();
+    //   cancelAnimationFrame(animationId);
+    //   window.removeEventListener("resize", handleResize);
+    //   window.removeEventListener("mousemove", onMouseMove);
+    //   window.removeEventListener("touchmove", onTouchMove);
+    //   window.removeEventListener("navmenu:toggle", onMenuToggle);
+    //   geometry.dispose();
+    //   material.dispose();
+    //   renderer.dispose();
+    //   renderer.forceContextLoss();
+    // };
+
+    // shader render login/signup fix: diff 2
     return () => {
       observer.disconnect();
+      ro.disconnect();
       cancelAnimationFrame(animationId);
-      window.removeEventListener("resize", handleResize);
       window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("touchmove", onTouchMove);
       window.removeEventListener("navmenu:toggle", onMenuToggle);
