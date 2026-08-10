@@ -1273,15 +1273,33 @@ const Navbar = () => {
 
   // ── Mobile overlay GSAP timeline ─────────────────────────────────────────
   useGSAP(() => {
+    // if (!mobileMenuRef.current) return;
+    // mobileTlRef.current = gsap
+    //   .timeline({ paused: true })
+    //   .to(mobileMenuRef.current, {
+    //     clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)",
+    //     duration: 1.0,
+    //     ease: "expo.inOut",
+    //     force3D: true,
+    //   })
     if (!mobileMenuRef.current) return;
-    mobileTlRef.current = gsap
-      .timeline({ paused: true })
-      .to(mobileMenuRef.current, {
-        clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)",
-        duration: 1.0,
-        ease: "expo.inOut",
-        force3D: true,
-      })
+  mobileTlRef.current = gsap
+    .timeline({
+      paused: true,
+      onReverseComplete: () => {
+        // Fires exactly once the close wipe has finished playing,
+        // not when the close tap happened. This is the correct moment
+        // to tell the shader it's safe to resume — the overlay is
+        // actually gone from the screen by now.
+        window.dispatchEvent(new CustomEvent("navmenu:toggle", { detail: { open: false } }));
+      },
+    })
+    .to(mobileMenuRef.current, {
+      clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)",
+      duration: 1.0,
+      ease: "expo.inOut",
+      force3D: true,
+    })
       .from(
         ".menu-link-inner",
         {
@@ -1327,21 +1345,43 @@ const Navbar = () => {
   // event-handler tick as the click. This guarantees the shader's
   // cancelAnimationFrame fires before React even schedules a re-render,
   // let alone before GSAP's timeline starts — no race window.
-  const toggleMobileMenu = useCallback(() => {
-    setMobileOpen((prev) => {
-      const next = !prev;
-      window.dispatchEvent(new CustomEvent("navmenu:toggle", { detail: { open: next } }));
-      return next;
-    });
-  }, []);
+  // const toggleMobileMenu = useCallback(() => {
+  //   setMobileOpen((prev) => {
+  //     const next = !prev;
+  //     window.dispatchEvent(new CustomEvent("navmenu:toggle", { detail: { open: next } }));
+  //     return next;
+  //   });
+  // }, []);
 
-  const closeMobileMenu = useCallback(() => {
-    setMobileOpen((prev) => {
-      if (!prev) return prev;
-      window.dispatchEvent(new CustomEvent("navmenu:toggle", { detail: { open: false } }));
-      return false;
-    });
-  }, []);
+  // const closeMobileMenu = useCallback(() => {
+  //   setMobileOpen((prev) => {
+  //     if (!prev) return prev;
+  //     window.dispatchEvent(new CustomEvent("navmenu:toggle", { detail: { open: false } }));
+  //     return false;
+  //   });
+  // }, []);
+
+  // Dispatch on OPEN happens here, synchronously, same as before — pausing
+// the shader before the reveal animation starts is correct and instant.
+// Dispatch on CLOSE is intentionally NOT here anymore — see the GSAP
+// timeline setup below, where onReverseComplete fires it only once the
+// close wipe has actually finished. Firing it here (at tap time) was
+// the bug: it told the shader to resume at the START of the ~1s reverse
+// animation instead of at the end, so the shader was visibly rendering
+// through the overlay for the whole close transition.
+const toggleMobileMenu = useCallback(() => {
+  setMobileOpen((prev) => {
+    const next = !prev;
+    if (next) {
+      window.dispatchEvent(new CustomEvent("navmenu:toggle", { detail: { open: true } }));
+    }
+    return next;
+  });
+}, []);
+
+const closeMobileMenu = useCallback(() => {
+  setMobileOpen((prev) => (prev ? false : prev));
+}, []);
 
   const closeDesktop = useCallback(() => setDesktopOpen(false), []);
 
