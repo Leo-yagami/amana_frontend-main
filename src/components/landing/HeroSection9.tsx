@@ -982,6 +982,24 @@ export default function HeroSection() {
   const scrollProgressRef = useRef<number>(0);
   const [isMobileDevice] = useState(() => isMobile());
 
+  // useEffect(() => {
+  //   gsap.registerPlugin(ScrollTrigger);
+  //   const section = sectionRef.current;
+  //   if (!section) return;
+  //   const st = ScrollTrigger.create({
+  //     trigger: section,
+  //     start: "top top",
+  //     end: "bottom top",
+  //     onUpdate: (self) => {
+  //       scrollProgressRef.current = self.progress;
+  //     },
+  //   });
+  //   return () => st.kill();
+  // }, []);
+
+  // hotfix 2 diff
+  const tickerSectionVisibleRef = useRef(true);
+
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
     const section = sectionRef.current;
@@ -993,6 +1011,14 @@ export default function HeroSection() {
       onUpdate: (self) => {
         scrollProgressRef.current = self.progress;
       },
+      // Reuses the same trigger to gate the ticker's RAF loop. Once the
+      // user scrolls the hero (and its ticker) fully off-screen, there's
+      // no reason to keep animating transform every frame — this is the
+      // same rationale as the shader's IntersectionObserver pause, just
+      // applied to the ticker's independent RAF loop, which currently
+      // has no equivalent and runs indefinitely regardless of visibility.
+      onLeave: () => { tickerSectionVisibleRef.current = false; },
+      onEnterBack: () => { tickerSectionVisibleRef.current = true; },
     });
     return () => st.kill();
   }, []);
@@ -1134,9 +1160,40 @@ export default function HeroSection() {
 
       let x = 0;
 
-      const animate = (now: number) => {
+    //   const animate = (now: number) => {
+    //     if (cancelled) return;
+    //     if (!tickerRevealedRef.current) {
+    //       rafId = requestAnimationFrame(animate);
+    //       lastTime = now;
+    //       return;
+    //     }
+
+    //     const dt = Math.min((now - lastTime) / 1000, 0.1);
+    //     lastTime = now;
+    //     x -= pxPerSec * dt;
+
+    //     // Seamless wrap around: when x scrolls past 1 full singleWidth set, reset x back by singleWidth
+    //     if (x <= -singleWidth) {
+    //       x += singleWidth;
+    //     }
+
+    //     if (tickerRef.current) {
+    //       tickerRef.current.style.transform = `translate3d(${x}px, 0, 0)`;
+    //     }
+    //     rafId = requestAnimationFrame(animate);
+    //   };
+
+    //   rafId = requestAnimationFrame(animate);
+    // };
+
+    // hotfix 2 diff 2
+    const animate = (now: number) => {
         if (cancelled) return;
-        if (!tickerRevealedRef.current) {
+        if (!tickerRevealedRef.current || !tickerSectionVisibleRef.current) {
+          // Either the reveal hasn't fired yet, or the hero has scrolled
+          // out of view — keep the RAF chain alive (cheap: just a
+          // timestamp bookkeeping call) but skip the actual transform
+          // write and don't burn a dt tick against nothing.
           rafId = requestAnimationFrame(animate);
           lastTime = now;
           return;
@@ -1156,9 +1213,6 @@ export default function HeroSection() {
         }
         rafId = requestAnimationFrame(animate);
       };
-
-      rafId = requestAnimationFrame(animate);
-    };
 
     // document.fonts.ready.then(init);
 
