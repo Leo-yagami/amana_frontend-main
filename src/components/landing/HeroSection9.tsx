@@ -1160,33 +1160,32 @@ export default function HeroSection() {
 
       let x = 0;
 
-    //   const animate = (now: number) => {
-    //     if (cancelled) return;
-    //     if (!tickerRevealedRef.current) {
-    //       rafId = requestAnimationFrame(animate);
-    //       lastTime = now;
-    //       return;
-    //     }
+      // const animate = (now: number) => {
+      //   if (cancelled) return;
+      //   if (!tickerRevealedRef.current) {
+      //     rafId = requestAnimationFrame(animate);
+      //     lastTime = now;
+      //     return;
+      //   }
 
-    //     const dt = Math.min((now - lastTime) / 1000, 0.1);
-    //     lastTime = now;
-    //     x -= pxPerSec * dt;
+      //   const dt = Math.min((now - lastTime) / 1000, 0.1);
+      //   lastTime = now;
+      //   x -= pxPerSec * dt;
 
-    //     // Seamless wrap around: when x scrolls past 1 full singleWidth set, reset x back by singleWidth
-    //     if (x <= -singleWidth) {
-    //       x += singleWidth;
-    //     }
+      //   // Seamless wrap around: when x scrolls past 1 full singleWidth set, reset x back by singleWidth
+      //   if (x <= -singleWidth) {
+      //     x += singleWidth;
+      //   }
 
-    //     if (tickerRef.current) {
-    //       tickerRef.current.style.transform = `translate3d(${x}px, 0, 0)`;
-    //     }
-    //     rafId = requestAnimationFrame(animate);
-    //   };
+      //   if (tickerRef.current) {
+      //     tickerRef.current.style.transform = `translate3d(${x}px, 0, 0)`;
+      //   }
+      //   rafId = requestAnimationFrame(animate);
+      // };
 
-    //   rafId = requestAnimationFrame(animate);
-    // };
+      // rafId = requestAnimationFrame(animate);
 
-    // hotfix 2 diff 2
+      // hotfix 2 diff 2
     const animate = (now: number) => {
         if (cancelled) return;
         if (!tickerRevealedRef.current || !tickerSectionVisibleRef.current) {
@@ -1213,6 +1212,10 @@ export default function HeroSection() {
         }
         rafId = requestAnimationFrame(animate);
       };
+      rafId = requestAnimationFrame(animate);
+    };
+
+    
 
     // document.fonts.ready.then(init);
 
@@ -1242,6 +1245,7 @@ export default function HeroSection() {
       cloneEls.forEach((el) => el.remove());
     };
   }, [TICKER_ITEMS]);
+
   
 
 const runAnimation = (mode: AnimationMode, payload?: HeroStats | null) => {
