@@ -369,27 +369,54 @@ function useThreeShaderBackground(
     // window.addEventListener("navmenu:toggle", onMenuToggle);
 
     // Diff 7
+    // const onMenuToggle = (e: Event) => {
+    //   const open = (e as CustomEvent).detail?.open;
+    //   menuOpen = !!open;
+    //   if (menuOpen) {
+    //     // Pause rendering so GPU is free for menu animation
+    //     cancelAnimationFrame(animationId);
+    //     // Drop the backing-store resolution while the canvas isn't the
+    //     // interactive focus anyway. A stale 2-3x DPR framebuffer still
+    //     // occupies GPU memory bandwidth even while paused, and that
+    //     // bandwidth contention is what causes dropped frames on the
+    //     // clip-path wipe on mobile GPUs (Adreno/Mali especially).
+    //     renderer.setPixelRatio(1);
+    //   } else {
+    //     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    //     if (isVisible) {
+    //       // Resume rendering
+    //       animationId = requestAnimationFrame(animate);
+    //     }
+    //   }
+    // };
+    // window.addEventListener("navmenu:toggle", onMenuToggle);
+
+    //Diff 7(modified)
     const onMenuToggle = (e: Event) => {
-      const open = (e as CustomEvent).detail?.open;
-      menuOpen = !!open;
-      if (menuOpen) {
-        // Pause rendering so GPU is free for menu animation
-        cancelAnimationFrame(animationId);
-        // Drop the backing-store resolution while the canvas isn't the
-        // interactive focus anyway. A stale 2-3x DPR framebuffer still
-        // occupies GPU memory bandwidth even while paused, and that
-        // bandwidth contention is what causes dropped frames on the
-        // clip-path wipe on mobile GPUs (Adreno/Mali especially).
+      const detail = (e as CustomEvent).detail ?? {};
+      const open = !!detail.open;
+      const settled = !!detail.settled;
+      menuOpen = open;
+      if (open && settled) {
+        // Menu open AND its wipe animation has finished — canvas is fully
+        // covered now, so this is the safe moment to drop pixel ratio.
         renderer.setPixelRatio(1);
-      } else {
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        if (isVisible) {
-          // Resume rendering
-          animationId = requestAnimationFrame(animate);
-        }
+        return;
+      }
+      if (open) {
+        // Menu just started opening — pause only, no pixelRatio touch yet.
+        cancelAnimationFrame(animationId);
+        return;
+      }
+      // Closing / closed
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      if (isVisible) {
+        animationId = requestAnimationFrame(animate);
       }
     };
     window.addEventListener("navmenu:toggle", onMenuToggle);
+
+
     const animate = (now: number) => {
       if (!isVisible || menuOpen) return;
       const elapsed = (now - startTime) / 1000;

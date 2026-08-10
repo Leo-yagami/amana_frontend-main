@@ -1273,15 +1273,35 @@ const Navbar = () => {
 
   // ── Mobile overlay GSAP timeline ─────────────────────────────────────────
   useGSAP(() => {
+    // if (!mobileMenuRef.current) return;
+    // mobileTlRef.current = gsap
+    //   .timeline({ paused: true })
+    //   .to(mobileMenuRef.current, {
+    //     clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)",
+    //     duration: 1.0,
+    //     ease: "expo.inOut",
+    //     force3D: true,
+    //   })
     if (!mobileMenuRef.current) return;
-    mobileTlRef.current = gsap
-      .timeline({ paused: true })
-      .to(mobileMenuRef.current, {
-        clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)",
-        duration: 1.0,
-        ease: "expo.inOut",
-        force3D: true,
-      })
+  mobileTlRef.current = gsap
+    .timeline({
+      paused: true,
+      onComplete: () => {
+        // Fires once the OPEN wipe has fully covered the canvas. Safe to
+        // drop pixel ratio here — the shader is already hidden behind
+        // the opaque overlay, so there's nothing to visibly blank.
+        window.dispatchEvent(new CustomEvent("navmenu:toggle", { detail: { open: true, settled: true } }));
+      },
+      onReverseComplete: () => {
+        window.dispatchEvent(new CustomEvent("navmenu:toggle", { detail: { open: false } }));
+      },
+    })
+    .to(mobileMenuRef.current, {
+      clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)",
+      duration: 1.0,
+      ease: "expo.inOut",
+      force3D: true,
+    })
       .from(
         ".menu-link-inner",
         {
