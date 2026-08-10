@@ -160,7 +160,7 @@ export default function StoriesSection() {
       {/* Sticky wrapper — CSS sticky top-0, sized responsively to 100svh */}
       <div
         ref={stickyRef}
-        className="sticky top-0 flex flex-col items-center justify-center py-6 sm:py-8 lg:py-12 overflow-hidden box-border"
+        className="sticky top-0 flex flex-col items-center justify-center pt-6 pb-3 sm:py-8 lg:py-12 overflow-hidden box-border"
         style={{ height: "100svh" }}
       >
         <div className="container mx-auto px-4 flex flex-col items-center justify-center flex-1 min-h-0">

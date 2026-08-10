@@ -1057,6 +1057,24 @@ export default function HeroSection() {
     const wrapper = tickerWrapperRef.current;
     if (!ticker || !wrapper) return;
 
+    // let rafId: number;
+    // let cancelled = false;
+    // let cloneEls: HTMLElement[] = [];
+    // let lastTime = performance.now();
+    // const pxPerSec = 38;
+
+    // const init = () => {
+    //   if (cancelled) return;
+    //   const inner = tickerInnerRef.current;
+    //   const outer = tickerRef.current;
+    //   const wrap = tickerWrapperRef.current;
+    //   if (!inner || !outer || !wrap) return;
+
+    //   // Clean up previous clones if any
+    //   cloneEls.forEach((el) => el.remove());
+    //   cloneEls = [];
+
+    // hotfix diff 1
     let rafId: number;
     let cancelled = false;
     let cloneEls: HTMLElement[] = [];
@@ -1070,10 +1088,22 @@ export default function HeroSection() {
       const wrap = tickerWrapperRef.current;
       if (!inner || !outer || !wrap) return;
 
+      // Kill the previous animate() chain before starting a new one.
+      // Without this, every resize (which fires constantly on mobile —
+      // address bar show/hide, orientation changes) spawns a second
+      // self-perpetuating RAF loop that never gets cancelled, because
+      // the old chain recurses via its own closed-over `animate`
+      // reference rather than checking the shared `rafId`. Two loops
+      // then fight over the same transform property with different
+      // `x` values and possibly different singleWidth assumptions,
+      // producing the visible stutter/jump you're seeing.
+      cancelAnimationFrame(rafId);
+
       // Clean up previous clones if any
       cloneEls.forEach((el) => el.remove());
       cloneEls = [];
-
+      
+      
       const singleWidth = inner.scrollWidth;
       if (singleWidth <= 0) return;
 
@@ -1130,10 +1160,24 @@ export default function HeroSection() {
       rafId = requestAnimationFrame(animate);
     };
 
+    // document.fonts.ready.then(init);
+
+    // const handleResize = () => {
+    //   init();
+    // };
+    // window.addEventListener("resize", handleResize);
+
+    // hotfix diff 2
     document.fonts.ready.then(init);
 
+    let resizeTimer: ReturnType<typeof setTimeout>;
     const handleResize = () => {
-      init();
+      clearTimeout(resizeTimer);
+      // Debounced — mobile browsers fire resize on URL-bar show/hide
+      // during scroll, and rebuilding the clone set + resetting x on
+      // every one of those would make the ticker visibly stutter-reset
+      // mid-scroll even after the RAF-leak fix above.
+      resizeTimer = setTimeout(init, 200);
     };
     window.addEventListener("resize", handleResize);
 
