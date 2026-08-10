@@ -998,7 +998,11 @@ export default function HeroSection() {
   // }, []);
 
   // hotfix 2 diff
+  // const tickerSectionVisibleRef = useRef(true);
+
+  // hotfix stutter diff 6
   const tickerSectionVisibleRef = useRef(true);
+  const visibilityDebounceTimer = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
@@ -1017,8 +1021,27 @@ export default function HeroSection() {
       // same rationale as the shader's IntersectionObserver pause, just
       // applied to the ticker's independent RAF loop, which currently
       // has no equivalent and runs indefinitely regardless of visibility.
-      onLeave: () => { tickerSectionVisibleRef.current = false; },
-      onEnterBack: () => { tickerSectionVisibleRef.current = true; },
+      // onLeave: () => { tickerSectionVisibleRef.current = false; },
+      // onEnterBack: () => { tickerSectionVisibleRef.current = true; },
+
+      //hotfix stutter diff 5
+      // Debounced rather than applied immediately. ScrollTrigger's onLeave/
+      // onEnterBack fire on scroll POSITION crossing the boundary, which
+      // can oscillate rapidly during momentum/elastic scrolling (mobile
+      // rubber-banding, or Lenis's eased interpolation settling near the
+      // trigger edge) — flipping tickerSectionVisibleRef back and forth
+      // within a few frames produces the stutter, since animate() only
+      // advances x on frames where the flag reads true.
+      onLeave: () => {
+        clearTimeout(visibilityDebounceTimer.current);
+        visibilityDebounceTimer.current = setTimeout(() => {
+          tickerSectionVisibleRef.current = false;
+        }, 120);
+      },
+      onEnterBack: () => {
+        clearTimeout(visibilityDebounceTimer.current);
+        tickerSectionVisibleRef.current = true;
+      },
     });
     return () => st.kill();
   }, []);
@@ -1033,7 +1056,22 @@ export default function HeroSection() {
   const tickerRef = useRef<HTMLDivElement>(null);
   const tickerInnerRef = useRef<HTMLDivElement>(null);
   const tickerItemRefs = useRef<HTMLDivElement[]>([]);
+  // const tickerRevealedRef = useRef(false);
+  //hotfix stutter diff 1
   const tickerRevealedRef = useRef(false);
+  // Tracks whether init() has finished building the clone set for the
+  // CURRENT TICKER_ITEMS. runAnimation's ticker-reveal step checks this
+  // before querying .ticker-item-span — without it, the GSAP reveal can
+  // run its querySelectorAll before clones exist (cold-load / first-visit
+  // path, where heroStats populates asynchronously and init() is gated
+  // behind document.fonts.ready), producing a partial span list that
+  // either skips the later-appended clones entirely or leaves them in a
+  // stale pre-clone visual state — the stutter/flash you're seeing.
+  const clonesReadyRef = useRef(false);
+  // Queued reveal params, in case runAnimation fires before clonesReadyRef
+  // flips true — rather than dropping the reveal call, stash it and replay
+  // once init() signals clones are ready.
+  const pendingTickerRevealRef = useRef<{ tickerRevealAt: number; itemDuration: number; itemStagger: number; isReveal: boolean; tl: gsap.core.Timeline } | null>(null);
   const [countersActive, setCountersActive] = useState(false);
 
   const hairlinesRef = useRef<SVGSVGElement>(null);
@@ -1101,11 +1139,28 @@ export default function HeroSection() {
     //   cloneEls = [];
 
     // hotfix diff 1
+    // let rafId: number;
+    // let cancelled = false;
+    // let cloneEls: HTMLElement[] = [];
+    // let lastTime = performance.now();
+    // const pxPerSec = 38;
+
+    // const init = () => {
+
+    // hotfix stutter diff 7
     let rafId: number;
     let cancelled = false;
     let cloneEls: HTMLElement[] = [];
     let lastTime = performance.now();
     const pxPerSec = 38;
+    // Lifted out of init() so a resize-triggered rebuild can preserve
+    // scroll position instead of restarting from 0 — previously every
+    // init() call declared a fresh `let x = 0`, so a resize firing mid-
+    // scroll (common on mobile: the URL bar collapsing/expanding AS the
+    // user scrolls triggers a resize event) would snap the visible track
+    // back to its start position, reading as a stutter/rewind.
+    let x = 0;
+    let hasInitializedOnce = false;
 
     const init = () => {
       if (cancelled) return;
@@ -1123,7 +1178,15 @@ export default function HeroSection() {
       // then fight over the same transform property with different
       // `x` values and possibly different singleWidth assumptions,
       // producing the visible stutter/jump you're seeing.
+      // cancelAnimationFrame(rafId);
+
+      // // Clean up previous clones if any
+      // cloneEls.forEach((el) => el.remove());
+      // cloneEls = [];
+
+      //hotfix stutter diff 3
       cancelAnimationFrame(rafId);
+      clonesReadyRef.current = false;
 
       // Clean up previous clones if any
       cloneEls.forEach((el) => el.remove());
@@ -1150,15 +1213,114 @@ export default function HeroSection() {
       }
 
       // If reveal already happened before clones were created, ensure clone spans are visible
+      // if (tickerRevealedRef.current) {
+      //   const spans = outer.querySelectorAll<HTMLElement>(".ticker-item-span");
+      //   spans.forEach((span) => {
+      //     span.style.opacity = "1";
+      //     span.style.transform = "none";
+      //   });
+      // }
+
+      // let x = 0;
+
+      //hotfix stutter diff 2
+      // If reveal already happened before clones were created, ensure clone spans are visible
+      // if (tickerRevealedRef.current) {
+      //   const spans = outer.querySelectorAll<HTMLElement>(".ticker-item-span");
+      //   spans.forEach((span) => {
+      //     span.style.opacity = "1";
+      //     span.style.transform = "none";
+      //   });
+      // } else {
+      //   // Reveal hasn't happened yet — make sure freshly-cloned spans start
+      //   // in the same pre-reveal state as the originals, since cloneNode
+      //   // copies whatever inline styles were present at clone time, and a
+      //   // clone made from an as-yet-unrevealed original may or may not
+      //   // have picked up the initial gsap.set(yPercent:100, opacity:0).
+      //   const spans = outer.querySelectorAll<HTMLElement>(".ticker-item-span");
+      //   gsap.set(spans, { yPercent: 100, opacity: 0 });
+      // }
+
+      // clonesReadyRef.current = true;
+
+      // hotfix stutter diff 8
+// If reveal already happened before clones were created, ensure clone spans are visible
       if (tickerRevealedRef.current) {
         const spans = outer.querySelectorAll<HTMLElement>(".ticker-item-span");
         spans.forEach((span) => {
           span.style.opacity = "1";
           span.style.transform = "none";
         });
+      } else {
+        const spans = outer.querySelectorAll<HTMLElement>(".ticker-item-span");
+        gsap.set(spans, { yPercent: 100, opacity: 0 });
       }
 
-      let x = 0;
+      // Preserve scroll position across a rebuild rather than snapping to
+      // 0. Only reset on the very first init() call (nothing to preserve
+      // yet) or if singleWidth genuinely changed enough that the old x
+      // would be out of range for the new track.
+      if (!hasInitializedOnce) {
+        x = 0;
+      } else {
+        // Normalize x into the new singleWidth's range, in case content
+        // width changed between rebuilds (e.g. TICKER_ITEMS updated).
+        x = x % singleWidth;
+      }
+      hasInitializedOnce = true;
+
+      clonesReadyRef.current = true;
+
+      // If a reveal call arrived before clones were ready, replay it now.
+      // if (pendingTickerRevealRef.current) {
+      //   const { tickerRevealAt, itemDuration, itemStagger, isReveal, tl } = pendingTickerRevealRef.current;
+      //   pendingTickerRevealRef.current = null;
+      //   const freshSpans = Array.from(outer.querySelectorAll<HTMLElement>(".ticker-item-span"));
+      //   if (freshSpans.length > 0) {
+      //     tl.to(
+      //       freshSpans,
+      //       {
+      //         yPercent: 0,
+      //         opacity: 1,
+      //         duration: itemDuration,
+      //         stagger: itemStagger,
+      //         ease: isReveal ? "power3.out" : "power2.out",
+      //       },
+      //       tickerRevealAt
+      //     );
+      //   }
+      // }
+      // If a reveal call arrived before clones were ready, replay it now —
+      // but as an INDEPENDENT tween, not an insertion into the original
+      // tl. By the time this fires (gated behind document.fonts.ready,
+      // a microtask, and possibly a second full stats-fetch delay on
+      // cold load), tl's playhead has very likely already advanced past
+      // the original tickerRevealAt position. Inserting at that stale
+      // absolute timestamp would register the tween but never visibly
+      // play it, since GSAP doesn't re-seek a timeline backward to replay
+      // a segment it's already advanced past — the spans would just snap
+      // to their end state with no motion. A fresh gsap.to() with
+      // relative timing starting now sidesteps this entirely.
+      if (pendingTickerRevealRef.current) {
+        const { itemDuration, itemStagger, isReveal } = pendingTickerRevealRef.current;
+        pendingTickerRevealRef.current = null;
+        const freshSpans = Array.from(outer.querySelectorAll<HTMLElement>(".ticker-item-span"));
+        if (freshSpans.length > 0) {
+          gsap.set(freshSpans, { yPercent: 100, opacity: 0 });
+          gsap.to(freshSpans, {
+            yPercent: 0,
+            opacity: 1,
+            duration: itemDuration,
+            stagger: itemStagger,
+            ease: isReveal ? "power3.out" : "power2.out",
+          });
+        }
+      }
+
+      // hotfix stutter diff 9
+      // let x = 0;
+
+
 
       // const animate = (now: number) => {
       //   if (cancelled) return;
@@ -1339,31 +1501,72 @@ const runAnimation = (mode: AnimationMode, payload?: HeroStats | null) => {
     const itemDuration = isReveal ? 0.45 : 0.3;
     const itemStagger = isReveal ? 0.028 : 0.018;
 
-    const tickerSpans = tickerRef.current
-      ? Array.from(tickerRef.current.querySelectorAll<HTMLElement>(".ticker-item-span"))
-      : tickerItemRefs.current;
+    // const tickerSpans = tickerRef.current
+    //   ? Array.from(tickerRef.current.querySelectorAll<HTMLElement>(".ticker-item-span"))
+    //   : tickerItemRefs.current;
 
-    if (tickerSpans.length > 0) {
-      tl.to(
-        tickerSpans,
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: itemDuration,
-          stagger: itemStagger,
-          ease: isReveal ? "power3.out" : "power2.out",
-        },
-        tickerRevealAt
-      );
-    }
+    // if (tickerSpans.length > 0) {
+    //   tl.to(
+    //     tickerSpans,
+    //     {
+    //       yPercent: 0,
+    //       opacity: 1,
+    //       duration: itemDuration,
+    //       stagger: itemStagger,
+    //       ease: isReveal ? "power3.out" : "power2.out",
+    //     },
+    //     tickerRevealAt
+    //   );
+    // }
 
-    const itemRevealSpan =
-      Math.max(0, tickerSpans.length - 1) * itemStagger + itemDuration;
-    const tickerScrollStart = tickerRevealAt + itemRevealSpan + 0.1;
-    tl.call(() => {
-      tickerRevealedRef.current = true;
-    }, [], tickerScrollStart);
-  };
+    // const itemRevealSpan =
+    //   Math.max(0, tickerSpans.length - 1) * itemStagger + itemDuration;
+    // const tickerScrollStart = tickerRevealAt + itemRevealSpan + 0.1;
+    // tl.call(() => {
+    //   tickerRevealedRef.current = true;
+    // }, [], tickerScrollStart);
+    
+    //hotfix stutter diff 4
+  if (!clonesReadyRef.current) {
+      // Clones haven't been built yet — this is the cold-load race. Stash
+      // the reveal params so the ticker effect can replay this exact
+      // animation once init() finishes, instead of animating a partial
+      // (pre-clone) span list now and leaving later-appended clones
+      // either stuck at final state or never animated at all.
+      pendingTickerRevealRef.current = { tickerRevealAt, itemDuration, itemStagger, isReveal, tl };
+      // Still schedule the tickerRevealedRef flip at a reasonable estimate
+      // — the ticker scroll loop only needs this to go true eventually,
+      // and the replay path above handles the actual span animation.
+      tl.call(() => {
+        tickerRevealedRef.current = true;
+      }, [], tickerRevealAt + itemDuration + 0.1);
+    } else {
+      const tickerSpans = tickerRef.current
+        ? Array.from(tickerRef.current.querySelectorAll<HTMLElement>(".ticker-item-span"))
+        : tickerItemRefs.current;
+
+      if (tickerSpans.length > 0) {
+        tl.to(
+          tickerSpans,
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: itemDuration,
+            stagger: itemStagger,
+            ease: isReveal ? "power3.out" : "power2.out",
+          },
+          tickerRevealAt
+        );
+      }
+
+      const itemRevealSpan =
+        Math.max(0, tickerSpans.length - 1) * itemStagger + itemDuration;
+      const tickerScrollStart = tickerRevealAt + itemRevealSpan + 0.1;
+      tl.call(() => {
+        tickerRevealedRef.current = true;
+      }, [], tickerScrollStart);
+    }  
+  }; 
 
   useLayoutEffect(() => {
     gsap.set([eyebrowRef.current, subRef.current, ctaRef.current], {
