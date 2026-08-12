@@ -56,7 +56,9 @@ export default function StatsSection() {
   const { t } = useTranslation();
   const wrapperRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
-  const [activeIndex, setActiveIndex] = useState(0);
+  // const [activeIndex, setActiveIndex] = useState(0);
+  const labelRef = useRef<HTMLSpanElement>(null);
+  const barRef = useRef<HTMLSpanElement>(null);
 
   const [stats, setStats] = useState(() => {
     const cached = readCache();
@@ -111,12 +113,24 @@ export default function StatsSection() {
         fastScrollEnd: true,
         preventOverlaps: true,
         invalidateOnRefresh: true,
+        // onUpdate: (self) => {
+        //   const idx = Math.min(
+        //     Math.floor(self.progress * STATS.length),
+        //     STATS.length - 1
+        //   );
+        //   setActiveIndex((prev) => (prev !== idx ? idx : prev));
+        // },
         onUpdate: (self) => {
           const idx = Math.min(
             Math.floor(self.progress * STATS.length),
             STATS.length - 1
           );
-          setActiveIndex((prev) => (prev !== idx ? idx : prev));
+          if (labelRef.current) {
+            labelRef.current.textContent = `0${idx + 1} / 0${STATS.length}`;
+          }
+          if (barRef.current) {
+            barRef.current.style.width = `${((idx + 1) / STATS.length) * 100}%`;
+          }
         },
       },
     });
@@ -155,11 +169,19 @@ export default function StatsSection() {
       </div>
 
       <div className="flex absolute bottom-8 left-1/2 -translate-x-1/2 items-center gap-3 font-mono text-xs uppercase tracking-[0.15em] text-muted-foreground">
-        <span>0{activeIndex + 1} / 0{STATS.length}</span>
+        {/* <span>0{activeIndex + 1} / 0{STATS.length}</span>
         <span className="w-28 h-0.5 bg-border rounded-full overflow-hidden">
           <span
             className="block h-full bg-primary rounded-full transition-[width] duration-300"
             style={{ width: `${((activeIndex + 1) / STATS.length) * 100}%` }}
+          />
+        </span> */}
+        <span ref={labelRef}>01 / 0{STATS.length}</span>
+        <span className="w-28 h-0.5 bg-border rounded-full overflow-hidden">
+          <span
+            ref={barRef}
+            className="block h-full bg-primary rounded-full"
+            style={{ width: `${100 / STATS.length}%` }}
           />
         </span>
       </div>

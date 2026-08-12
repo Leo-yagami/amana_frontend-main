@@ -1,6 +1,11 @@
 import React, { ReactNode, useEffect, useRef } from 'react';
 import { ReactLenis } from 'lenis/react';
+// import { gsap } from 'gsap';
+
 import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+gsap.registerPlugin(ScrollTrigger);
 // src/lenis.tsx — your existing Layout component
 import Preloader from "@/components/Preloader";
 import { AnimationProvider } from "@/components/AnimationCoordinator";
@@ -19,11 +24,22 @@ export default function Layout({ children }: LayoutProps) {
     }
     
     // Disable GSAP's lag smoothing for perfectly fluid scroll syncing
+    // gsap.ticker.lagSmoothing(0);
+    // gsap.ticker.add(update);
+
+    // return () => {
+    //   gsap.ticker.remove(update);
+    // };
+
+    // Diff 2
+    // Disable GSAP's lag smoothing for perfectly fluid scroll syncing
     gsap.ticker.lagSmoothing(0);
     gsap.ticker.add(update);
+    lenisRef.current?.lenis?.on('scroll', ScrollTrigger.update);
 
     return () => {
       gsap.ticker.remove(update);
+      lenisRef.current?.lenis?.off('scroll', ScrollTrigger.update);
     };
   }, []);
 
@@ -35,7 +51,9 @@ export default function Layout({ children }: LayoutProps) {
       options={{
         lerp: 0.09, // The Awwwards "sweet spot" for butter-smooth momentum
         wheelMultiplier: 1.05, // Slightly responsive wheel
-        smoothTouch: false, // Leave touch devices to native momentum (best practice)
+        // smoothTouch: false, // Leave touch devices to native momentum (best practice)
+        // diff 3
+        syncTouch: false, // Leave touch devices to native momentum (best practice)
         touchMultiplier: 2, // Native-feeling touch speed if smoothTouch was enabled
         orientation: 'vertical',
         gestureOrientation: 'vertical',
