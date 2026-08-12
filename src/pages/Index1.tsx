@@ -4,7 +4,7 @@ import StatsSection from "@/components/landing/StatsSection1";
 import CampaignsSection from "@/components/landing/CampaignsSection1";
 import PartnersSection from "@/components/landing/PartnersSection1";
 import ImpactSection from "@/components/landing/ImpactSection1";
-import StoriesSection from "@/components/landing/StoriesSection1";
+import StoriesSection from "@/components/landing/StoriesSection2";
 import CTABand from "@/components/landing/CTABand1";
 import { useEffect } from "react";
 import { ScrollTrigger } from "gsap/ScrollTrigger"; // 👈 missing
