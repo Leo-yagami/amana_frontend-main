@@ -243,12 +243,16 @@ const STORIES: Story[] = [
 // before it locks into the stack and starts receding. 50 ≈ "about half the
 // card is visible" at that moment, instead of it having already scrolled
 // fully into view before its own animation even starts.
-const PEEK_START_PERCENT = 50;
+// const PEEK_START_PERCENT = 50;
 
 // Extra offset per card index, so consecutive cards don't all lock in at the
 // exact same spot — this small stagger is what produces the sliver of each
 // earlier, receded card peeking out above the current one.
-const PIN_STEP_PERCENT = 1.5;
+// const PIN_STEP_PERCENT = 1.5;
+
+const GAP_BELOW_HEADER_PX = 32;
+const PIN_STEP_PX = 14;
+// const CARD_END_MULTIPLIER = 0.9;
 
 // Scroll budget for a card's recede animation, as a multiple of *that
 // card's own* rendered height, measured live via offsetHeight. Anchoring
@@ -262,6 +266,9 @@ export default function StoriesSection() {
   const { t } = useTranslation();
   // const sectionRef = useRef<HTMLElement>(null);
   const sectionRef = useRef<HTMLDivElement>(null);
+
+  const headerRef = useRef<HTMLDivElement>(null); // add this
+
   const wrapperRef = useRef<HTMLDivElement>(null);
   const cardWrapperRefs = useRef<(HTMLDivElement | null)[]>([]);
   // const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -269,95 +276,193 @@ export default function StoriesSection() {
   const indicatorRef = useRef<HTMLDivElement>(null);
   const indicatorDotRefs = useRef<(HTMLDivElement | null)[]>([]);
 
+  // useGSAP(
+  //   () => {
+  //     const wrapperEl = wrapperRef.current;
+  //     const cardWrappers = cardWrapperRefs.current.filter(Boolean) as HTMLDivElement[];
+  //     const cards = cardRefs.current.filter(Boolean) as HTMLDivElement[];
+  //     if (!wrapperEl || cardWrappers.length === 0) return;
+
+  //     // Uncapped ticker, no lag smoothing — the scrub tracks native scroll
+  //     // position 1:1 every animation frame, so it scales cleanly across
+  //     // 60/120/144Hz instead of chasing a time-smoothed target.
+  //     gsap.ticker.lagSmoothing(0);
+
+  //     const cardTriggers: ScrollTrigger[] = [];
+  //     let activeDotIndex = -1;
+
+  //     // Active dot = the highest-index card whose own trigger has started.
+  //     // Ties the indicator to real trigger state rather than a naive
+  //     // linear split of scroll progress.
+  //     const updateActiveDot = () => {
+  //       let idx = 0;
+  //       cardTriggers.forEach((st, i) => {
+  //         if (st.progress > 0) idx = i;
+  //       });
+  //       if (idx === activeDotIndex) return;
+  //       activeDotIndex = idx;
+  //       indicatorDotRefs.current.forEach((dot, i) => {
+  //         if (!dot) return;
+  //         dot.style.transform = i === idx ? "scaleY(1.7)" : "scaleY(1)";
+  //         dot.style.backgroundColor =
+  //           i === idx ? "hsl(var(--primary))" : "hsl(var(--primary) / 0.25)";
+  //       });
+  //     };
+
+  //     const showIndicator = () => {
+  //       if (indicatorRef.current) {
+  //         gsap.to(indicatorRef.current, { opacity: 1, duration: 0.3, overwrite: true });
+  //       }
+  //     };
+  //     const hideIndicator = () => {
+  //       if (indicatorRef.current) {
+  //         gsap.to(indicatorRef.current, { opacity: 0, duration: 0.3, overwrite: true });
+  //       }
+  //     };
+
+  //     cardWrappers.forEach((cardWrapper, i) => {
+  //       const card = cards[i];
+  //       if (!card) return;
+
+  //       const isFirst = i === 0;
+  //       const isLast = i === cardWrappers.length - 1;
+  //       const scale = isLast ? 1 : 0.9 + 0.025 * i;
+  //       const rotation = isLast ? 0 : -10;
+
+  //       const tween = gsap.to(card, {
+  //         scale,
+  //         rotationX: rotation,
+  //         transformOrigin: "top center",
+  //         ease: "none",
+  //         force3D: true,
+  //         scrollTrigger: {
+  //           trigger: cardWrapper,
+  //           start: `top ${PEEK_START_PERCENT + PIN_STEP_PERCENT * i}%`,
+  //           end: () => `+=${cardWrapper.offsetHeight * CARD_END_MULTIPLIER}`,
+  //           scrub: true,
+  //           anticipatePin: 1,
+  //           fastScrollEnd: true,
+  //           invalidateOnRefresh: true,
+  //           pin: cardWrapper,
+  //           pinSpacing: false,
+  //           onUpdate: updateActiveDot,
+  //           onEnter: isFirst ? showIndicator : undefined,
+  //           onLeaveBack: isFirst ? hideIndicator : undefined,
+  //           onLeave: isLast ? hideIndicator : undefined,
+  //           onEnterBack: isLast ? showIndicator : undefined,
+  //           // markers: { indent: 100 * i, startColor: "#0ae448", endColor: "#fec5fb", fontSize: "14px" },
+  //           id: `story-card-${i + 1}`,
+  //         },
+  //       });
+
+  //       if (tween.scrollTrigger) cardTriggers.push(tween.scrollTrigger);
+  //     });
+
+  //     const resizeObserver = new ResizeObserver(() => ScrollTrigger.refresh());
+  //     resizeObserver.observe(wrapperEl);
+
+  //     return () => resizeObserver.disconnect();
+  //   },
+  //   { scope: sectionRef }
+  // );
+
   useGSAP(
-    () => {
-      const wrapperEl = wrapperRef.current;
-      const cardWrappers = cardWrapperRefs.current.filter(Boolean) as HTMLDivElement[];
-      const cards = cardRefs.current.filter(Boolean) as HTMLDivElement[];
-      if (!wrapperEl || cardWrappers.length === 0) return;
+  () => {
+    const wrapperEl = wrapperRef.current;
+    const cardWrappers = cardWrapperRefs.current.filter(Boolean) as HTMLDivElement[];
+    const cards = cardRefs.current.filter(Boolean) as HTMLDivElement[];
+    if (!wrapperEl || cardWrappers.length === 0) return;
 
-      // Uncapped ticker, no lag smoothing — the scrub tracks native scroll
-      // position 1:1 every animation frame, so it scales cleanly across
-      // 60/120/144Hz instead of chasing a time-smoothed target.
-      gsap.ticker.lagSmoothing(0);
+    gsap.ticker.lagSmoothing(0);
 
-      const cardTriggers: ScrollTrigger[] = [];
-      let activeDotIndex = -1;
+    const cardTriggers: ScrollTrigger[] = [];
+    let activeDotIndex = -1;
 
-      // Active dot = the highest-index card whose own trigger has started.
-      // Ties the indicator to real trigger state rather than a naive
-      // linear split of scroll progress.
-      const updateActiveDot = () => {
-        let idx = 0;
-        cardTriggers.forEach((st, i) => {
-          if (st.progress > 0) idx = i;
-        });
-        if (idx === activeDotIndex) return;
-        activeDotIndex = idx;
-        indicatorDotRefs.current.forEach((dot, i) => {
-          if (!dot) return;
-          dot.style.transform = i === idx ? "scaleY(1.7)" : "scaleY(1)";
-          dot.style.backgroundColor =
-            i === idx ? "hsl(var(--primary))" : "hsl(var(--primary) / 0.25)";
-        });
-      };
+    const updateActiveDot = () => {
+      let idx = 0;
+      cardTriggers.forEach((st, i) => {
+        if (st.progress > 0) idx = i;
+      });
+      if (idx === activeDotIndex) return;
+      activeDotIndex = idx;
+      indicatorDotRefs.current.forEach((dot, i) => {
+        if (!dot) return;
+        dot.style.transform = i === idx ? "scaleY(1.7)" : "scaleY(1)";
+        dot.style.backgroundColor =
+          i === idx ? "hsl(var(--primary))" : "hsl(var(--primary) / 0.25)";
+      });
+    };
 
-      const showIndicator = () => {
-        if (indicatorRef.current) {
-          gsap.to(indicatorRef.current, { opacity: 1, duration: 0.3, overwrite: true });
-        }
-      };
-      const hideIndicator = () => {
-        if (indicatorRef.current) {
-          gsap.to(indicatorRef.current, { opacity: 0, duration: 0.3, overwrite: true });
-        }
-      };
+    const showIndicator = () => {
+      if (indicatorRef.current) {
+        gsap.to(indicatorRef.current, { opacity: 1, duration: 0.3, overwrite: true });
+      }
+    };
+    const hideIndicator = () => {
+      if (indicatorRef.current) {
+        gsap.to(indicatorRef.current, { opacity: 0, duration: 0.3, overwrite: true });
+      }
+    };
 
-      cardWrappers.forEach((cardWrapper, i) => {
-        const card = cards[i];
-        if (!card) return;
+    // Where a card's pin engages: just below the sticky header's *actual*
+    // rendered height (read live at refresh time, not assumed), plus a
+    // flat breathing-room gap, plus this card's stagger offset.
+    const pinStart = (i: number) => () =>
+      `top ${(headerRef.current?.offsetHeight ?? 0) + GAP_BELOW_HEADER_PX + PIN_STEP_PX * i}px`;
 
-        const isFirst = i === 0;
-        const isLast = i === cardWrappers.length - 1;
-        const scale = isLast ? 1 : 0.9 + 0.025 * i;
-        const rotation = isLast ? 0 : -10;
+    cardWrappers.forEach((cardWrapper, i) => {
+      const card = cards[i];
+      if (!card) return;
 
-        const tween = gsap.to(card, {
-          scale,
-          rotationX: rotation,
-          transformOrigin: "top center",
-          ease: "none",
-          force3D: true,
-          scrollTrigger: {
-            trigger: cardWrapper,
-            start: `top ${PEEK_START_PERCENT + PIN_STEP_PERCENT * i}%`,
-            end: () => `+=${cardWrapper.offsetHeight * CARD_END_MULTIPLIER}`,
-            scrub: true,
-            anticipatePin: 1,
-            fastScrollEnd: true,
-            invalidateOnRefresh: true,
-            pin: cardWrapper,
-            pinSpacing: false,
-            onUpdate: updateActiveDot,
-            onEnter: isFirst ? showIndicator : undefined,
-            onLeaveBack: isFirst ? hideIndicator : undefined,
-            onLeave: isLast ? hideIndicator : undefined,
-            onEnterBack: isLast ? showIndicator : undefined,
-            // markers: { indent: 100 * i, startColor: "#0ae448", endColor: "#fec5fb", fontSize: "14px" },
-            id: `story-card-${i + 1}`,
-          },
-        });
+      const isFirst = i === 0;
+      const isLast = i === cardWrappers.length - 1;
+      const scale = isLast ? 1 : 0.9 + 0.025 * i;
+      const rotation = isLast ? 0 : -10;
 
-        if (tween.scrollTrigger) cardTriggers.push(tween.scrollTrigger);
+      const tween = gsap.to(card, {
+        scale,
+        rotationX: rotation,
+        transformOrigin: "top center",
+        ease: "none",
+        force3D: true,
+        scrollTrigger: {
+          trigger: cardWrapper,
+          start: pinStart(i),
+          // Every card gets its own relative runway EXCEPT the last one:
+          // that pin's release is anchored to the wrapper's own bottom
+          // instead, so it can never outlive the section's actual content
+          // and bleed into whatever comes next. Its old "+=" runway had
+          // no ceiling tied to the DOM, so on some screens it kept the
+          // card fixed on screen after the wrapper had already ended.
+          ...(isLast
+            ? { endTrigger: wrapperEl, end: "bottom top" }
+            : { end: () => `+=${cardWrapper.offsetHeight * CARD_END_MULTIPLIER}` }),
+          scrub: true,
+          anticipatePin: 1,
+          fastScrollEnd: true,
+          invalidateOnRefresh: true,
+          pin: cardWrapper,
+          pinSpacing: false,
+          onUpdate: updateActiveDot,
+          onEnter: isFirst ? showIndicator : undefined,
+          onLeaveBack: isFirst ? hideIndicator : undefined,
+          onLeave: isLast ? hideIndicator : undefined,
+          onEnterBack: isLast ? showIndicator : undefined,
+          id: `story-card-${i + 1}`,
+        },
       });
 
-      const resizeObserver = new ResizeObserver(() => ScrollTrigger.refresh());
-      resizeObserver.observe(wrapperEl);
+      if (tween.scrollTrigger) cardTriggers.push(tween.scrollTrigger);
+    });
 
-      return () => resizeObserver.disconnect();
-    },
-    { scope: sectionRef }
-  );
+    const resizeObserver = new ResizeObserver(() => ScrollTrigger.refresh());
+    resizeObserver.observe(wrapperEl);
+    if (headerRef.current) resizeObserver.observe(headerRef.current); // new — header height can change independently of the wrapper
+
+    return () => resizeObserver.disconnect();
+  },
+  { scope: sectionRef }
+);
 
   return (
     // <section id="stories" ref={sectionRef} className="relative">
@@ -365,7 +470,9 @@ export default function StoriesSection() {
       <div className="container mx-auto px-4">
         {/* Sticky heading — pinned to the top of the viewport for the whole
             scroll distance of the card stack below it. */}
-        <div className="sticky top-0 z-20 bg-background/90 backdrop-blur-sm pt-16 sm:pt-24 lg:pt-28 pb-6 sm:pb-8">
+        <div 
+          ref={headerRef}
+        className="sticky top-0 z-20 bg-background/90 backdrop-blur-sm pt-16 sm:pt-24 lg:pt-28 pb-6 sm:pb-8">
           <SectionHeading
             align="center"
             kicker={t("stories.kicker", "In Their Words")}
