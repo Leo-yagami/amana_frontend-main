@@ -106,36 +106,43 @@ export default function StoriesSection() {
         },
       });
 
+      // for (let i = 0; i < total - 1; i++) {
+      //   // Outgoing: recedes up and back, tilts, fades.
+      //   tl.to(
+      //     cards[i],
+      //     {
+      //       scale: 0.82,
+      //       yPercent: -8,
+      //       rotation: i % 2 === 0 ? -4 : 4,
+      //       opacity: 0,
+      //       zIndex: 1,
+      //       duration: 1,
+      //       force3D: true,
+      //       ease: "none",
+      //     },
+      //     i
+      //   );
+      //   // Incoming: slides up from below, settles to natural size.
+      //   tl.to(
+      //     cards[i + 1],
+      //     {
+      //       yPercent: 0,
+      //       scale: 1,
+      //       opacity: 1,
+      //       zIndex: total - i,
+      //       duration: 1,
+      //       force3D: true,
+      //       ease: "none",
+      //     },
+      //     i
+      //   );
+      // }
+
       for (let i = 0; i < total - 1; i++) {
-        // Outgoing: recedes up and back, tilts, fades.
-        tl.to(
-          cards[i],
-          {
-            scale: 0.82,
-            yPercent: -8,
-            rotation: i % 2 === 0 ? -4 : 4,
-            opacity: 0,
-            zIndex: 1,
-            duration: 1,
-            force3D: true,
-            ease: "none",
-          },
-          i
-        );
-        // Incoming: slides up from below, settles to natural size.
-        tl.to(
-          cards[i + 1],
-          {
-            yPercent: 0,
-            scale: 1,
-            opacity: 1,
-            zIndex: total - i,
-            duration: 1,
-            force3D: true,
-            ease: "none",
-          },
-          i
-        );
+        tl.set(cards[i], { zIndex: 1 }, i);
+        tl.set(cards[i + 1], { zIndex: total - i }, i);
+        tl.to(cards[i], { scale: 0.82, yPercent: -8, rotation: i % 2 === 0 ? -4 : 4, opacity: 0, duration: 1, force3D: true, ease: "none" }, i);
+        tl.to(cards[i + 1], { yPercent: 0, scale: 1, opacity: 1, duration: 1, force3D: true, ease: "none" }, i);
       }
 
       const resizeObserver = new ResizeObserver(() => ScrollTrigger.refresh());
