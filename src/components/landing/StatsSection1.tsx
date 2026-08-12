@@ -129,7 +129,7 @@ export default function StatsSection() {
             labelRef.current.textContent = `0${idx + 1} / 0${STATS.length}`;
           }
           if (barRef.current) {
-            barRef.current.style.width = `${((idx + 1) / STATS.length) * 100}%`;
+            barRef.current.style.width = `${self.progress * 100}%`;
           }
         },
       },
