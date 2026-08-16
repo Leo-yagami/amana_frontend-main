@@ -930,6 +930,268 @@
 //   );
 // }
 
+// import { useRef } from "react";
+// import { useTranslation } from "react-i18next";
+// import { useGSAP } from "@gsap/react";
+// import gsap from "gsap";
+// import { ScrollTrigger } from "gsap/ScrollTrigger";
+// import SectionHeading from "./SectionHeading1";
+
+// gsap.registerPlugin(ScrollTrigger);
+
+// interface Story {
+//   quoteKey: string;
+//   quoteFallback: string;
+//   name: string;
+//   roleKey: string;
+//   roleFallback: string;
+//   avatar: string;
+// }
+
+// const STORIES: Story[] = [
+//   {
+//     quoteKey: "story.amara.quote",
+//     quoteFallback:
+//       "The school fund meant I could keep studying instead of working the fields with my brothers. I want to be a doctor for my village.",
+//     name: "Amara K.",
+//     roleKey: "story.amara.role",
+//     roleFallback: "Kenya — Education Programme",
+//     avatar:
+//       "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=200&auto=format&fit=crop&q=80",
+//   },
+//   {
+//     quoteKey: "story.rahman.quote",
+//     quoteFallback:
+//       "After the flood took our home, HopeBridge helped us rebuild on higher ground. Our children finally have a safe place to grow up.",
+//     name: "The Rahman Family",
+//     roleKey: "story.rahman.role",
+//     roleFallback: "Bangladesh — Emergency Relief",
+//     avatar:
+//       "https://images.unsplash.com/photo-1609220136736-443140cffec6?w=200&auto=format&fit=crop&q=80",
+//   },
+//   {
+//     quoteKey: "story.maya.quote",
+//     quoteFallback:
+//       "The medical fund covered the heart surgery we could never have paid for ourselves. Today she's running around like any seven-year-old should.",
+//     name: "Maya's Mother",
+//     roleKey: "story.maya.role",
+//     roleFallback: "Nepal — Healthcare Programme",
+//     avatar:
+//       "https://images.unsplash.com/photo-1516627145497-ae6968895b74?w=200&auto=format&fit=crop&q=80",
+//   },
+// ];
+
+// const PIN_STEP_PX = 14;
+
+// export default function StoriesSection() {
+//   const { t } = useTranslation();
+//   const sectionRef = useRef<HTMLDivElement>(null);
+//   const wrapperRef = useRef<HTMLDivElement>(null);
+//   const cardWrapperRefs = useRef<(HTMLDivElement | null)[]>([]);
+//   const cardRefs = useRef<(HTMLElement | null)[]>([]);
+//   const indicatorRef = useRef<HTMLDivElement>(null);
+//   const indicatorDotRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+//   useGSAP(
+//     () => {
+//       const wrapperEl = wrapperRef.current;
+//       const cardWrappers = cardWrapperRefs.current.filter(Boolean) as HTMLDivElement[];
+//       const cards = cardRefs.current.filter(Boolean) as HTMLElement[];
+//       if (!wrapperEl || cardWrappers.length === 0) return;
+
+//       gsap.ticker.lagSmoothing(0);
+
+//       // Position cards 2+ off-screen at the start
+//       cardWrappers.forEach((wrapper, i) => {
+//         if (i > 0) {
+//           gsap.set(wrapper, { y: window.innerHeight });
+//         }
+//       });
+
+//       // Master Timeline: Pin wrapperRef while cards scrub into position
+//       const tl = gsap.timeline({
+//         scrollTrigger: {
+//           trigger: wrapperEl,
+//           start: "top top",
+//           end: () => `+=${window.innerHeight * 1.5}`, // Total scroll distance for stacking
+//           pin: true,
+//           pinSpacing: true,
+//           scrub: 0.5,
+//           invalidateOnRefresh: true,
+//           onUpdate: (self) => {
+//             const total = cardWrappers.length;
+//             const activeIdx = Math.min(Math.floor(self.progress * total), total - 1);
+
+//             indicatorDotRefs.current.forEach((dot, i) => {
+//               if (!dot) return;
+//               dot.style.transform = i === activeIdx ? "scaleY(1.7)" : "scaleY(1)";
+//               dot.style.backgroundColor =
+//                 i === activeIdx ? "hsl(var(--primary))" : "hsl(var(--primary) / 0.25)";
+//             });
+//           },
+//           onEnter: () => {
+//             if (indicatorRef.current) {
+//               gsap.to(indicatorRef.current, { opacity: 1, duration: 0.3, overwrite: true });
+//             }
+//           },
+//           onLeave: () => {
+//             if (indicatorRef.current) {
+//               gsap.to(indicatorRef.current, { opacity: 0, duration: 0.3, overwrite: true });
+//             }
+//           },
+//           onEnterBack: () => {
+//             if (indicatorRef.current) {
+//               gsap.to(indicatorRef.current, { opacity: 1, duration: 0.3, overwrite: true });
+//             }
+//           },
+//           onLeaveBack: () => {
+//             if (indicatorRef.current) {
+//               gsap.to(indicatorRef.current, { opacity: 0, duration: 0.3, overwrite: true });
+//             }
+//           },
+//         },
+//       });
+
+//       // Build step sequence: slide each card up while scaling down previous cards
+//       cardWrappers.forEach((cardWrapper, i) => {
+//         if (i === 0) return;
+
+//         const prevCards = cards.slice(0, i);
+
+//         // 1. Slide current card up into its stacked position
+//         tl.to(
+//           cardWrapper,
+//           {
+//             y: PIN_STEP_PX * i,
+//             ease: "power1.inOut",
+//             duration: 1,
+//           },
+//           `step-${i}`
+//         );
+
+//         // 2. Scale & rotate previous cards to create depth
+//         prevCards.forEach((prevCard, prevIdx) => {
+//           const depth = i - prevIdx;
+//           tl.to(
+//             prevCard,
+//             {
+//               scale: 1 - depth * 0.035,
+//               rotationX: -6 * depth,
+//               transformOrigin: "top center",
+//               ease: "power1.inOut",
+//               duration: 1,
+//             },
+//             `step-${i}`
+//           );
+//         });
+//       });
+//     },
+//     { scope: sectionRef }
+//   );
+
+//   return (
+//     <section id="stories" ref={sectionRef} className="relative">
+//       {/* 
+//         Parent Container: Pinned by GSAP during scroll.
+//         When pinned, header and cards remain fixed together in the viewport.
+//         When unpinned, the entire block scrolls away seamlessly.
+//       */}
+//       <div
+//         ref={wrapperRef}
+//         className="container mx-auto px-4 max-w-2xl min-h-screen flex flex-col justify-start pb-16 sm:pb-24 lg:pb-32"
+//       >
+//         {/* Header */}
+//         <div className="pt-16 sm:pt-24 lg:pt-28 pb-6 sm:pb-8">
+//           <SectionHeading
+//             align="center"
+//             kicker={t("stories.kicker", "In Their Words")}
+//             title={t(
+//               "stories.title",
+//               "Stories from the other end of a donation"
+//             )}
+//             className="mx-auto"
+//           />
+//         </div>
+
+//         {/* Stacked Cards Area */}
+//         <div className="relative w-full">
+//           {STORIES.map((story, i) => (
+//             <div
+//               key={story.name}
+//               ref={(el) => {
+//                 cardWrapperRefs.current[i] = el;
+//               }}
+//               className="w-full"
+//               style={{
+//                 perspective: "500px",
+//                 position: i === 0 ? "relative" : "absolute",
+//                 top: 0,
+//                 left: 0,
+//                 zIndex: 10 + i,
+//               }}
+//             >
+//               <article
+//                 ref={(el) => {
+//                   cardRefs.current[i] = el;
+//                 }}
+//                 className="flex h-[360px] xs:h-[380px] sm:h-[420px] md:h-[450px] lg:h-[460px] w-full flex-col justify-between rounded-2xl sm:rounded-3xl bg-card p-5 xs:p-6 sm:p-8 lg:p-10 will-change-transform [transform:translateZ(0)]"
+//                 style={{
+//                   border: "1px solid hsl(var(--border))",
+//                   boxShadow: `
+//                     0 0 0 1px hsl(var(--border) / 0.5),
+//                     0 12px 24px hsl(var(--foreground) / 0.08)
+//                   `,
+//                   backfaceVisibility: "hidden",
+//                 }}
+//               >
+//                 <div>
+//                   <span className="font-display text-3xl sm:text-4xl lg:text-5xl text-primary/20 mb-1 sm:mb-2 block leading-none">
+//                     &ldquo;
+//                   </span>
+//                   <blockquote className="text-base xs:text-lg sm:text-xl lg:text-2xl leading-snug sm:leading-relaxed font-medium pb-2 sm:pb-4">
+//                     {t(story.quoteKey, story.quoteFallback)}
+//                   </blockquote>
+//                 </div>
+
+//                 <figcaption className="flex items-center gap-3 sm:gap-4 mb-1 sm:mb-2 pt-3 sm:pt-6 border-t border-border">
+//                   <img
+//                     src={story.avatar}
+//                     alt={story.name}
+//                     className="w-10 h-10 sm:w-14 sm:h-14 rounded-full object-cover shrink-0"
+//                   />
+//                   <div className="min-w-0">
+//                     <div className="font-bold text-sm sm:text-base truncate">{story.name}</div>
+//                     <div className="text-xs sm:text-sm text-primary truncate">
+//                       {t(story.roleKey, story.roleFallback)}
+//                     </div>
+//                   </div>
+//                 </figcaption>
+//               </article>
+//             </div>
+//           ))}
+//         </div>
+//       </div>
+
+//       {/* Progress Dots Indicator */}
+//       <div
+//         ref={indicatorRef}
+//         className="fixed right-3 sm:right-6 lg:right-10 top-1/2 -translate-y-1/2 z-40 flex flex-col items-center gap-2.5 sm:gap-3 opacity-0 pointer-events-none"
+//         aria-hidden="true"
+//       >
+//         {STORIES.map((_, i) => (
+//           <div
+//             key={i}
+//             ref={(el) => {
+//               indicatorDotRefs.current[i] = el;
+//             }}
+//             className="h-4 sm:h-5 w-1 sm:w-1.5 rounded-full bg-primary/25 origin-center transition-[transform,background-color] duration-300 ease-out"
+//           />
+//         ))}
+//       </div>
+//     </section>
+//   );
+// }
+
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useGSAP } from "@gsap/react";
@@ -1001,19 +1263,13 @@ export default function StoriesSection() {
 
       gsap.ticker.lagSmoothing(0);
 
-      // Position cards 2+ off-screen at the start
-      cardWrappers.forEach((wrapper, i) => {
-        if (i > 0) {
-          gsap.set(wrapper, { y: window.innerHeight });
-        }
-      });
-
       // Master Timeline: Pin wrapperRef while cards scrub into position
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: wrapperEl,
           start: "top top",
-          end: () => `+=${window.innerHeight * 1.5}`, // Total scroll distance for stacking
+          // Reduce scroll distance to 1x screen height on mobile for snappier animation
+          end: () => `+=${window.innerHeight * (window.innerWidth < 640 ? 1 : 1.5)}`,
           pin: true,
           pinSpacing: true,
           scrub: 0.5,
@@ -1029,26 +1285,10 @@ export default function StoriesSection() {
                 i === activeIdx ? "hsl(var(--primary))" : "hsl(var(--primary) / 0.25)";
             });
           },
-          onEnter: () => {
-            if (indicatorRef.current) {
-              gsap.to(indicatorRef.current, { opacity: 1, duration: 0.3, overwrite: true });
-            }
-          },
-          onLeave: () => {
-            if (indicatorRef.current) {
-              gsap.to(indicatorRef.current, { opacity: 0, duration: 0.3, overwrite: true });
-            }
-          },
-          onEnterBack: () => {
-            if (indicatorRef.current) {
-              gsap.to(indicatorRef.current, { opacity: 1, duration: 0.3, overwrite: true });
-            }
-          },
-          onLeaveBack: () => {
-            if (indicatorRef.current) {
-              gsap.to(indicatorRef.current, { opacity: 0, duration: 0.3, overwrite: true });
-            }
-          },
+          onEnter: () => gsap.to(indicatorRef.current, { opacity: 1, duration: 0.3, overwrite: true }),
+          onLeave: () => gsap.to(indicatorRef.current, { opacity: 0, duration: 0.3, overwrite: true }),
+          onEnterBack: () => gsap.to(indicatorRef.current, { opacity: 1, duration: 0.3, overwrite: true }),
+          onLeaveBack: () => gsap.to(indicatorRef.current, { opacity: 0, duration: 0.3, overwrite: true }),
         },
       });
 
@@ -1058,9 +1298,14 @@ export default function StoriesSection() {
 
         const prevCards = cards.slice(0, i);
 
-        // 1. Slide current card up into its stacked position
-        tl.to(
+        // 1. Slide current card up using fromTo to calculate exact off-screen distance
+        tl.fromTo(
           cardWrapper,
+          {
+            // Calculate exactly where the bottom of the screen is relative to the stack
+            // so the card doesn't waste time traveling through invisible space.
+            y: () => window.innerHeight - cardWrappers[0].offsetTop + 40,
+          },
           {
             y: PIN_STEP_PX * i,
             ease: "power1.inOut",
@@ -1091,17 +1336,14 @@ export default function StoriesSection() {
 
   return (
     <section id="stories" ref={sectionRef} className="relative">
-      {/* 
-        Parent Container: Pinned by GSAP during scroll.
-        When pinned, header and cards remain fixed together in the viewport.
-        When unpinned, the entire block scrolls away seamlessly.
-      */}
       <div
         ref={wrapperRef}
-        className="container mx-auto px-4 max-w-2xl min-h-screen flex flex-col justify-start pb-16 sm:pb-24 lg:pb-32"
+        // ADDED 'relative' and changed to 'justify-center sm:justify-start'
+        // This centers the content vertically on mobile to evenly distribute the dead space.
+        className="relative container mx-auto px-4 max-w-2xl min-h-[100svh] sm:min-h-screen flex flex-col justify-center sm:justify-start pb-10 sm:pb-24 lg:pb-32"
       >
-        {/* Header */}
-        <div className="pt-16 sm:pt-24 lg:pt-28 pb-6 sm:pb-8">
+        {/* Header (Adjusted mobile top padding to balance the vertical centering) */}
+        <div className="pt-6 sm:pt-24 lg:pt-28 pb-6 sm:pb-8">
           <SectionHeading
             align="center"
             kicker={t("stories.kicker", "In Their Words")}
