@@ -286,6 +286,55 @@ export default function StatsSection() {
     { value: compact.format(stats.old_age), labelKey: "stats.card4", fallback: "Elderly families without..." },
   ];
 
+  // useGSAP(() => {
+  //   if (!wrapperRef.current || !trackRef.current) return;
+  //   const wrapper = wrapperRef.current;
+  //   const track = trackRef.current;
+
+  //   const getDistance = () => track.scrollWidth - track.offsetWidth;
+
+  //   const tween = gsap.to(track, {
+  //     x: () => -getDistance(),
+  //     ease: "none",
+  //     force3D: true, // Good that you have this for hardware acceleration
+  //     scrollTrigger: {
+  //       trigger: wrapper,
+  //       start: "top top",
+  //       end: () => `+=${getDistance()}`,
+  //       pin: true,
+  //       pinSpacing: true,
+  //       // 2. TWEAK: Sometimes scrub: true is smoother on mobile than a numerical delay
+  //       // but 0.1 is usually okay. If it still jitters, change this to true.
+  //       scrub: 0.1, 
+  //       fastScrollEnd: true,
+  //       preventOverlaps: true,
+  //       invalidateOnRefresh: true,
+  //       anticipatePin: 1, // 3. FIX: Prevents the jump when the pin kicks in on mobile touch threads
+  //       onUpdate: (self) => {
+  //         // (Your ref-based DOM updates are excellent for performance! Keep them.)
+  //         const idx = Math.min(
+  //           Math.floor(self.progress * STATS.length),
+  //           STATS.length - 1
+  //         );
+  //         if (labelRef.current) {
+  //           labelRef.current.textContent = `0${idx + 1} / 0${STATS.length}`;
+  //         }
+  //         if (barRef.current) {
+  //           barRef.current.style.width = `${self.progress * 100}%`;
+  //         }
+  //       },
+  //     },
+  //   });
+
+  //   return () => {
+  //     tween.scrollTrigger?.kill();
+  //     tween.kill();
+  //   };
+  // }, { 
+  //   scope: wrapperRef, 
+  //   dependencies: [stats, t] // 4. FIX: Re-calculate GSAP bounds if your data or language changes
+  // });
+  
   useGSAP(() => {
     if (!wrapperRef.current || !trackRef.current) return;
     const wrapper = wrapperRef.current;
@@ -293,25 +342,23 @@ export default function StatsSection() {
 
     const getDistance = () => track.scrollWidth - track.offsetWidth;
 
-    const tween = gsap.to(track, {
+    // Notice we don't even need to assign this to a 'const tween' anymore
+    gsap.to(track, {
       x: () => -getDistance(),
       ease: "none",
-      force3D: true, // Good that you have this for hardware acceleration
+      force3D: true,
       scrollTrigger: {
         trigger: wrapper,
         start: "top top",
         end: () => `+=${getDistance()}`,
         pin: true,
         pinSpacing: true,
-        // 2. TWEAK: Sometimes scrub: true is smoother on mobile than a numerical delay
-        // but 0.1 is usually okay. If it still jitters, change this to true.
-        scrub: 0.1, 
+        scrub: 0.1,
         fastScrollEnd: true,
         preventOverlaps: true,
         invalidateOnRefresh: true,
-        anticipatePin: 1, // 3. FIX: Prevents the jump when the pin kicks in on mobile touch threads
+        anticipatePin: 1, 
         onUpdate: (self) => {
-          // (Your ref-based DOM updates are excellent for performance! Keep them.)
           const idx = Math.min(
             Math.floor(self.progress * STATS.length),
             STATS.length - 1
@@ -326,14 +373,13 @@ export default function StatsSection() {
       },
     });
 
-    return () => {
-      tween.scrollTrigger?.kill();
-      tween.kill();
-    };
+    // ❌ REMOVE THE RETURN / CLEANUP FUNCTION ENTIRELY
+    // useGSAP handles context.revert() automatically under the hood!
+
   }, { 
     scope: wrapperRef, 
-    dependencies: [stats, t] // 4. FIX: Re-calculate GSAP bounds if your data or language changes
-  }); 
+    dependencies: [stats, t] 
+  });
 
   return (
     // ... (Keep your JSX exactly the same, your use of translateZ(0) and backface-visibility is correct for avoiding repaint bugs)
