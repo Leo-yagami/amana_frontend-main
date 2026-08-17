@@ -1589,7 +1589,7 @@ const Navbar = () => {
           ))}
         </div>
 
-        <div className="menu-footer w-full px-6 sm:px-10 pb-8 flex flex-col gap-6 mt-auto">
+        <div className="menu-footer w-full px-6 sm:px-10 pb-[calc(2rem+env(safe-area-inset-bottom))] flex flex-col gap-6 mt-auto">
           <div className="w-full h-px bg-border" />
           <div className="flex items-center justify-between">
             <div className="flex gap-4">

@@ -379,7 +379,7 @@ export default function StatsSection() {
         ))}
       </div>
 
-      <div className="flex absolute bottom-8 left-1/2 -translate-x-1/2 items-center gap-3 font-mono text-xs uppercase tracking-[0.15em] text-muted-foreground">
+      <div className="flex absolute bottom-[calc(2rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 items-center gap-3 font-mono text-xs uppercase tracking-[0.15em] text-muted-foreground">
         <span ref={labelRef}>01 / 0{STATS.length}</span>
         <span className="w-28 h-0.5 bg-border rounded-full overflow-hidden">
           <span
