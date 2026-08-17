@@ -1264,28 +1264,48 @@ export default function Preloader() {
 
     const ready = Promise.all([readyGates, statsPromise]);
 
-    tl.eventCallback("onComplete", () => {
-      let isRightOrigin = true;
-      const idlePulse = prefersReducedMotion
-        ? null
-        : gsap.to(ruleRef.current, {
-            scaleX: 0.2,
-            duration: 0.8,
-            yoyo: true,
-            repeat: -1,
-            ease: "sine.inOut",
-            onRepeat: () => {
-              isRightOrigin = !isRightOrigin;
-              gsap.set(ruleRef.current, {
-                transformOrigin: isRightOrigin ? "right center" : "left center",
-              });
-            },
-          });
+    // tl.eventCallback("onComplete", () => {
+    //   let isRightOrigin = true;
+    //   const idlePulse = prefersReducedMotion
+    //     ? null
+    //     : gsap.to(ruleRef.current, {
+    //         scaleX: 0.2,
+    //         duration: 0.8,
+    //         yoyo: true,
+    //         repeat: -1,
+    //         ease: "sine.inOut",
+    //         onRepeat: () => {
+    //           isRightOrigin = !isRightOrigin;
+    //           gsap.set(ruleRef.current, {
+    //             transformOrigin: isRightOrigin ? "right center" : "left center",
+    //           });
+    //         },
+    //       });
 
-      ready.then(([, stats]) => {
-        idlePulse?.kill();
-        gsap.set(ruleRef.current, { scaleX: 1, transformOrigin: "left center" });
-        setHeroStats(stats);
+    //   ready.then(([, stats]) => {
+    //     idlePulse?.kill();
+    //     gsap.set(ruleRef.current, { scaleX: 1, transformOrigin: "left center" });
+    //     setHeroStats(stats);
+
+    // diff 1(reverting progress bar behavior)
+    tl.eventCallback("onComplete", () => {
+  // Gentle opacity pulse instead of changing scale/origin
+  const idlePulse = prefersReducedMotion
+    ? null
+    : gsap.to(ruleRef.current, {
+        opacity: 0.3,
+        duration: 0.8,
+        yoyo: true,
+        repeat: -1,
+        ease: "sine.inOut",
+      });
+
+  ready.then(([, stats]) => {
+    idlePulse?.kill();
+    gsap.set(ruleRef.current, { opacity: 1, scaleX: 1 });
+    setHeroStats(stats);
+    
+    // ... rest of your ready.then logic
 
         try {
           localStorage.setItem(
