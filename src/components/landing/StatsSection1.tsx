@@ -302,6 +302,10 @@ export default function StatsSection() {
         preventOverlaps: true,
         invalidateOnRefresh: true,
         anticipatePin: 1, 
+        onEnter: () => window.dispatchEvent(new CustomEvent("force-hide-nav", { detail: { hidden: true } })),
+        onLeave: () => window.dispatchEvent(new CustomEvent("force-hide-nav", { detail: { hidden: false } })),
+        onEnterBack: () => window.dispatchEvent(new CustomEvent("force-hide-nav", { detail: { hidden: true } })),
+        onLeaveBack: () => window.dispatchEvent(new CustomEvent("force-hide-nav", { detail: { hidden: false } })),
         onUpdate: (self) => {
           const idx = Math.min(
             Math.floor(self.progress * STATS.length),

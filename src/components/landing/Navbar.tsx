@@ -1369,11 +1369,22 @@ const Navbar = () => {
   // Drives the floating glass-pill look on the desktop menu cluster.
   const showStickyChrome = isSticky && !mobileOpen && !desktopOpen;
 
+  const [isForceHidden, setIsForceHidden] = useState(false);
+
+  useEffect(() => {
+    const handleForceHide = (e: Event) => {
+      const customEvent = e as CustomEvent<{ hidden: boolean }>;
+      setIsForceHidden(customEvent.detail.hidden);
+    };
+    window.addEventListener("force-hide-nav", handleForceHide);
+    return () => window.removeEventListener("force-hide-nav", handleForceHide);
+  }, []);
+
   // ── Top bar: glass on mobile, slides up/down on scroll ───────────────────
   const topBarClasses = [
     "fixed top-0 left-0 right-0 z-50 will-change-transform transition-all duration-300 ease-out",
     mobileOpen || !isSticky || !isNavVisible ? "bg-transparent border-transparent shadow-none" : "bg-card/90 backdrop-blur-md border-b border-border shadow-sm",
-    mobileOpen || isNavVisible ? "translate-y-0" : "-translate-y-full",
+    mobileOpen || (isNavVisible && !isForceHidden) ? "translate-y-0" : "-translate-y-full",
     "lg:bg-transparent lg:backdrop-blur-none lg:border-transparent lg:shadow-none lg:translate-y-0 lg:transition-none",
     desktopOpen ? "lg:opacity-0 lg:pointer-events-none" : "lg:opacity-100",
   ].join(" ");
