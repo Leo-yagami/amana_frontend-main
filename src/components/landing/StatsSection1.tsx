@@ -200,8 +200,6 @@ import type { DashboardOverview } from "@/types/api";
 
 gsap.registerPlugin(ScrollTrigger);
 
-// 1. CRITICAL FIX: Prevent ScrollTrigger from recalculating every time 
-// the mobile address bar hides/shows during scroll.
 ScrollTrigger.config({ ignoreMobileResize: true });
 
 const CACHE_KEY = "amana_overview_cache_v1";
@@ -220,7 +218,6 @@ const compact = new Intl.NumberFormat("en", {
 });
 
 const readCache = (): { data: DashboardOverview; cachedAt: number } | null => {
-  // ... (Keep your existing readCache function exactly the same)
   try {
     const raw = localStorage.getItem(CACHE_KEY);
     if (!raw) return null;
@@ -233,7 +230,6 @@ const readCache = (): { data: DashboardOverview; cachedAt: number } | null => {
 };
 
 const mapStats = (data: DashboardOverview) => {
-  // ... (Keep your existing mapStats function exactly the same)
   const c = data.families?.classifications ?? {
     orphan: 0,
     single_mother: 0,
@@ -261,7 +257,6 @@ export default function StatsSection() {
   });
 
   useEffect(() => {
-    // ... (Keep your existing API fetch logic exactly the same)
     const cached = readCache();
     if (cached && Date.now() - cached.cachedAt < STALE_MS) return;
 
@@ -280,61 +275,12 @@ export default function StatsSection() {
   }, []);
 
   const STATS = [
-    { value: compact.format(stats.orphan), labelKey: "stats.card1", fallback: "Families raising children..." },
-    { value: compact.format(stats.single_mother), labelKey: "stats.card2", fallback: "Single mothers raising..." },
-    { value: compact.format(stats.disabled_disease), labelKey: "stats.card3", fallback: "Families living with..." },
-    { value: compact.format(stats.old_age), labelKey: "stats.card4", fallback: "Elderly families without..." },
+    { value: compact.format(stats.orphan), labelKey: "stats.card1", fallback: "Families raising children who have lost one or both parents" },
+    { value: compact.format(stats.single_mother), labelKey: "stats.card2", fallback: "Single mothers raising their children on their own, with our steady support" },
+    { value: compact.format(stats.disabled_disease), labelKey: "stats.card3", fallback: "Families living with disability or long-term illness, never left behind" },
+    { value: compact.format(stats.old_age), labelKey: "stats.card4", fallback: "Elderly families without a steady income, cared for with dignity" },
   ];
 
-  // useGSAP(() => {
-  //   if (!wrapperRef.current || !trackRef.current) return;
-  //   const wrapper = wrapperRef.current;
-  //   const track = trackRef.current;
-
-  //   const getDistance = () => track.scrollWidth - track.offsetWidth;
-
-  //   const tween = gsap.to(track, {
-  //     x: () => -getDistance(),
-  //     ease: "none",
-  //     force3D: true, // Good that you have this for hardware acceleration
-  //     scrollTrigger: {
-  //       trigger: wrapper,
-  //       start: "top top",
-  //       end: () => `+=${getDistance()}`,
-  //       pin: true,
-  //       pinSpacing: true,
-  //       // 2. TWEAK: Sometimes scrub: true is smoother on mobile than a numerical delay
-  //       // but 0.1 is usually okay. If it still jitters, change this to true.
-  //       scrub: 0.1, 
-  //       fastScrollEnd: true,
-  //       preventOverlaps: true,
-  //       invalidateOnRefresh: true,
-  //       anticipatePin: 1, // 3. FIX: Prevents the jump when the pin kicks in on mobile touch threads
-  //       onUpdate: (self) => {
-  //         // (Your ref-based DOM updates are excellent for performance! Keep them.)
-  //         const idx = Math.min(
-  //           Math.floor(self.progress * STATS.length),
-  //           STATS.length - 1
-  //         );
-  //         if (labelRef.current) {
-  //           labelRef.current.textContent = `0${idx + 1} / 0${STATS.length}`;
-  //         }
-  //         if (barRef.current) {
-  //           barRef.current.style.width = `${self.progress * 100}%`;
-  //         }
-  //       },
-  //     },
-  //   });
-
-  //   return () => {
-  //     tween.scrollTrigger?.kill();
-  //     tween.kill();
-  //   };
-  // }, { 
-  //   scope: wrapperRef, 
-  //   dependencies: [stats, t] // 4. FIX: Re-calculate GSAP bounds if your data or language changes
-  // });
-  
   useGSAP(() => {
     if (!wrapperRef.current || !trackRef.current) return;
     const wrapper = wrapperRef.current;
@@ -342,18 +288,16 @@ export default function StatsSection() {
 
     const getDistance = () => track.scrollWidth - track.offsetWidth;
 
-    // Notice we don't even need to assign this to a 'const tween' anymore
     gsap.to(track, {
       x: () => -getDistance(),
       ease: "none",
-      force3D: true,
       scrollTrigger: {
         trigger: wrapper,
         start: "top top",
         end: () => `+=${getDistance()}`,
         pin: true,
         pinSpacing: true,
-        scrub: 0.1,
+        scrub: true, // Direct 1:1 mapping is better for 120Hz native scroll than 0.1 interpolation
         fastScrollEnd: true,
         preventOverlaps: true,
         invalidateOnRefresh: true,
@@ -373,18 +317,74 @@ export default function StatsSection() {
       },
     });
 
-    // ❌ REMOVE THE RETURN / CLEANUP FUNCTION ENTIRELY
-    // useGSAP handles context.revert() automatically under the hood!
-
   }, { 
     scope: wrapperRef, 
     dependencies: [stats, t] 
   });
 
+  useEffect(() => {
+    // Awwwards optimization: Disable pointer events while scrolling
+    // This stops the browser from doing heavy hit-testing (checking for hovers) 
+    // on all the elements inside the track while you are swiping.
+    let scrollTimeout: ReturnType<typeof setTimeout>;
+    const trackElement = trackRef.current;
+    
+    const disablePointersOnScroll = () => {
+      if (!trackElement) return;
+      if (trackElement.style.pointerEvents !== "none") {
+        trackElement.style.pointerEvents = "none";
+      }
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        if (trackElement) trackElement.style.pointerEvents = "auto";
+      }, 150);
+    };
+
+    window.addEventListener("scroll", disablePointersOnScroll, { passive: true });
+    
+    return () => {
+      window.removeEventListener("scroll", disablePointersOnScroll);
+      clearTimeout(scrollTimeout);
+    };
+  }, []);
+
   return (
-    // ... (Keep your JSX exactly the same, your use of translateZ(0) and backface-visibility is correct for avoiding repaint bugs)
-    <div ref={wrapperRef} className="relative bg-secondary/40 border-y border-border overflow-hidden [transform:translateZ(0)]">
-       {/* ... rest of your JSX ... */}
+    <div
+      ref={wrapperRef}
+      className="relative bg-secondary/40 border-y border-border overflow-hidden"
+    >
+      <div
+        ref={trackRef}
+        className="flex will-change-transform"
+      >
+        {STATS.map((stat, i) => (
+          <div
+            key={stat.labelKey}
+            className="flex-shrink-0 w-screen min-h-lvh flex flex-col items-center justify-center text-center px-8 relative"
+          >
+            {i !== STATS.length - 1 && (
+              <span className="absolute right-0 top-1/4 h-1/2 w-px bg-border" />
+            )}
+            <div className="font-display font-extrabold tracking-tight text-[clamp(3.5rem,10vw,8.5rem)] leading-none mb-4">
+              {stat.value}
+            </div>
+            <p className="text-base sm:text-lg text-muted-foreground max-w-xs">
+              {t(stat.labelKey, stat.fallback)}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex absolute bottom-8 left-1/2 -translate-x-1/2 items-center gap-3 font-mono text-xs uppercase tracking-[0.15em] text-muted-foreground">
+        <span ref={labelRef}>01 / 0{STATS.length}</span>
+        <span className="w-28 h-0.5 bg-border rounded-full overflow-hidden">
+          <span
+            ref={barRef}
+            className="block h-full bg-primary rounded-full"
+            style={{ width: `${100 / STATS.length}%` }}
+          />
+        </span>
+      </div>
     </div>
   );
 }
