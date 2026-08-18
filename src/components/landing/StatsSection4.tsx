@@ -594,8 +594,15 @@ export default function StatsSection4() {
           }
         }
       });
+
+      // Refresh ScrollTrigger once DOM layout has settled
+      const timer = setTimeout(() => {
+        ScrollTrigger.refresh();
+      }, 100);
+
+      return () => clearTimeout(timer);
     },
-    { scope: wrapperRef, dependencies: [stats, t] }
+    { scope: wrapperRef, dependencies: [] }
   );
 
   return (
