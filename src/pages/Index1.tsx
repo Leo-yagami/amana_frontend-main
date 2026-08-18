@@ -1,6 +1,6 @@
 import HeroSection from "@/components/landing/HeroSection9";
 import AboutSection from "@/components/landing/AboutSection1";
-import StatsSection from "@/components/landing/StatsSection1";
+import StatsSection from "@/components/landing/StatsSection4";
 import CampaignsSection from "@/components/landing/CampaignsSection1";
 import PartnersSection from "@/components/landing/PartnersSection1";
 import ImpactSection from "@/components/landing/ImpactSection1";
