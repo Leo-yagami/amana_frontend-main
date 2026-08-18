@@ -478,6 +478,8 @@ export default function StatsSection4() {
         },
       });
 
+      const isMobile = window.matchMedia("(max-width: 767px)").matches;
+
       // 1. Pre-calculate path lengths and set initial 0% draw state for ALL emblems
       emblemRefs.current.forEach((emblem) => {
         if (!emblem) return;
@@ -509,43 +511,73 @@ export default function StatsSection4() {
         }
       });
 
-      // 2. Extra-Late Scroll-Triggered DrawSVG Line Animation for EACH panel separately
-      emblemRefs.current.forEach((emblem, i) => {
-        if (!emblem) return;
-        const shapes = emblem.querySelectorAll(
-          "path, circle, polygon, rect, line, polyline"
-        );
-        const iconPaths = emblem.querySelectorAll(".fa-icon-draw path");
-        
-        if (!shapes.length) return;
+      // 2. DrawSVG Line Animation
+      if (isMobile) {
+        // On Mobile (< 768px): Pre-draw ALL emblems upfront when the stats section enters viewport (top 80%)
+        // This offloads SVG stroke calculations BEFORE horizontal scrolling begins, preserving GPU performance.
+        emblemRefs.current.forEach((emblem) => {
+          if (!emblem) return;
+          const shapes = emblem.querySelectorAll(
+            "path, circle, polygon, rect, line, polyline"
+          );
+          const iconPaths = emblem.querySelectorAll(".fa-icon-draw path");
+          if (!shapes.length) return;
 
-        if (i === 0) {
-          // Panel 0: Starts drawing smoothly after entering viewport
           gsap.fromTo(
             shapes,
             { drawSVG: "0%" },
             {
               drawSVG: "100%",
               strokeDashoffset: 0,
-              duration: 2.2,
+              duration: 1.4,
               ease: "power2.out",
               scrollTrigger: {
                 trigger: wrapper,
-                start: "top 65%",
+                start: "top 80%",
                 once: true,
               },
             }
           );
-          // Fade in the solid fill as the outline finishes drawing
+
           if (iconPaths.length) {
             gsap.fromTo(
               iconPaths,
               { fillOpacity: 0 },
               {
                 fillOpacity: 1,
-                duration: 1.0,
+                duration: 0.8,
                 ease: "power1.inOut",
-                delay: 1.2,
+                delay: 0.7,
+                scrollTrigger: {
+                  trigger: wrapper,
+                  start: "top 80%",
+                  once: true,
+                },
+              }
+            );
+          }
+        });
+      } else {
+        // On Desktop (>= 768px): Scroll-Triggered DrawSVG per panel via containerAnimation
+        emblemRefs.current.forEach((emblem, i) => {
+          if (!emblem) return;
+          const shapes = emblem.querySelectorAll(
+            "path, circle, polygon, rect, line, polyline"
+          );
+          const iconPaths = emblem.querySelectorAll(".fa-icon-draw path");
+          
+          if (!shapes.length) return;
+
+          if (i === 0) {
+            // Panel 0: Starts drawing smoothly after entering viewport
+            gsap.fromTo(
+              shapes,
+              { drawSVG: "0%" },
+              {
+                drawSVG: "100%",
+                strokeDashoffset: 0,
+                duration: 2.2,
+                ease: "power2.out",
                 scrollTrigger: {
                   trigger: wrapper,
                   start: "top 65%",
@@ -553,47 +585,65 @@ export default function StatsSection4() {
                 },
               }
             );
-          }
-        } else {
-          // Panels 1, 2, 3: EXTRA LATE trigger — starts drawing when panel reaches 45% of viewport width
-          gsap.fromTo(
-            shapes,
-            { drawSVG: "0%" },
-            {
-              drawSVG: "100%",
-              strokeDashoffset: 0,
-              ease: "power1.inOut",
-              scrollTrigger: {
-                trigger: panelRefs.current[i],
-                containerAnimation: scrollTween,
-                start: "left 45%",
-                end: "left 10%",
-                scrub: 0.8,
-                once: true, // Draws once when scrolled into view and stays drawn!
-              },
+            // Fade in the solid fill as the outline finishes drawing
+            if (iconPaths.length) {
+              gsap.fromTo(
+                iconPaths,
+                { fillOpacity: 0 },
+                {
+                  fillOpacity: 1,
+                  duration: 1.0,
+                  ease: "power1.inOut",
+                  delay: 1.2,
+                  scrollTrigger: {
+                    trigger: wrapper,
+                    start: "top 65%",
+                    once: true,
+                  },
+                }
+              );
             }
-          );
-          
-          if (iconPaths.length) {
+          } else {
+            // Panels 1, 2, 3: EXTRA LATE trigger — starts drawing when panel reaches 45% of viewport width
             gsap.fromTo(
-              iconPaths,
-              { fillOpacity: 0 },
+              shapes,
+              { drawSVG: "0%" },
               {
-                fillOpacity: 1,
-                ease: "power2.in",
+                drawSVG: "100%",
+                strokeDashoffset: 0,
+                ease: "power1.inOut",
                 scrollTrigger: {
                   trigger: panelRefs.current[i],
                   containerAnimation: scrollTween,
-                  start: "left 25%",
+                  start: "left 45%",
                   end: "left 10%",
                   scrub: 0.8,
-                  once: true, // Solid fill stays filled!
+                  once: true,
                 },
               }
             );
+            
+            if (iconPaths.length) {
+              gsap.fromTo(
+                iconPaths,
+                { fillOpacity: 0 },
+                {
+                  fillOpacity: 1,
+                  ease: "power2.in",
+                  scrollTrigger: {
+                    trigger: panelRefs.current[i],
+                    containerAnimation: scrollTween,
+                    start: "left 25%",
+                    end: "left 10%",
+                    scrub: 0.8,
+                    once: true,
+                  },
+                }
+              );
+            }
           }
-        }
-      });
+        });
+      }
 
       // Refresh ScrollTrigger once DOM layout has settled
       const timer = setTimeout(() => {
