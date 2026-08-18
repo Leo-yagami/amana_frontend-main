@@ -411,7 +411,7 @@ export default function StatsSection4() {
       }
 
       // Main Horizontal Track Scroll Animation
-      const getDistance = () => Math.max(0, track.scrollWidth - window.innerWidth);
+      const getDistance = () => Math.max(0, track.scrollWidth - (wrapper.clientWidth || window.innerWidth));
 
       const scrollTween = gsap.to(track, {
         x: () => -getDistance(),
@@ -650,7 +650,7 @@ export default function StatsSection4() {
               ref={(el) => {
                 panelRefs.current[i] = el;
               }}
-              className="relative flex-shrink-0 w-screen h-full flex items-center justify-center px-6 sm:px-12 lg:px-20"
+              className="relative flex-shrink-0 w-full min-w-full h-full flex items-center justify-center px-6 sm:px-12 lg:px-20"
             >
               {/* Vertical Section Divider */}
               {i !== 0 && (

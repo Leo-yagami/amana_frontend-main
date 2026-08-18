@@ -8,7 +8,7 @@ export default function SiteLayout() {
     <>
       <ScrollToTop />
       <Navbar />
-      <main>
+      <main className="w-full max-w-full overflow-x-hidden relative">
         <Outlet />
       </main>
       <Footer />
