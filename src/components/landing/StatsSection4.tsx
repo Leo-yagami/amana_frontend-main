@@ -661,14 +661,14 @@ export default function StatsSection4() {
         <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary/60" />
         <span
           ref={kickerRef}
-          className="inline-block font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.22em] text-muted-foreground/70 will-change-transform"
+          className="inline-block font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.22em] text-muted-foreground/70"
         >
           {t("stats.kicker", "Who we serve")}
         </span>
       </div>
 
       {/* Horizontal Panels Track */}
-      <div ref={trackRef} className="flex h-full will-change-transform">
+      <div ref={trackRef} className="flex h-full">
         {STAT_ITEMS.map((stat, i) => {
           const Emblem = EMBLEMS[i];
           const isDark =
@@ -756,7 +756,7 @@ export default function StatsSection4() {
                   ref={(el) => {
                     emblemRefs.current[i] = el;
                   }}
-                  className="relative w-[200px] h-[200px] sm:w-[280px] sm:h-[280px] lg:w-[360px] lg:h-[360px] shrink-0 will-change-transform"
+                  className="relative w-[200px] h-[200px] sm:w-[280px] sm:h-[280px] lg:w-[360px] lg:h-[360px] shrink-0"
                 >
                   <Emblem accentColor={accentColor} />
                 </div>
