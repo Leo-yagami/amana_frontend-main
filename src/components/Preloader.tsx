@@ -1670,14 +1670,14 @@ export default function Preloader() {
     gsap.set(signalOuterRef.current, {
       strokeDasharray: outerLen,
       strokeDashoffset: outerLen,
-      opacity: 0.35,
+      opacity: 0.13,
       rotation: -90,
       transformOrigin: "50% 50%",
     });
     gsap.set(signalInnerRef.current, {
       strokeDasharray: innerLen,
       strokeDashoffset: innerLen,
-      opacity: 0.5,
+      opacity: 0.19,
       rotation: 90,
       transformOrigin: "50% 50%",
     });
