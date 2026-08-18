@@ -411,7 +411,7 @@ export default function StatsSection4() {
       }
 
       // Main Horizontal Track Scroll Animation
-      const getDistance = () => track.scrollWidth - track.offsetWidth;
+      const getDistance = () => Math.max(0, track.scrollWidth - window.innerWidth);
 
       const scrollTween = gsap.to(track, {
         x: () => -getDistance(),
@@ -422,9 +422,7 @@ export default function StatsSection4() {
           end: () => `+=${getDistance()}`,
           pin: true,
           pinSpacing: true,
-          scrub: true,
-          fastScrollEnd: true,
-          preventOverlaps: true,
+          scrub: 1,
           invalidateOnRefresh: true,
           anticipatePin: 1,
 
@@ -522,7 +520,7 @@ export default function StatsSection4() {
         if (!shapes.length) return;
 
         if (i === 0) {
-          // Panel 0: Starts drawing smoothly after entering viewport, using fromTo to guarantee initial undrawn state
+          // Panel 0: Starts drawing smoothly after entering viewport
           gsap.fromTo(
             shapes,
             { drawSVG: "0%" },
@@ -534,6 +532,7 @@ export default function StatsSection4() {
               scrollTrigger: {
                 trigger: wrapper,
                 start: "top 65%",
+                once: true,
               },
             }
           );
@@ -550,53 +549,13 @@ export default function StatsSection4() {
                 scrollTrigger: {
                   trigger: wrapper,
                   start: "top 65%",
+                  once: true,
                 },
               }
             );
           }
         } else {
-          // Panels 1, 2, 3: EXTRA LATE trigger — starts drawing when panel reaches 40% of viewport width
-          
-          // -- VERSION A: PLAY ONCE AND KEEP DRAWN (Active) --
-          gsap.fromTo(
-            shapes,
-            { drawSVG: "0%" },
-            {
-              drawSVG: "100%",
-              strokeDashoffset: 0,
-              duration: 2.2,
-              ease: "power2.out",
-              scrollTrigger: {
-                trigger: panelRefs.current[i],
-                containerAnimation: scrollTween,
-                start: "left 40%",
-                toggleActions: "play none none none",
-              },
-            }
-          );
-          
-          if (iconPaths.length) {
-            gsap.fromTo(
-              iconPaths,
-              { fillOpacity: 0 },
-              {
-                fillOpacity: 1,
-                duration: 1.0,
-                ease: "power1.inOut",
-                delay: 1.2,
-                scrollTrigger: {
-                  trigger: panelRefs.current[i],
-                  containerAnimation: scrollTween,
-                  start: "left 40%",
-                  toggleActions: "play none none none",
-                },
-              }
-            );
-          }
-
-          /* 
-          // -- VERSION B: SCRUBBABLE (Undraws on scroll backward) --
-          // To use this version, uncomment this block and comment out VERSION A above.
+          // Panels 1, 2, 3: EXTRA LATE trigger — starts drawing when panel reaches 45% of viewport width
           gsap.fromTo(
             shapes,
             { drawSVG: "0%" },
@@ -607,13 +566,14 @@ export default function StatsSection4() {
               scrollTrigger: {
                 trigger: panelRefs.current[i],
                 containerAnimation: scrollTween,
-                start: "left 40%",
-                end: "left 5%",
-                scrub: 1.0,
+                start: "left 45%",
+                end: "left 10%",
+                scrub: 0.8,
+                once: true, // Draws once when scrolled into view and stays drawn!
               },
             }
           );
-          // Fade in the solid fill towards the final portion of the scroll trigger
+          
           if (iconPaths.length) {
             gsap.fromTo(
               iconPaths,
@@ -624,14 +584,14 @@ export default function StatsSection4() {
                 scrollTrigger: {
                   trigger: panelRefs.current[i],
                   containerAnimation: scrollTween,
-                  start: "left 20%",
-                  end: "left 5%",
-                  scrub: 1.0,
+                  start: "left 25%",
+                  end: "left 10%",
+                  scrub: 0.8,
+                  once: true, // Solid fill stays filled!
                 },
               }
             );
           }
-          */
         }
       });
     },
